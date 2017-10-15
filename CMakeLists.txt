@@ -17,9 +17,11 @@ add_library(cvlib SHARED ${SOURCES} ${HEADERS})
 install(TARGETS cvlib DESTINATION lib/${PROJECT_NAME})
 # Install library headers
 install(FILES ${HEADERS} DESTINATION include/${PROJECT_NAME})
+# Link OpenCV
+target_link_libraries(cvlib ${OpenCV_LIBS})
 
 #Tests
-add_executable(test-video test/video/video.cpp)
+add_executable(test-video test/video/videotest.cpp)
 target_link_libraries(test-video ${OpenCV_LIBS} cvlib)
 
 add_executable(test-videostab test/videostab/videostab.cpp)

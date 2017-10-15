@@ -1,16 +1,8 @@
 #pragma once
 
-#ifdef _WIN32
-#  define PUBLIC extern "C" __declspec( dllexport )
-#else
-#  define PUBLIC
-#endif
+#include "common.h"
 
 #ifdef _WIN32 
-
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#include <SDKDDKVer.h>
 
 BOOL APIENTRY DllMain(HMODULE hModule,
 	DWORD  ul_reason_for_call,
@@ -30,4 +22,9 @@ BOOL APIENTRY DllMain(HMODULE hModule,
 
 #endif
 
-PUBLIC int func();
+#include "time.h"
+#include "fps.h"
+#include "util.h"
+#include "videoio.h"
+
+EXPORT int func();
