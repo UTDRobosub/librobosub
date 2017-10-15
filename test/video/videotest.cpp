@@ -23,7 +23,7 @@ int main(int argc, char** argv)
 	cout << cam.setFrameSizeToMaximum() << endl;
 	for (;;)
 	{
-		cam.retrieveFrameGrey(frame); // get a new frame from camera
+		cam.retrieveFrameGrey(frame);
 		GaussianBlur(frame, frame, Size(7, 7), 1.5, 1.5);
 		Canny(frame, frame, 0, 30, 3);
 		imshow("edges", frame);

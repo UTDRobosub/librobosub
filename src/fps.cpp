@@ -1,17 +1,27 @@
 #include "cvlib\fps.h"
 
-double FPS::frame()
-{
-	if (Time::millis() - _fpsstart>1000)
+namespace cvlib {
+	FPS::FPS()
 	{
-		_fpsstart = Time::millis();
-		_avgfps = 0.7*_avgfps + 0.3*_fps1sec;
-		_fps1sec = 0;
+		for (int i=0; i<BUFFER_LENGTH; i++)
+			_freqBuffer[i] = 0;
 	}
-	_fps1sec++;
-	return _avgfps;
-}
 
-double FPS::fps() {
-	return _avgfps;
+	double FPS::frame()
+	{
+		long long time = Time::millis();
+		if (_prevTime == 0) _prevTime = time;
+
+		_currentSum -= _freqBuffer[_bufferPos];
+		_currentSum += time - _prevTime;
+		_freqBuffer[_bufferPos] = time - _prevTime;
+		_bufferPos = (_bufferPos + 1) % BUFFER_LENGTH;
+		_prevTime = time;
+		return fps();
+	}
+
+	double FPS::fps() {
+		if (_currentSum == 0) return 0;
+		return (1.0 / ((double)_currentSum / (double)BUFFER_LENGTH / 1000.0));
+	}
 }

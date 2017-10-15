@@ -8,11 +8,17 @@ namespace cvlib
 	class FPS 
 	{
 	private:
-		long long _fpsstart = 0;
-		double _avgfps = 0;
-		double _fps1sec = 0;
+		static const int BUFFER_LENGTH = 7;
+
+		double _freqBuffer[BUFFER_LENGTH]; //list of time deltas
+		long long _currentSum = 0; //sum of time deltas
+		long long _prevTime = 0;
+		int _bufferPos = 0;
 
 	public:
+
+		EXPORT FPS();
+
 		///Calculate the FPS of a single frame
 		///Returns current fps
 		EXPORT double frame();
