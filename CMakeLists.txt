@@ -24,12 +24,12 @@ target_link_libraries(cvlib ${OpenCV_LIBS})
 add_executable(test-video test/video/videotest.cpp)
 target_link_libraries(test-video ${OpenCV_LIBS} cvlib)
 
-add_executable(test-videostab test/videostab/videostab.cpp)
-target_link_libraries(test-videostab ${OpenCV_LIBS} ${CMAKE_THREAD_LIBS_INIT})
+#add_executable(test-videostab test/videostab/videostab.cpp)
+#target_link_libraries(test-videostab ${OpenCV_LIBS} ${CMAKE_THREAD_LIBS_INIT})
 
 #Enable C++11
 target_compile_features(test-video PRIVATE cxx_range_for)
-target_compile_features(test-videostab PRIVATE cxx_range_for)
+#target_compile_features(test-videostab PRIVATE cxx_range_for)
 target_compile_features(cvlib PRIVATE cxx_range_for)
 
 #Add special windows DLLS

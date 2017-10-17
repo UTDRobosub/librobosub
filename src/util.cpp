@@ -1,4 +1,4 @@
-#include "..\include\cvlib\util.h"
+#include "cvlib/util.h"
 
 namespace cvlib {
 	void Util::pause()

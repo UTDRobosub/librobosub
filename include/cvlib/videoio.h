@@ -1,13 +1,13 @@
 #pragma once
 
 #include "common.h"
-#include "cvlib/time.h"
-#include "cvlib/fps.h"
+#include "time.h"
+#include "fps.h"
 #include <opencv2/opencv.hpp>
 
-namespace cvlib 
+namespace cvlib
 {
-	class Camera 
+	class Camera
 	{
 	private:
 		int frame;
@@ -52,10 +52,9 @@ namespace cvlib
 		///Get position in seconds
 		///If live stream, will return timestamp of last frame
 		EXPORT double getPositionSeconds();
-		///Get number of frames 
+		///Get number of frames
 		EXPORT long getFrameCount();
 		///Returns true if live stream, false if reading from file
 		EXPORT bool isLiveStream();
 	};
 }
-
