@@ -13,8 +13,11 @@ namespace cvlib
 		int frame;
 		long long startTime;
 		long long lastTime;
+		bool liveStream = false;
+		bool init = false;
 
 		void updateRetrieveTime();
+		bool testLiveStream();
 
 		VideoCapture* cap;
 		FPS* fps;

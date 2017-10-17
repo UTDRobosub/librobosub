@@ -9,6 +9,13 @@ namespace cvlib {
 		fps->frame();
 	}
 
+	bool Camera::testLiveStream() {
+		if (!isOpen()) return false;
+		liveStream = cap->get(cv::CAP_PROP_POS_FRAMES) < 0 || cap->get(cv::CAP_PROP_FPS) == 0;
+		init = true;
+		return liveStream;
+	}
+
 	Camera::Camera(int index)
 	{
 		cap = new VideoCapture(index);
@@ -16,6 +23,7 @@ namespace cvlib {
 		frame = 0;
 		startTime = 0;
 		lastTime = Time::millis();
+		testLiveStream();
 	}
 
 	Camera::Camera(cv::String file)
@@ -25,6 +33,7 @@ namespace cvlib {
 		frame = 0;
 		startTime = 0;
 		lastTime = Time::millis();
+		testLiveStream();
 	}
 
 	Camera::~Camera()
@@ -95,7 +104,7 @@ namespace cvlib {
 		return cap->get(cv::CAP_PROP_POS_MSEC) / 1000.0;
 	}
 
-	long Camera::getFrameCount() 
+	long Camera::getFrameCount()
 	{
 		if (isLiveStream()) return 0;
 		return cap->get(cv::CAP_PROP_FRAME_COUNT);
@@ -103,7 +112,7 @@ namespace cvlib {
 
 	bool Camera::isLiveStream()
 	{
-		if (!isOpen()) return false;
-		return cap->get(cv::CAP_PROP_FPS) == 0;
+		if (!init) return testLiveStream();
+		return liveStream;
 	}
 }
