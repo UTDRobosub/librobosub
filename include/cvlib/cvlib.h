@@ -26,5 +26,6 @@ BOOL APIENTRY DllMain(HMODULE hModule,
 #include "fps.h"
 #include "util.h"
 #include "videoio.h"
+#include "image.h"
 
 EXPORT int func();
