@@ -32,20 +32,29 @@ namespace cvlib {
 		Point center = Point((int)(newWidth / 2.0), (int)(newHeight / 2.0));
 		Mat rotMatrix =  cv::getRotationMatrix2D(center, angle, 1.0);
 
-		Size size = Size(newWidth, newHeight);
+		Size size = Size((int)newWidth, (int)newHeight);
 		cv::warpAffine(image, image, rotMatrix, image.size());
 	}
 
 	void ImageTransform::scale(Mat& image, double factor)
 	{
-		resize(image, Size(image.cols * factor, image.rows * factor));
+		resize(image, Size((int)(image.cols * factor), (int)(image.rows * factor)));
 	}
 	void ImageTransform::scale(Mat& image, Size approxSize)
 	{
 		Size imageSize = image.size();
-		double ratioWidth = approxSize.width / imageSize.width;
-		double ratioHeight = approxSize.height / imageSize.height;
+		double ratioWidth = (double)approxSize.width / (double)imageSize.width;
+		double ratioHeight = (double)approxSize.height / (double)imageSize.height;
 		double ratio = std::min(ratioWidth, ratioHeight);
 		scale(image, ratio);
+	}
+
+	void Drawing::text(Mat& img, String text, Point origin, Scalar color, Anchor anchor, float scale) {
+		if (anchor == Anchor::BOTTOM_LEFT)
+			ImageTransform::flip(img, ImageTransform::FlipAxis::HORIZONTAL);
+		putText(img, text, origin, cv::FONT_HERSHEY_SIMPLEX, scale, color, 2, cv::LINE_AA,
+			(anchor == Anchor::BOTTOM_LEFT || anchor == Anchor::BOTTOM_LEFT_UNFLIPPED_Y));
+		if (anchor == Anchor::BOTTOM_LEFT)
+			ImageTransform::flip(img, ImageTransform::FlipAxis::HORIZONTAL);
 	}
 }
