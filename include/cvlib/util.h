@@ -12,8 +12,12 @@ namespace cvlib {
 		EXPORT static void pause();
 
 		template <typename T>
-		static String toStringWithPrecision(const T value, const int n = 4);
-	};
+		inline static String toStringWithPrecision(const T value, const int n = 4) {
+			std::ostringstream out;
+			out << std::setprecision(n) << value;
+			return out.str();
+		}
+	};	
 
 	template EXPORT String Util::toStringWithPrecision(const float value, const int n);
 	template EXPORT String Util::toStringWithPrecision(const double value, const int n);

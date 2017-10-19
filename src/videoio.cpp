@@ -104,6 +104,6 @@ namespace cvlib {
 	bool Camera::isLiveStream()
 	{
 		if (!isOpen()) return false;
-		return cap->get(cv::CAP_PROP_FPS) == 0;
+		return cap->get(cv::CAP_PROP_FPS) == 0 || cap->get(cv::CAP_PROP_POS_FRAMES) == -1;
 	}
 }
