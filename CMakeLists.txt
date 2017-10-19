@@ -1,6 +1,15 @@
 #Hey there! You need to install OpenCV first!
 
 cmake_minimum_required(VERSION 3.2)
+
+#Set library name
+IF (WIN32)
+  # set stuff for windows
+  set(LIBRARY_NAME librobosub)
+ELSE()
+  set(LIBRARY_NAME robosub)
+ENDIF()
+
 project(librobosub CXX)
 find_package(OpenCV REQUIRED)
 find_package (Threads)
@@ -12,21 +21,21 @@ file(GLOB HEADERS include/**/*.h)
 # Include header files
 include_directories(include)
 # Create shared library
-add_library(librobosub SHARED ${SOURCES} ${HEADERS})
+add_library(${LIBRARY_NAME} SHARED ${SOURCES} ${HEADERS})
 # Install library
-install(TARGETS librobosub DESTINATION lib/${PROJECT_NAME})
+install(TARGETS ${LIBRARY_NAME} DESTINATION lib/${PROJECT_NAME})
 # Install library headers
 install(FILES ${HEADERS} DESTINATION include/${PROJECT_NAME})
 # Link OpenCV
-target_link_libraries(librobosub ${OpenCV_LIBS})
+target_link_libraries(${LIBRARY_NAME} ${OpenCV_LIBS})
 
 #Tests
 add_executable(test-video test/video/videotest.cpp)
-target_link_libraries(test-video ${OpenCV_LIBS} librobosub)
+target_link_libraries(test-video ${OpenCV_LIBS} ${LIBRARY_NAME})
 target_compile_features(test-video PRIVATE cxx_range_for)
 
 add_executable(test-stereo test/stereo/stereotest.cpp)
-target_link_libraries(test-stereo ${OpenCV_LIBS} librobosub)
+target_link_libraries(test-stereo ${OpenCV_LIBS} ${LIBRARY_NAME})
 target_compile_features(test-stereo PRIVATE cxx_range_for)
 
 #add_executable(test-videostab test/videostab/videostab.cpp)
@@ -34,7 +43,7 @@ target_compile_features(test-stereo PRIVATE cxx_range_for)
 #target_compile_features(test-videostab PRIVATE cxx_range_for)
 
 #Enable C++11
-target_compile_features(librobosub PRIVATE cxx_range_for)
+target_compile_features(${LIBRARY_NAME} PRIVATE cxx_range_for)
 
 #Add special windows DLLS
 #if(MSVC)
