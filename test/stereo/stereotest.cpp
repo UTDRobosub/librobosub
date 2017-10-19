@@ -48,11 +48,11 @@ int main(int argc, char** argv)
 		cam0.grabFrame();
 		cam1.grabFrame();
 
-		cam0.retrieveFrameRGBA(_frame0);
-		cam1.retrieveFrameRGBA(_frame1);
+		cam0.retrieveFrameBGR(_frame0);
+		cam1.retrieveFrameBGR(_frame1);
 
-		_frame0.copyTo(left);
-		_frame1.copyTo(right);
+		cvtColor(_frame0, left, COLOR_BGR2GRAY, CV_8U);
+		cvtColor(_frame1, right, COLOR_BGR2GRAY, CV_8U);
 
 		max_disp /= 2;
 		if (max_disp % 16 != 0)
@@ -64,8 +64,8 @@ int main(int argc, char** argv)
 		Ptr<StereoBM> left_matcher = StereoBM::create(max_disp, wsize);
 		wls_filter = ximgproc::createDisparityWLSFilter(left_matcher);
 		Ptr<StereoMatcher> right_matcher = ximgproc::createRightMatcher(left_matcher);
-		cvtColor(left, left, COLOR_BGR2GRAY);
-		cvtColor(right, right, COLOR_BGR2GRAY);
+		//cvtColor(left, left, COLOR_BGR2GRAY);
+		//cvtColor(right, right, COLOR_BGR2GRAY);
 		/*Ptr<StereoSGBM> left_matcher = StereoSGBM::create(0, max_disp, wsize);
 		left_matcher->setBlockSize(wsize);
 		left_matcher->setP1(24 * wsize*wsize);

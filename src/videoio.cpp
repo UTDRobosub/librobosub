@@ -43,7 +43,7 @@ namespace cvlib {
 		return cap->grab();
 	}
 
-	bool Camera::retrieveFrameRGBA(Mat& img)
+	bool Camera::retrieveFrameBGR(Mat& img)
 	{
 		if (!cap->retrieve(img)) return false;
 		updateRetrieveTime();
