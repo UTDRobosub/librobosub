@@ -17,6 +17,8 @@ namespace cvlib {
 			out << std::setprecision(n) << value;
 			return out.str();
 		}
+		
+		EXPORT static cv::Size getDesktopResolution();
 	};	
 
 	template EXPORT String Util::toStringWithPrecision(const float value, const int n);
