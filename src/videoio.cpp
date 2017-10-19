@@ -54,7 +54,7 @@ namespace cvlib {
 	{
 		if (!cap->retrieve(img)) return false;
 		updateRetrieveTime();
-		cvtColor(img, img, COLOR_BGR2GRAY);
+		cvtColor(img, img, COLOR_BGR2GRAY, CV_8UC1);
 		return true;
 	}
 
