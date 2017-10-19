@@ -52,7 +52,7 @@ namespace cvlib {
 		return cap->grab();
 	}
 
-	bool Camera::retrieveFrameRGBA(Mat& img)
+	bool Camera::retrieveFrameBGR(Mat& img)
 	{
 		if (!cap->retrieve(img)) return false;
 		updateRetrieveTime();
@@ -63,7 +63,7 @@ namespace cvlib {
 	{
 		if (!cap->retrieve(img)) return false;
 		updateRetrieveTime();
-		cvtColor(img, img, COLOR_BGR2GRAY);
+		cvtColor(img, img, COLOR_BGR2GRAY, CV_8UC1);
 		return true;
 	}
 

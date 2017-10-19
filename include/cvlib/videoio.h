@@ -37,7 +37,7 @@ namespace cvlib
 		///When using multiple cameras, call this on all cameras before retrieving frames.
 		EXPORT bool grabFrame();
 		///Retrieve and decode the current frame (RGBA)
-		EXPORT bool retrieveFrameRGBA(Mat& img);
+		EXPORT bool retrieveFrameBGR(Mat& img);
 		///Retrieve and decode the current frame (greyscale)
 		EXPORT bool retrieveFrameGrey(Mat& img);
 
