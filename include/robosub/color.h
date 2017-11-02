@@ -5,7 +5,7 @@
 #include "common.h"
 #include <opencv2/opencv.hpp>
 
-namespace cvlib
+namespace robosub
 {
 	enum ColorSpace
 	{

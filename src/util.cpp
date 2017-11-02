@@ -1,10 +1,10 @@
-#include "cvlib/util.h"
+#include "robosub/util.h"
 
 #ifndef WINDOWS
 #include <X11/Xlib.h>
 #endif // WINDOWS
 
-namespace cvlib {
+namespace robosub {
 
 	void Util::pause()
 	{

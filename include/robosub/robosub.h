@@ -27,5 +27,6 @@ BOOL APIENTRY DllMain(HMODULE hModule,
 #include "util.h"
 #include "videoio.h"
 #include "image.h"
+#include "networkudp.h"
 
 EXPORT int func();

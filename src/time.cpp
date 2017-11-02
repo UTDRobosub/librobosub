@@ -1,6 +1,6 @@
-#include "cvlib/time.h"
+#include "robosub/time.h"
 
-namespace cvlib {
+namespace robosub {
 
 #include <sys/timeb.h>
 #if defined(WINDOWS)

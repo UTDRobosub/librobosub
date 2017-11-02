@@ -5,7 +5,7 @@
 #include <string>
 #include "opencv2/opencv.hpp"
 
-namespace cvlib {
+namespace robosub {
 	class Util {
 	public:
 		///Wait for any keypress

@@ -7,7 +7,7 @@
 #include <opencv2/opencv.hpp>
 #include <math.h>
 
-namespace cvlib
+namespace robosub
 {
 	class ImageFilter 
 	{

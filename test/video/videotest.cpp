@@ -1,9 +1,9 @@
 #include <opencv2/opencv.hpp>
-#include <cvlib/cvlib.h>
+#include <robosub/robosub.h>
 #include <signal.h>
 
 using namespace std;
-using namespace cvlib;
+using namespace robosub;
 
 bool running = true;
 

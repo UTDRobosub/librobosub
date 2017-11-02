@@ -26,9 +26,9 @@
 #define EXPORT
 #endif
 
-namespace cvlib { }
+namespace robosub { }
 namespace cv { }
 
 using namespace std;
-using namespace cvlib;
+using namespace robosub;
 using namespace cv;

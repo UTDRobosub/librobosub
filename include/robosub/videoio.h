@@ -5,7 +5,7 @@
 #include "fps.h"
 #include <opencv2/opencv.hpp>
 
-namespace cvlib
+namespace robosub
 {
 	class Camera
 	{

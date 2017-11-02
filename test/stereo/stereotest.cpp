@@ -1,10 +1,10 @@
 #include <opencv2/opencv.hpp>
-#include <cvlib/cvlib.h>
+#include <robosub/robosub.h>
 #include <signal.h>
 #include <opencv2/ximgproc.hpp>
 
 using namespace std;
-using namespace cvlib;
+using namespace robosub;
 
 bool running = true;
 
@@ -20,8 +20,14 @@ int main(int argc, char** argv)
 	Camera cam0 = Camera(0);
 	Camera cam1 = Camera(1);
 
-	if (!cam0.isOpen()) return -1;
-	if (!cam1.isOpen()) return -1;
+	if (!cam0.isOpen()){
+        cout<<"Camera 0 failed to open"<<endl;
+        return -1;
+	}
+	if (!cam1.isOpen()){
+        cout<<"Camera 1 failed to open"<<endl;
+        return -1;
+	}
 
 	cam1.setFrameSize(cam0.getFrameSize());
 

@@ -1,6 +1,6 @@
-#include "cvlib/image.h"
+#include "robosub/image.h"
 
-namespace cvlib {
+namespace robosub {
 	void ImageTransform::resize(Mat& image, Size size)
 	{
 		int interpolation;

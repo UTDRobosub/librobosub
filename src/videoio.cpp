@@ -1,6 +1,6 @@
-#include "cvlib/videoio.h"
+#include "robosub/videoio.h"
 
-namespace cvlib {
+namespace robosub {
 	void Camera::updateRetrieveTime()
 	{
 		if (startTime == 0) startTime = Time::millis();

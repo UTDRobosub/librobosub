@@ -30,6 +30,11 @@ install(FILES ${HEADERS} DESTINATION include/${PROJECT_NAME})
 target_link_libraries(${LIBRARY_NAME} ${OpenCV_LIBS})
 
 #Tests
+
+add_executable(test-networkudp test/network/networkudptest.cpp)
+target_link_libraries(test-networkudp ${OpenCV_LIBS} ${LIBRARY_NAME})
+target_compile_features(test-networkudp PRIVATE cxx_range_for)
+
 add_executable(test-video test/video/videotest.cpp)
 target_link_libraries(test-video ${OpenCV_LIBS} ${LIBRARY_NAME})
 target_compile_features(test-video PRIVATE cxx_range_for)
