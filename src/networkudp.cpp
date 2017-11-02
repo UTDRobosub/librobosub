@@ -1,4 +1,3 @@
-
 #include "robosub/networkudp.h"
 
 namespace robosub {

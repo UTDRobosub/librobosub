@@ -15,6 +15,13 @@ find_package(OpenCV REQUIRED)
 find_package (Threads)
 set (CMAKE_CXX_STANDARD 11)
 
+IF (UNIX)
+  # include X11
+  find_package(X11 REQUIRED)
+  link_libraries(${X11_LIBRARIES})
+  include_directories(${X11_INCLUDE_DIR})
+ENDIF()
+
 # Find files
 file(GLOB SOURCES src/*.cpp)
 file(GLOB HEADERS include/**/*.h)
@@ -28,9 +35,10 @@ install(TARGETS ${LIBRARY_NAME} DESTINATION lib/${PROJECT_NAME})
 install(FILES ${HEADERS} DESTINATION include/${PROJECT_NAME})
 # Link OpenCV
 target_link_libraries(${LIBRARY_NAME} ${OpenCV_LIBS})
+#Enable C++11
+target_compile_features(${LIBRARY_NAME} PRIVATE cxx_range_for)
 
 #Tests
-
 add_executable(test-networkudp test/network/networkudptest.cpp)
 target_link_libraries(test-networkudp ${OpenCV_LIBS} ${LIBRARY_NAME})
 target_compile_features(test-networkudp PRIVATE cxx_range_for)
@@ -46,9 +54,6 @@ target_compile_features(test-stereo PRIVATE cxx_range_for)
 #add_executable(test-videostab test/videostab/videostab.cpp)
 #target_link_libraries(test-videostab ${OpenCV_LIBS} ${CMAKE_THREAD_LIBS_INIT})
 #target_compile_features(test-videostab PRIVATE cxx_range_for)
-
-#Enable C++11
-target_compile_features(${LIBRARY_NAME} PRIVATE cxx_range_for)
 
 #Add special windows DLLS
 #if(MSVC)

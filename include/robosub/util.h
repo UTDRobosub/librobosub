@@ -5,6 +5,10 @@
 #include <string>
 #include "opencv2/opencv.hpp"
 
+#ifndef WINDOWS
+#include <X11/Xlib.h>
+#endif
+
 namespace robosub {
 	class Util {
 	public:
@@ -17,9 +21,9 @@ namespace robosub {
 			out << std::setprecision(n) << value;
 			return out.str();
 		}
-		
+
 		EXPORT static cv::Size getDesktopResolution();
-	};	
+	};
 
 	template EXPORT String Util::toStringWithPrecision(const float value, const int n);
 	template EXPORT String Util::toStringWithPrecision(const double value, const int n);

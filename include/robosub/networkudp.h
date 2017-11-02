@@ -1,8 +1,6 @@
 
 #pragma once
 
-#include "common.h"
-
 #include <string>
 #include <iostream>
 #include <string.h>
@@ -12,7 +10,10 @@
 //#include <netdb.h>
 #include <arpa/inet.h>
 
-namespace robosub{
+#include "common.h"
+
+namespace robosub
+{
 
 	//class for receiving
 	//call initRecv on the port to listen on before calling recv

@@ -1,9 +1,5 @@
 #include "robosub/util.h"
 
-#ifndef WINDOWS
-#include <X11/Xlib.h>
-#endif // WINDOWS
-
 namespace robosub {
 
 	void Util::pause()
@@ -18,8 +14,8 @@ namespace robosub {
         Display* d = XOpenDisplay(NULL);
         Screen* s = DefaultScreenOfDisplay(d);
         cv::Size z = cv::Size(s->width, s->height);
-        delete d;
         delete s;
+        XCloseDisplay(d);
         return z;
 #endif
 	}

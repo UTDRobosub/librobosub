@@ -17,8 +17,8 @@ int main(int argc, char** argv)
 	//catch signal
 	signal(SIGINT, catchSignal);
 
-	Camera cam0 = Camera(0);
-	Camera cam1 = Camera(1);
+	Camera cam0 = Camera(1);
+	Camera cam1 = Camera(2);
 
 	if (!cam0.isOpen()){
         cout<<"Camera 0 failed to open"<<endl;
