@@ -23,7 +23,8 @@ int main(int argc, char** argv)
 	Scalar mu, sigma;
 
 	Mat frame, output, canny, final;
-	cout << cam.setFrameSizeToMaximum() << endl;
+	//cout << cam.setFrameSizeToMaximum() << endl;
+	Size screenRes = Util::getDesktopResolution();
 
 	while (running)
 	{
@@ -37,10 +38,10 @@ int main(int argc, char** argv)
 
 		//Compute standard deviation for image
 		meanStdDev(output, mu, sigma);
-		
+
 		//Run adaptive algorithm
 		//adaptiveThreshold(output, output, 255, ADAPTIVE_THRESH_MEAN_C, THRESH_BINARY_INV, 15, 8);
-		
+
 		//medianBlur(output, output, 5);
 
 		//Remove small noise
@@ -64,10 +65,10 @@ int main(int argc, char** argv)
 		for (unsigned int i = 0; i<contours.size(); i++)
 			if (hierarchy[i][3] >= 0)   //has parent, inner (hole) contour of a closed edge (looks good)
 				drawContours(frame, contours, i, Scalar(0, 0, 0), 4, 8);
-				
+
 		//Run canny detection with +- 1 std dev of random values
 		//Canny(output, output, mu.val[0] - 0.66 * sigma.val[0], mu.val[0] + 1.33 * sigma.val[0]);
-		
+
 		//Draw FPS text
 		Drawing::text(frame,
 			String(Util::toStringWithPrecision(cam.getFrameRate())) + String(" FPS"),
@@ -79,8 +80,8 @@ int main(int argc, char** argv)
 			String("Mu = ") + Util::toStringWithPrecision(mu.val[0]) + String("  Sigma = ") + Util::toStringWithPrecision(sigma.val[0]),
 			Point(120, 16), Scalar(255, 255, 255), Drawing::Anchor::BOTTOM_LEFT, 0.5);
 
-		ImageTransform::scale(frame, Util::getDesktopResolution() - Size(0, 128));
-		ImageTransform::scale(output, Util::getDesktopResolution() - Size(0, 128));
+		ImageTransform::scale(frame, screenRes - Size(0, 128));
+		ImageTransform::scale(output, screenRes - Size(0, 128));
 
 		cvtColor(frame, frame, COLOR_BGR2GRAY);
 

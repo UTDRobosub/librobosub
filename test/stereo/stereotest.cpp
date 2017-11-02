@@ -17,8 +17,8 @@ int main(int argc, char** argv)
 	//catch signal
 	signal(SIGINT, catchSignal);
 
-	Camera cam0 = Camera(1);
-	Camera cam1 = Camera(2);
+	Camera cam0 = Camera(0);
+	Camera cam1 = Camera(1);
 
 	if (!cam0.isOpen()) return -1;
 	if (!cam1.isOpen()) return -1;
@@ -61,23 +61,23 @@ int main(int argc, char** argv)
 		resize(right, right, Size(), 0.5, 0.5);
 
 		//Prepare matchers
-		Ptr<StereoBM> left_matcher = StereoBM::create(max_disp, wsize);
+		/*Ptr<StereoBM> left_matcher = StereoBM::create(max_disp, wsize);
 		wls_filter = ximgproc::createDisparityWLSFilter(left_matcher);
-		Ptr<StereoMatcher> right_matcher = ximgproc::createRightMatcher(left_matcher);
+		Ptr<StereoMatcher> right_matcher = ximgproc::createRightMatcher(left_matcher);*/
 		//cvtColor(left, left, COLOR_BGR2GRAY);
 		//cvtColor(right, right, COLOR_BGR2GRAY);
-		/*Ptr<StereoSGBM> left_matcher = StereoSGBM::create(0, max_disp, wsize);
+		Ptr<StereoSGBM> left_matcher = StereoSGBM::create(0, max_disp, wsize);
 		left_matcher->setBlockSize(wsize);
 		left_matcher->setP1(24 * wsize*wsize);
 		left_matcher->setP2(96 * wsize*wsize);
 		left_matcher->setPreFilterCap(63);
 		left_matcher->setMode(StereoSGBM::MODE_SGBM_3WAY);
 		wls_filter = ximgproc::createDisparityWLSFilter(left_matcher);
-		Ptr<StereoMatcher> right_matcher = ximgproc::createRightMatcher(left_matcher);*/
+		Ptr<StereoMatcher> right_matcher = ximgproc::createRightMatcher(left_matcher);
 		//Compute matches
 		left_matcher->compute(left, right, left_disp);
 		right_matcher->compute(right, left, right_disp);
-		
+
 		//Filter
 		wls_filter->setLambda(wls_lambda);
 		wls_filter->setSigmaColor(wls_sigma);

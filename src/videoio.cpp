@@ -54,14 +54,22 @@ namespace cvlib {
 
 	bool Camera::retrieveFrameBGR(Mat& img)
 	{
-		if (!cap->retrieve(img)) return false;
+	    #ifdef WINDOWS
+            if (!cap->retrieve(img)) return false;
+        #else
+            if (!cap->read(img)) return false;
+        #endif
 		updateRetrieveTime();
 		return true;
 	}
 
 	bool Camera::retrieveFrameGrey(Mat& img)
 	{
-		if (!cap->retrieve(img)) return false;
+        #ifdef WINDOWS
+            if (!cap->retrieve(img)) return false;
+        #else
+            if (!cap->read(img)) return false;
+        #endif
 		updateRetrieveTime();
 		cvtColor(img, img, COLOR_BGR2GRAY, CV_8UC1);
 		return true;
