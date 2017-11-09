@@ -1,0 +1,18 @@
+﻿  stdafx.cpp
+  objectTracking_color.cpp
+c:\users\vi\desktop\robosub\robosub-cvlib\objecttracking_color\objecttracking_color.cpp(41): warning C4244: 'initializing': conversion from 'double' to 'int', possible loss of data
+c:\users\vi\desktop\robosub\robosub-cvlib\objecttracking_color\objecttracking_color.cpp(71): warning C4474: 'sprintf_s' : too many arguments passed for format string
+  c:\users\vi\desktop\robosub\robosub-cvlib\objecttracking_color\objecttracking_color.cpp(71): note: placeholders and their parameters expect 0 variadic arguments, but 1 were provided
+c:\users\vi\desktop\robosub\robosub-cvlib\objecttracking_color\objecttracking_color.cpp(72): warning C4474: 'sprintf_s' : too many arguments passed for format string
+  c:\users\vi\desktop\robosub\robosub-cvlib\objecttracking_color\objecttracking_color.cpp(72): note: placeholders and their parameters expect 0 variadic arguments, but 1 were provided
+c:\users\vi\desktop\robosub\robosub-cvlib\objecttracking_color\objecttracking_color.cpp(73): warning C4474: 'sprintf_s' : too many arguments passed for format string
+  c:\users\vi\desktop\robosub\robosub-cvlib\objecttracking_color\objecttracking_color.cpp(73): note: placeholders and their parameters expect 0 variadic arguments, but 1 were provided
+c:\users\vi\desktop\robosub\robosub-cvlib\objecttracking_color\objecttracking_color.cpp(74): warning C4474: 'sprintf_s' : too many arguments passed for format string
+  c:\users\vi\desktop\robosub\robosub-cvlib\objecttracking_color\objecttracking_color.cpp(74): note: placeholders and their parameters expect 0 variadic arguments, but 1 were provided
+c:\users\vi\desktop\robosub\robosub-cvlib\objecttracking_color\objecttracking_color.cpp(75): warning C4474: 'sprintf_s' : too many arguments passed for format string
+  c:\users\vi\desktop\robosub\robosub-cvlib\objecttracking_color\objecttracking_color.cpp(75): note: placeholders and their parameters expect 0 variadic arguments, but 1 were provided
+c:\users\vi\desktop\robosub\robosub-cvlib\objecttracking_color\objecttracking_color.cpp(76): warning C4474: 'sprintf_s' : too many arguments passed for format string
+  c:\users\vi\desktop\robosub\robosub-cvlib\objecttracking_color\objecttracking_color.cpp(76): note: placeholders and their parameters expect 0 variadic arguments, but 1 were provided
+c:\users\vi\desktop\robosub\robosub-cvlib\objecttracking_color\objecttracking_color.cpp(162): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
+c:\users\vi\desktop\robosub\robosub-cvlib\objecttracking_color\objecttracking_color.cpp(163): warning C4244: '=': conversion from 'double' to 'int', possible loss of data
+LINK : fatal error LNK1104: cannot open file 'Debug\cvlib.lib'
