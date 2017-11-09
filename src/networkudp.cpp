@@ -2,20 +2,6 @@
 
 namespace robosub {
 
-	UDPR::UDPR(){
-	    initrecv=0;
-	}
-	UDPR::~UDPR(){
-	    if(initrecv)stopRecv();
-	}
-
-	UDPS::UDPS(){
-	    initsend=0;
-	}
-	UDPS::~UDPS(){
-	    if(initsend)stopSend();
-	}
-
 	//set-up receiving on the specified port
 	//since it binds to the port, only one instance can receive on the same port on any device
 	//because of this, two bidirectional instances cannot be used on the same device on the same port

@@ -25,8 +25,12 @@ namespace robosub
 
 		public:
 
-		UDPR();
-		~UDPR();
+		UDPR(){
+            initrecv=0;
+		}
+		~UDPR(){
+            if(initrecv)stopRecv();
+		}
 
 		int initRecv(int);
 		int stopRecv();
@@ -43,8 +47,12 @@ namespace robosub
 
 		public:
 
-	    UDPS();
-	    ~UDPS();
+	    UDPS(){
+            initsend=0;
+	    }
+	    ~UDPS(){
+            if(initsend)stopSend();
+	    }
 
 		int initSend(int,string);
 		int stopSend();
