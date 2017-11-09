@@ -26,7 +26,7 @@ namespace robosub {
             #ifdef NETWORKUDP_WINSOCK
                 WSACleanup();
             #endif
-            return 2;
+            return rsock;
         }
 
         memset((char*)&raddr, 0, sizeof(raddr));
@@ -36,9 +36,10 @@ namespace robosub {
 
         //bind to port; tell OS to send all incoming messages on this port to this instance
         //will err if already bound by another instance
-        if(bind(rsock, (struct sockaddr*)&raddr, sizeof(raddr)) < 0){
+        int err;
+        if(err=bind(rsock, (struct sockaddr*)&raddr, sizeof(raddr)) < 0){
             stopRecv();
-            return 4;
+            return err;
         }
 
         initrecv=1;
@@ -72,7 +73,7 @@ namespace robosub {
 	    int rlen;
 	    if((rlen=recvfrom(rsock, msg, mlen, 0, (struct sockaddr*)&raddr, &addrlen)) < 0){
             stopRecv();
-            return 64;
+            return rlen;
 	    }
 
 	    len=rlen;
@@ -143,7 +144,7 @@ namespace robosub {
 	    #endif
 
 		if((ssock=socket(AF_INET, SOCK_DGRAM, 0)) < 0){
-            return 1;
+            return ssock;
 		}
 
 		memset((char*)&saddr, 0, sizeof(saddr));
@@ -177,8 +178,9 @@ namespace robosub {
 	int UDPS::send(int len, char *msg){
 	    if(!initsend)return 8;
 
-	    if(sendto(ssock, msg, len, 0, (struct sockaddr*)&saddr, sizeof(saddr)) < 0){
-            return 16;
+        int err;
+	    if((err=sendto(ssock, msg, len, 0, (struct sockaddr*)&saddr, sizeof(saddr))) < 0){
+            return err;
 	    }
 
 	    return 0;
