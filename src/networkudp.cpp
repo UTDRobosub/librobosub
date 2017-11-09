@@ -1,3 +1,4 @@
+
 #include "robosub/networkudp.h"
 
 namespace robosub {
@@ -5,32 +6,50 @@ namespace robosub {
 	//set-up receiving on the specified port
 	//since it binds to the port, only one instance can receive on the same port on any device
 	//because of this, two bidirectional instances cannot be used on the same device on the same port
-	int UDPR::initRecv(int port){
-		if((rsock=socket(AF_INET, SOCK_DGRAM, 0)) < 0){
-			return 2;
-		}
 
-		memset((char*)&raddr, 0, sizeof(raddr));
-	    raddr.sin_family=AF_INET;
-	    raddr.sin_addr.s_addr=htonl(INADDR_ANY);
-	    raddr.sin_port=htons(port);
+    int UDPR::initRecv(int port){
+        #ifdef NETWORKUDP_WINSOCK
+            WSADATA wsad;
+            if(WSAStartup(0x0101,&wsad)!=0){
+                return 1;
+            }
+        #endif
 
-	    //bind to port; tell OS to send all incoming messages on this port to this instance
-	    //will err if already bound by another instance
-	    if(bind(rsock, (struct sockaddr*)&raddr, sizeof(raddr)) < 0){
-		return 4;
-	    }
+        if((rsock=socket(AF_INET, SOCK_DGRAM, 0)) < 0){
+            #ifdef NETWORKUDP_WINSOCK
+                WSACleanup();
+            #endif
+            return 2;
+        }
 
-	    initrecv=1;
-	    return 0;
-	}
+        memset((char*)&raddr, 0, sizeof(raddr));
+        raddr.sin_family=AF_INET;
+        raddr.sin_addr.s_addr=htonl(INADDR_ANY);
+        raddr.sin_port=htons(port);
+
+        //bind to port; tell OS to send all incoming messages on this port to this instance
+        //will err if already bound by another instance
+        if(bind(rsock, (struct sockaddr*)&raddr, sizeof(raddr)) < 0){
+            stopRecv();
+            return 4;
+        }
+
+        initrecv=1;
+        return 0;
+    }
 
 	//closes the socket
 	//should unbind the port and allow it to be bound again, but the OS can take several minutes to actually unbind the port after doing this
 	int UDPR::stopRecv(){
 	    if(!initrecv)return 128;
 
-	    close(rsock);
+        #ifdef NETWORKUDP_WINSOCK
+            WSACleanup();
+            closesocket(rsock);
+        #else
+            close(rsock);
+	    #endif
+
 	    initrecv=0;
 
 	    return 0;
@@ -45,7 +64,8 @@ namespace robosub {
 
 	    int rlen;
 	    if((rlen=recvfrom(rsock, msg, mlen, 0, (struct sockaddr*)&raddr, &addrlen)) < 0){
-		return 64;
+            stopRecv();
+            return 64;
 	    }
 
 	    len=rlen;
@@ -61,17 +81,17 @@ namespace robosub {
 	    int offset=0;
 
 	    for(int i=0;i<len;i++){
-		if(msg[i]=='\\'){
-		    nmsg[i+offset]='\\';
-		    offset++;
-		    nmsg[i+offset]='\\';
-		}else if(msg[i]=='\0'){
-		    nmsg[i+offset]='\\';
-		    offset++;
-		    nmsg[i+offset]='0';
-		}else{
-		    nmsg[i+offset]=msg[i];
-		}
+            if(msg[i]=='\\'){
+                nmsg[i+offset]='\\';
+                offset++;
+                nmsg[i+offset]='\\';
+            }else if(msg[i]=='\0'){
+                nmsg[i+offset]='\\';
+                offset++;
+                nmsg[i+offset]='0';
+            }else{
+                nmsg[i+offset]=msg[i];
+            }
 	    }
 
 	    nlen=len+offset;
@@ -87,7 +107,7 @@ namespace robosub {
 	    int rlen;
 	    int err;
 	    if((err=recv(4096,rlen,buffer)) != 0){
-		return err;
+            return err;
 	    }
 
 	    char nbuffer[8193];
@@ -103,8 +123,13 @@ namespace robosub {
 	//set-up sending to the address in string form, on the specified port
 	//any amount of instances can send from or to any device
 	int UDPS::initSend(int port, string ssaddr){
+	    #ifdef NETWORKUDP_WINSOCK
+            WSADATA wsad;
+            WSAStartup(0x0101,&wsad);
+	    #endif
+
 		if((ssock=socket(AF_INET, SOCK_DGRAM, 0)) < 0){
-		return 1;
+            return 1;
 		}
 
 		memset((char*)&saddr, 0, sizeof(saddr));
@@ -120,9 +145,15 @@ namespace robosub {
 	//basically a formality since it doesn't bind, maybe it frees memory or something
 	int UDPS::stopSend(){
 	    if(!initsend){
-		return 256;
+            return 256;
 	    }
-	    close(ssock);
+
+	    #ifdef NETWORKUDP_WINSOCK
+            WASCleanup();
+            closesocket(ssock);
+	    #else
+            close(ssock);
+	    #endif
 	    initsend=0;
 
 	    return 0;
@@ -133,7 +164,7 @@ namespace robosub {
 	    if(!initsend)return 8;
 
 	    if(sendto(ssock, msg, len, 0, (struct sockaddr*)&saddr, sizeof(saddr)) < 0){
-		return 16;
+            return 16;
 	    }
 
 	    return 0;
@@ -148,7 +179,7 @@ namespace robosub {
 
 	    int err;
 		if((err=send(msg.length(), buffer)) != 0){
-		return err;
+            return err;
 		}
 
 		return 0;
