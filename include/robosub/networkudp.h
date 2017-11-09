@@ -1,4 +1,6 @@
 
+#include "common.h"
+
 #ifdef WINDOWS
 	#define NETWORKUDP_WINSOCK
 #endif
@@ -8,18 +10,17 @@
 #include <string>
 #include <iostream>
 #include <string.h>
-#include <unistd.h>
 //#include <sys/types.h>
 //#include <sys/socket.h>
 //#include <netdb.h>
 
 #ifdef NETWORKUDP_WINSOCK
+    #include <WS2tcpip.h>
     #include <Winsock2.h>
 #else
+    #include <unistd.h>
     #include <arpa/inet.h>
 #endif
-
-#include "common.h"
 
 namespace robosub {
 
@@ -33,17 +34,13 @@ namespace robosub {
 
 		public:
 
-		UDPR(){
-            initrecv=0;
-		}
-		~UDPR(){
-            if(initrecv)stopRecv();
-		}
+        EXPORT UDPR();
+        EXPORT ~UDPR();
 
-		int initRecv(int);
-		int stopRecv();
-		int recv(int,int&,char*);
-		int recvStr(string&);
+		EXPORT int initRecv(int);
+		EXPORT int stopRecv();
+		EXPORT int recv(int,int&,char*);
+		EXPORT int recvStr(string&);
 	};
 
 	//class for sending
@@ -55,17 +52,13 @@ namespace robosub {
 
 		public:
 
-	    UDPS(){
-            initsend=0;
-	    }
-	    ~UDPS(){
-            if(initsend)stopSend();
-	    }
+	    EXPORT UDPS();
+	    EXPORT ~UDPS();
 
-		int initSend(int,string);
-		int stopSend();
-		int send(int,char*);
-		int sendStr(string);
+		EXPORT int initSend(int,string);
+		EXPORT int stopSend();
+		EXPORT int send(int,char*);
+		EXPORT int sendStr(string);
 	};
 
 	//wrapper class for bidirectional communication
@@ -77,11 +70,11 @@ namespace robosub {
 
 	    public:
 
-	    int init(int,string);
-	    int recv(int,int&,char*);
-	    int recvStr(string&);
-	    int send(int,char*);
-	    int sendStr(string);
+	    EXPORT int init(int,string);
+	    EXPORT int recv(int,int&,char*);
+	    EXPORT int recvStr(string&);
+	    EXPORT int send(int,char*);
+	    EXPORT int sendStr(string);
 	};
 
 	//wrapper functions for bidirectional communication
