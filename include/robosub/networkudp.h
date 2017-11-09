@@ -1,4 +1,8 @@
 
+#ifdef WINDOWS
+	#define NETWORKUDP_WINSOCK
+#endif
+
 #pragma once
 
 #include <string>
@@ -8,12 +12,16 @@
 //#include <sys/types.h>
 //#include <sys/socket.h>
 //#include <netdb.h>
-#include <arpa/inet.h>
+
+#ifdef NETWORKUDP_WINSOCK
+    #include <Winsock2.h>
+#else
+    #include <arpa/inet.h>
+#endif
 
 #include "common.h"
 
-namespace robosub
-{
+namespace robosub {
 
 	//class for receiving
 	//call initRecv on the port to listen on before calling recv
