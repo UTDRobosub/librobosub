@@ -97,7 +97,10 @@ int main(int argc, char** argv)
 		imshow("CAM 0", left);
 		imshow("CAM 1", right);
 		if (waitKey(30) >= 0) break;
-		//cout << "frame " << std::setprecision(4) << cam0.getPositionFrame() << " @ " << cam0.getFrameRate() << " fps (" << cam0.getPositionSeconds() << " sec)" << endl;
+		//	cout << "frame " << std::setprecision(4) << cam0.getPositionFrame() << " @ " << cam0.getFrameRate() << " fps (" << cam0.getPositionSeconds() << " sec)" << endl;
+	
+
+	
 	}
 	return 0;
 }
