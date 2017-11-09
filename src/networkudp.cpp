@@ -153,9 +153,9 @@ namespace robosub {
 
 		if((ssock=socket(AF_INET, SOCK_DGRAM, 0)) < 0){
             #ifdef NETWORKUDP_WINSOCK
-                return ssock;
-            #else
                 return WSAGetLastError();
+            #else
+                return ssock;
             #endif
 		}
 

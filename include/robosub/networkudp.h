@@ -70,7 +70,7 @@ namespace robosub {
 
 	    public:
 
-	    EXPORT int init(int,string);
+	    EXPORT int init(int,int,string);
 	    EXPORT int recv(int,int&,char*);
 	    EXPORT int recvStr(string&);
 	    EXPORT int send(int,char*);
@@ -79,8 +79,8 @@ namespace robosub {
 
 	//wrapper functions for bidirectional communication
 	//for usage, see comments on their monodirectional counterparts
-	inline int UDP::init(int port, string ssaddr){
-	    return ur.initRecv(port) + us.initSend(port,ssaddr);
+	inline int UDP::init(int rport, int sport, string ssaddr){
+	    return ur.initRecv(rport) + us.initSend(sport,ssaddr);
 	}
 
 	inline int UDP::recvStr(string &msg){
