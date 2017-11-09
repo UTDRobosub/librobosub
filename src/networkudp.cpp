@@ -39,7 +39,11 @@ namespace robosub {
         int err;
         if(err=bind(rsock, (struct sockaddr*)&raddr, sizeof(raddr)) < 0){
             stopRecv();
-            return err;
+            #ifdef NETWORKUDP_WINSOCK
+                return WSAGetLastError();
+            #else
+                return err;
+            #endif
         }
 
         initrecv=1;
@@ -73,7 +77,11 @@ namespace robosub {
 	    int rlen;
 	    if((rlen=recvfrom(rsock, msg, mlen, 0, (struct sockaddr*)&raddr, &addrlen)) < 0){
             stopRecv();
-            return rlen;
+            #ifdef NETWORKUDP_WINSOCK
+                return WSAGetLastError();
+            #else
+                return rlen;
+            #endif
 	    }
 
 	    len=rlen;
@@ -144,7 +152,11 @@ namespace robosub {
 	    #endif
 
 		if((ssock=socket(AF_INET, SOCK_DGRAM, 0)) < 0){
-            return ssock;
+            #ifdef NETWORKUDP_WINSOCK
+                return ssock;
+            #else
+                return WSAGetLastError();
+            #endif
 		}
 
 		memset((char*)&saddr, 0, sizeof(saddr));
@@ -180,7 +192,11 @@ namespace robosub {
 
         int err;
 	    if((err=sendto(ssock, msg, len, 0, (struct sockaddr*)&saddr, sizeof(saddr))) < 0){
-            return err;
+            #ifdef NETWORKUDP_WINSOCK
+                return WSAGetLastError();
+            #else
+                return err;
+            #endif
 	    }
 
 	    return 0;
