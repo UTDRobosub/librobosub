@@ -1,6 +1,6 @@
-#include "cvlib/fps.h"
+#include "robosub/fps.h"
 
-namespace cvlib {
+namespace robosub {
 	FPS::FPS()
 	{
 		for (int i=0; i<BUFFER_LENGTH; i++)

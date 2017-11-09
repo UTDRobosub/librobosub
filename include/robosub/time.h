@@ -3,7 +3,7 @@
 #include "common.h"
 #include <thread>
 
-namespace cvlib
+namespace robosub
 {
 	class Time
 	{

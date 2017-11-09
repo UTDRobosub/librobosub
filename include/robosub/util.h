@@ -5,14 +5,24 @@
 #include <string>
 #include "opencv2/opencv.hpp"
 
-namespace cvlib {
+#ifndef WINDOWS
+#include <X11/Xlib.h>
+#endif
+
+namespace robosub {
 	class Util {
 	public:
 		///Wait for any keypress
 		EXPORT static void pause();
 
 		template <typename T>
-		static String toStringWithPrecision(const T value, const int n = 4);
+		inline static String toStringWithPrecision(const T value, const int n = 4) {
+			std::ostringstream out;
+			out << std::setprecision(n) << value;
+			return out.str();
+		}
+
+		EXPORT static cv::Size getDesktopResolution();
 	};
 
 	template EXPORT String Util::toStringWithPrecision(const float value, const int n);

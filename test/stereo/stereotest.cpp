@@ -1,10 +1,10 @@
 #include <opencv2/opencv.hpp>
-#include <cvlib/cvlib.h>
+#include <robosub/robosub.h>
 #include <signal.h>
 #include <opencv2/ximgproc.hpp>
 
 using namespace std;
-using namespace cvlib;
+using namespace robosub;
 
 bool running = true;
 
@@ -20,8 +20,14 @@ int main(int argc, char** argv)
 	Camera cam0 = Camera(1);
 	Camera cam1 = Camera(2);
 
-	if (!cam0.isOpen()) return -1;
-	if (!cam1.isOpen()) return -1;
+	if (!cam0.isOpen()){
+        cout<<"Camera 0 failed to open"<<endl;
+        return -1;
+	}
+	if (!cam1.isOpen()){
+        cout<<"Camera 1 failed to open"<<endl;
+        return -1;
+	}
 
 	cam1.setFrameSize(cam0.getFrameSize());
 
@@ -48,11 +54,11 @@ int main(int argc, char** argv)
 		cam0.grabFrame();
 		cam1.grabFrame();
 
-		cam0.retrieveFrameRGBA(_frame0);
-		cam1.retrieveFrameRGBA(_frame1);
+		cam0.retrieveFrameBGR(_frame0);
+		cam1.retrieveFrameBGR(_frame1);
 
-		_frame0.copyTo(left);
-		_frame1.copyTo(right);
+		cvtColor(_frame0, left, COLOR_BGR2GRAY, CV_8U);
+		cvtColor(_frame1, right, COLOR_BGR2GRAY, CV_8U);
 
 		max_disp /= 2;
 		if (max_disp % 16 != 0)
@@ -61,23 +67,23 @@ int main(int argc, char** argv)
 		resize(right, right, Size(), 0.5, 0.5);
 
 		//Prepare matchers
-		Ptr<StereoBM> left_matcher = StereoBM::create(max_disp, wsize);
+		/*Ptr<StereoBM> left_matcher = StereoBM::create(max_disp, wsize);
 		wls_filter = ximgproc::createDisparityWLSFilter(left_matcher);
-		Ptr<StereoMatcher> right_matcher = ximgproc::createRightMatcher(left_matcher);
-		cvtColor(left, left, COLOR_BGR2GRAY);
-		cvtColor(right, right, COLOR_BGR2GRAY);
-		/*Ptr<StereoSGBM> left_matcher = StereoSGBM::create(0, max_disp, wsize);
+		Ptr<StereoMatcher> right_matcher = ximgproc::createRightMatcher(left_matcher);*/
+		//cvtColor(left, left, COLOR_BGR2GRAY);
+		//cvtColor(right, right, COLOR_BGR2GRAY);
+		Ptr<StereoSGBM> left_matcher = StereoSGBM::create(0, max_disp, wsize);
 		left_matcher->setBlockSize(wsize);
 		left_matcher->setP1(24 * wsize*wsize);
 		left_matcher->setP2(96 * wsize*wsize);
 		left_matcher->setPreFilterCap(63);
 		left_matcher->setMode(StereoSGBM::MODE_SGBM_3WAY);
 		wls_filter = ximgproc::createDisparityWLSFilter(left_matcher);
-		Ptr<StereoMatcher> right_matcher = ximgproc::createRightMatcher(left_matcher);*/
+		Ptr<StereoMatcher> right_matcher = ximgproc::createRightMatcher(left_matcher);
 		//Compute matches
 		left_matcher->compute(left, right, left_disp);
 		right_matcher->compute(right, left, right_disp);
-		
+
 		//Filter
 		wls_filter->setLambda(wls_lambda);
 		wls_filter->setSigmaColor(wls_sigma);

@@ -3,7 +3,7 @@
 #include "common.h"
 #include "time.h"
 
-namespace cvlib 
+namespace robosub 
 {
 	class FPS 
 	{

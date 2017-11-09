@@ -2,7 +2,7 @@
 
 #include "common.h"
 
-#ifdef _WIN32 
+#ifdef _WIN32
 
 BOOL APIENTRY DllMain(HMODULE hModule,
 	DWORD  ul_reason_for_call,
@@ -27,5 +27,4 @@ BOOL APIENTRY DllMain(HMODULE hModule,
 #include "util.h"
 #include "videoio.h"
 #include "image.h"
-
-EXPORT int func();
+#include "networkudp.h"

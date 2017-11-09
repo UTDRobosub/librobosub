@@ -1,16 +1,22 @@
-#include "cvlib/util.h"
+#include "robosub/util.h"
 
-namespace cvlib {
+namespace robosub {
+
 	void Util::pause()
 	{
 		std::cin.ignore();
 	}
-
-	template<typename T>
-	String Util::toStringWithPrecision(const T value, const int n)
+	cv::Size Util::getDesktopResolution()
 	{
-		std::ostringstream out;
-		out << std::setprecision(n) << value;
-		return out.str();
+#ifdef WINDOWS
+		return cv::Size(GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN));
+#else
+        Display* d = XOpenDisplay(NULL);
+        Screen* s = DefaultScreenOfDisplay(d);
+        cv::Size z = cv::Size(s->width, s->height);
+        delete s;
+        XCloseDisplay(d);
+        return z;
+#endif
 	}
 }
