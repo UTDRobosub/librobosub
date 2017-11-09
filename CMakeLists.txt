@@ -6,6 +6,7 @@ cmake_minimum_required(VERSION 3.2)
 IF (WIN32)
   # set stuff for windows
   set(LIBRARY_NAME librobosub)
+  link_libraries(wsock32 ws2_32)
 ELSE()
   set(LIBRARY_NAME robosub)
 ENDIF()

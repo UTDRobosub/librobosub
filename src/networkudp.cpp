@@ -7,6 +7,13 @@ namespace robosub {
 	//since it binds to the port, only one instance can receive on the same port on any device
 	//because of this, two bidirectional instances cannot be used on the same device on the same port
 
+    UDPR::UDPR(){
+        initrecv=0;
+    }
+    UDPR::~UDPR(){
+        if(initrecv)stopRecv();
+    }
+
     int UDPR::initRecv(int port){
         #ifdef NETWORKUDP_WINSOCK
             WSADATA wsad;
@@ -120,6 +127,13 @@ namespace robosub {
 	    return 0;
 	}
 
+    UDPS::UDPS(){
+        initsend=0;
+    }
+    UDPS::~UDPS(){
+        if(initsend)stopSend();
+    }
+
 	//set-up sending to the address in string form, on the specified port
 	//any amount of instances can send from or to any device
 	int UDPS::initSend(int port, string ssaddr){
@@ -149,7 +163,7 @@ namespace robosub {
 	    }
 
 	    #ifdef NETWORKUDP_WINSOCK
-            WASCleanup();
+            WSACleanup();
             closesocket(ssock);
 	    #else
             close(ssock);
