@@ -46,6 +46,16 @@ namespace robosub {
             #endif
         }
 
+        int timeout=100;
+        #ifdef NETWORKUDP_WINSOCK
+            int ti=timeout;
+            setsockopt(rsock, SOL_SOCKET, SO_RCVTIMEO, (char*)&ti, sizeof(ti));
+        #else
+            struct timeval tv;
+            tv.tv_sec=timeout;
+            setsockopt(rsock, SOL_SOCKET, SO_RCVTIMEO, (char*)&tv, sizeof(tv));
+        #endif
+
         initrecv=1;
         return 0;
     }

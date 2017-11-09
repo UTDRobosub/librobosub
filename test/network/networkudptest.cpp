@@ -37,10 +37,10 @@ int main(){
 			string msg;
 			e=a.recvStr(msg);
 
-			if(msg!=""){
+			//if(msg!=""){
                 cout<<"recv err: "<<e<<"\n";
                 cout<<"recv msg: \""<<msg<<"\"\n";
-			}
+			//}
 
 		}
 	}
@@ -78,11 +78,8 @@ int main(){
 
             string rmsg;
             e=a.recvStr(rmsg);
-
-			if(rmsg!=""){
-                cout<<"recv err: "<<e<<"\n";
-                cout<<"recv msg: \""<<rmsg<<"\"\n";
-			}
+            cout<<"recv err: "<<e<<"\n";
+            cout<<"recv msg: \""<<rmsg<<"\"\n";
         }
 	}
 
