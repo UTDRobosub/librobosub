@@ -22,6 +22,12 @@
     #include <arpa/inet.h>
 #endif
 
+#ifdef NETWORKUDP_WINSOCK
+    #define NETWORKUDP_GETERROR WSAGetLastError()
+#else
+    #define NETWORKUDP_GETERROR errno
+#endif
+
 namespace robosub {
 
 	//class for receiving

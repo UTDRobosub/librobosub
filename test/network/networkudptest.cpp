@@ -1,3 +1,4 @@
+
 #include <opencv2/opencv.hpp>
 #include <robosub/robosub.h>
 
@@ -68,7 +69,7 @@ int main(){
         while(true){
             string msg;
             cin>>msg;
-            if(msg!=""){
+            if(msg!="."){
                 for(int i=0;i<msg.length(); i++){
                     if(msg[i]=='0')msg[i]='\0';
                 }
@@ -76,7 +77,7 @@ int main(){
                 cout<<"send err: "<<e<<"\n";
             }
 
-            string rmsg;
+            string rmsg="";
             e=a.recvStr(rmsg);
             cout<<"recv err: "<<e<<"\n";
             cout<<"recv msg: \""<<rmsg<<"\"\n";

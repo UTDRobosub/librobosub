@@ -23,10 +23,7 @@ namespace robosub {
         #endif
 
         if((rsock=socket(AF_INET, SOCK_DGRAM, 0)) < 0){
-            #ifdef NETWORKUDP_WINSOCK
-                WSACleanup();
-            #endif
-            return rsock;
+            return NETWORKUDP_GETERROR;
         }
 
         memset((char*)&raddr, 0, sizeof(raddr));
@@ -36,25 +33,17 @@ namespace robosub {
 
         //bind to port; tell OS to send all incoming messages on this port to this instance
         //will err if already bound by another instance
-        int err;
-        if(err=bind(rsock, (struct sockaddr*)&raddr, sizeof(raddr)) < 0){
+        if(bind(rsock, (struct sockaddr*)&raddr, sizeof(raddr)) < 0){
             stopRecv();
-            #ifdef NETWORKUDP_WINSOCK
-                return WSAGetLastError();
-            #else
-                return err;
-            #endif
+            return NETWORKUDP_GETERROR;
         }
 
-        int timeout=100;
-        #ifdef NETWORKUDP_WINSOCK
-            int ti=timeout;
-            setsockopt(rsock, SOL_SOCKET, SO_RCVTIMEO, (char*)&ti, sizeof(ti));
-        #else
-            struct timeval tv;
-            tv.tv_sec=timeout;
-            setsockopt(rsock, SOL_SOCKET, SO_RCVTIMEO, (char*)&tv, sizeof(tv));
-        #endif
+        struct timeval tv;
+        tv.tv_sec=0;
+        tv.tv_usec=100000; //100 ms
+        if(setsockopt(rsock, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)) < 0){
+             return NETWORKUDP_GETERROR;
+        }
 
         initrecv=1;
         return 0;
@@ -86,12 +75,13 @@ namespace robosub {
 
 	    int rlen;
 	    if((rlen=recvfrom(rsock, msg, mlen, 0, (struct sockaddr*)&raddr, &addrlen)) < 0){
-            stopRecv();
-            #ifdef NETWORKUDP_WINSOCK
-                return WSAGetLastError();
-            #else
-                return rlen;
-            #endif
+            int err=NETWORKUDP_GETERROR;
+            if(err==11){ //error 11 is timeout, no data was received but nothing is broken
+                rlen=0;
+            }else{
+                stopRecv();
+                return err;
+            }
 	    }
 
 	    len=rlen;
@@ -162,11 +152,7 @@ namespace robosub {
 	    #endif
 
 		if((ssock=socket(AF_INET, SOCK_DGRAM, 0)) < 0){
-            #ifdef NETWORKUDP_WINSOCK
-                return WSAGetLastError();
-            #else
-                return ssock;
-            #endif
+            return NETWORKUDP_GETERROR;
 		}
 
 		memset((char*)&saddr, 0, sizeof(saddr));
@@ -200,13 +186,8 @@ namespace robosub {
 	int UDPS::send(int len, char *msg){
 	    if(!initsend)return 8;
 
-        int err;
-	    if((err=sendto(ssock, msg, len, 0, (struct sockaddr*)&saddr, sizeof(saddr))) < 0){
-            #ifdef NETWORKUDP_WINSOCK
-                return WSAGetLastError();
-            #else
-                return err;
-            #endif
+	    if(sendto(ssock, msg, len, 0, (struct sockaddr*)&saddr, sizeof(saddr)) < 0){
+            return NETWORKUDP_GETERROR;
 	    }
 
 	    return 0;
