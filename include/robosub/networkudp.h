@@ -1,11 +1,11 @@
 
+#pragma once
+
 #include "common.h"
 
 #ifdef WINDOWS
 	#define NETWORKUDP_WINSOCK
 #endif
-
-#pragma once
 
 #include <string>
 #include <iostream>

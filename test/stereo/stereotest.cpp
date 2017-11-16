@@ -17,8 +17,8 @@ int main(int argc, char** argv)
 	//catch signal
 	signal(SIGINT, catchSignal);
 
-	Camera cam0 = Camera(1);
-	Camera cam1 = Camera(2);
+	Camera cam0 = Camera(0);
+	Camera cam1 = Camera(1);
 
 	if (!cam0.isOpen()){
         cout<<"Camera 0 failed to open"<<endl;
@@ -104,9 +104,9 @@ int main(int argc, char** argv)
 		imshow("CAM 1", right);
 		if (waitKey(30) >= 0) break;
 		//	cout << "frame " << std::setprecision(4) << cam0.getPositionFrame() << " @ " << cam0.getFrameRate() << " fps (" << cam0.getPositionSeconds() << " sec)" << endl;
-	
 
-	
+
+
 	}
 	return 0;
 }

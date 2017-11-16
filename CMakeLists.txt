@@ -40,9 +40,13 @@ target_link_libraries(${LIBRARY_NAME} ${OpenCV_LIBS})
 target_compile_features(${LIBRARY_NAME} PRIVATE cxx_range_for)
 
 #Tests
-add_executable(test-networkudp test/network/networkudptest.cpp)
+add_executable(test-networkudp test/networkudp/networkudptest.cpp)
 target_link_libraries(test-networkudp ${OpenCV_LIBS} ${LIBRARY_NAME})
 target_compile_features(test-networkudp PRIVATE cxx_range_for)
+
+add_executable(test-networkvideo test/networkvideo/networkvideotest.cpp)
+target_link_libraries(test-networkvideo ${OpenCV_LIBS} ${LIBRARY_NAME})
+target_compile_features(test-networkvideo PRIVATE cxx_range_for)
 
 add_executable(test-video test/video/videotest.cpp)
 target_link_libraries(test-video ${OpenCV_LIBS} ${LIBRARY_NAME})

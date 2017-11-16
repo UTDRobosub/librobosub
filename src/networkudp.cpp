@@ -3,6 +3,8 @@
 
 namespace robosub {
 
+    const int maxlen=1024;
+
 	//set-up receiving on the specified port
 	//since it binds to the port, only one instance can receive on the same port on any device
 	//because of this, two bidirectional instances cannot be used on the same device on the same port
@@ -40,7 +42,7 @@ namespace robosub {
 
         struct timeval tv;
         tv.tv_sec=0;
-        tv.tv_usec=100000; //100 ms
+        tv.tv_usec=10000; //10 ms
         if(setsockopt(rsock, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)) < 0){
              return NETWORKUDP_GETERROR;
         }
@@ -73,18 +75,24 @@ namespace robosub {
 
 	    socklen_t addrlen=sizeof(raddr);
 
-	    int rlen;
-	    if((rlen=recvfrom(rsock, msg, mlen, 0, (struct sockaddr*)&raddr, &addrlen)) < 0){
-            int err=NETWORKUDP_GETERROR;
-            if(err==11){ //error 11 is timeout, no data was received but nothing is broken
-                rlen=0;
-            }else{
-                stopRecv();
-                return err;
-            }
-	    }
+        len=0;
 
-	    len=rlen;
+        while(true){
+
+            int rlen;
+            if((rlen=recvfrom(rsock, msg+len, min(mlen-len,maxlen), 0, (struct sockaddr*)&raddr, &addrlen)) < 0){
+                int err=NETWORKUDP_GETERROR;
+                if(err==11){ //error 11 is timeout, no data was received but nothing is broken
+                    rlen=0;
+                    break;
+                }else{
+                    stopRecv();
+                    return err;
+                }
+            }
+
+            len+=rlen;
+        }
 
 	    return 0;
 	}
@@ -182,13 +190,21 @@ namespace robosub {
 	    return 0;
 	}
 
+    const int maxlen2=1024;
 	//transmits len bytes in the char array msg
 	int UDPS::send(int len, char *msg){
 	    if(!initsend)return 8;
 
-	    if(sendto(ssock, msg, len, 0, (struct sockaddr*)&saddr, sizeof(saddr)) < 0){
-            return NETWORKUDP_GETERROR;
-	    }
+        int tlen=0;
+
+        while(true){
+            int slen;
+            if((slen=sendto(ssock, msg+tlen, min(len-tlen,maxlen2), 0, (struct sockaddr*)&saddr, sizeof(saddr))) < 0){
+                return NETWORKUDP_GETERROR;
+            }
+            tlen+=slen;
+            if(tlen>=len)break;
+        }
 
 	    return 0;
 	}
