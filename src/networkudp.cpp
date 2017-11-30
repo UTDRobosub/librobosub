@@ -86,7 +86,7 @@ namespace robosub {
         int rlen;
 
         while(true){
-            if((rlen=recvfrom(rsock, msg+len, min(mlen-len,maxlen), MSG_NOSIGNAL, (struct sockaddr*)&raddr, &addrlen)) < 0){
+            if((rlen=recvfrom(rsock, msg+len, min(mlen-len,maxlen), 0, (struct sockaddr*)&raddr, &addrlen)) < 0){
                 int err=NETWORKUDP_GETERROR;
                 if(err==11){ //error 11 is timeout, no data was received but nothing is broken
                     rlen=0;
@@ -173,10 +173,6 @@ namespace robosub {
 	    inet_pton(AF_INET, ssaddr.c_str(), &saddr.sin_addr.s_addr);
 	    saddr.sin_port=htons(port);
 
-	    //if(setsockopt(rsock, SOL_SOCKET, SO_SNDBUF, &tv, sizeof(tv)) < 0){
-          //   return NETWORKUDP_GETERROR;
-        //}
-
 	    initsend=1;
 	    return 0;
 	}
@@ -209,7 +205,7 @@ namespace robosub {
         int slen;
 
         while(true){
-            if((slen=sendto(ssock, msg+tlen, min(len-tlen,maxlen2), MSG_NOSIGNAL | MSG_DONTWAIT, (struct sockaddr*)&saddr, sizeof(saddr))) < 0){
+            if((slen=sendto(ssock, msg+tlen, min(len-tlen,maxlen2), 0, (struct sockaddr*)&saddr, sizeof(saddr))) < 0){
                 return NETWORKUDP_GETERROR;
             }
             tlen+=slen;
