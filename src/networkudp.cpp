@@ -4,7 +4,7 @@
 
 namespace robosub {
 
-    const int maxlen=1500;
+    const int maxlen=1024;
 
 	//set-up receiving on the specified port
 	//since it binds to the port, only one instance can receive on the same port on any device
@@ -199,7 +199,7 @@ namespace robosub {
 	    return 0;
 	}
 
-    const int maxlen2=1500;
+    const int maxlen2=1024;
 	//transmits len bytes in the char array msg
 	int UDPS::send(int len, char *msg){
 	    if(!initsend)return 8;
