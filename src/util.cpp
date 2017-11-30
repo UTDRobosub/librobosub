@@ -14,8 +14,8 @@ namespace robosub {
         Display* d = XOpenDisplay(NULL);
         Screen* s = DefaultScreenOfDisplay(d);
         cv::Size z = cv::Size(s->width, s->height);
-        delete s;
-        XCloseDisplay(d);
+        //delete s;
+        //XCloseDisplay(d);
         return z;
 #endif
 	}

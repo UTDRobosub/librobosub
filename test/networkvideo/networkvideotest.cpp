@@ -20,20 +20,26 @@ int main(int argc, char** argv)
 	//catch signal
 	signal(SIGINT, catchSignal);
 
+    const int cols = 1280;
+	const int rows = 720;
+
+    Size screenRes;
     Camera cam(0);
     if(mode==1){
         if (!cam.isOpen()){
-            cout<<"Camera failed to open"<<endl;
+            cout<<"Camera failed to open."<<endl;
             return -1;
         }
+        Size output = cam.setFrameSizeToMaximum();
+        cout << output << endl;
+        assert(output.width == cols && output.height == rows);
+    }else{
+        screenRes = Util::getDesktopResolution();
     }
 
-	int rows = 480;
-    int cols = 640;
     const int vals = 1;
-    int size = sizeof(uchar);
-    int len=rows*cols*vals*size/4+4;
-    char raw[len];
+    int size = sizeof(uchar)*3;
+    int len=rows*cols*vals*size;
     char raw2[len];
     int len2;
 
@@ -44,23 +50,25 @@ int main(int argc, char** argv)
     if(mode==1)cout<<"initSend err "<<udps.initSend(20202,"10.8.0.2")<<endl;
     else cout<<"initRecv err "<<udpr.initRecv(20202)<<endl;
 
+    Mat frame1;
+
 	while (running){
         if(mode==1){
 
-            cam.grabFrame();
+            cam.retrieveFrameBGR(frame1);
 
-            Mat _frame;
-            cam.retrieveFrameBGR(_frame);
-
-            Mat frame1;
-            resize(_frame,frame1,Size(),0.5,0.5);
+            //ImageTransform::resize(frame1, Size(cols,rows));
 
             //cvtColor(frame1,frame1,COLOR_BGR2GRAY,CV_8U);
 
-            frame1=frame1.clone(); //make it continuous
-            memcpy(raw,frame1.data,len);
+            Drawing::text(frame1,
+                String(Util::toStringWithPrecision(cam.getFrameRate())) + String(" FPS"),
+                Point(16, 16), Scalar(255, 255, 255), Drawing::Anchor::BOTTOM_LEFT, 0.5
+            );
 
-            cout<<"send err "<<udps.send(len,raw)<<endl;
+            //frame1=frame1.clone(); //make it continuous
+
+            cout<<"send err "<<udps.send(len,(char*)frame1.data)<<endl;
 
             imshow("Frame1", frame1);
 
@@ -68,11 +76,12 @@ int main(int argc, char** argv)
 
             cout<<"recv err "<<udpr.recv(len,len2,raw2)<<endl;
 
-            Mat frame2(rows/2,cols/2,CV_8UC3,raw2);
+            Mat frame2(rows,cols,CV_8UC3,raw2);
 
-            resize(frame2,frame2,Size(),2,2);
+            ImageTransform::scale(frame2, screenRes - Size(128,128));
 
             imshow("Frame2", frame2);
+
         }
 
 		if (waitKey(30) >= 0) break;

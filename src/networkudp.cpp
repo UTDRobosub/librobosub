@@ -1,9 +1,10 @@
 
 #include "robosub/networkudp.h"
+#include "robosub/time.h"
 
 namespace robosub {
 
-    const int maxlen=1024;
+    const int maxlen=1500;
 
 	//set-up receiving on the specified port
 	//since it binds to the port, only one instance can receive on the same port on any device
@@ -33,18 +34,23 @@ namespace robosub {
         raddr.sin_addr.s_addr=htonl(INADDR_ANY);
         raddr.sin_port=htons(port);
 
-        //bind to port; tell OS to send all incoming messages on this port to this instance
-        //will err if already bound by another instance
-        if(bind(rsock, (struct sockaddr*)&raddr, sizeof(raddr)) < 0){
-            stopRecv();
-            return NETWORKUDP_GETERROR;
-        }
-
         struct timeval tv;
         tv.tv_sec=0;
         tv.tv_usec=10000; //10 ms
         if(setsockopt(rsock, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv)) < 0){
              return NETWORKUDP_GETERROR;
+        }
+
+        int rb=10240000;
+        if(setsockopt(rsock, SOL_SOCKET, SO_RCVBUF, &rb, sizeof(rb)) < 0){
+             return NETWORKUDP_GETERROR;
+        }
+
+        //bind to port; tell OS to send all incoming messages on this port to this instance
+        //will err if already bound by another instance
+        if(bind(rsock, (struct sockaddr*)&raddr, sizeof(raddr)) < 0){
+            stopRecv();
+            return NETWORKUDP_GETERROR;
         }
 
         initrecv=1;
@@ -77,10 +83,10 @@ namespace robosub {
 
         len=0;
 
-        while(true){
+        int rlen;
 
-            int rlen;
-            if((rlen=recvfrom(rsock, msg+len, min(mlen-len,maxlen), 0, (struct sockaddr*)&raddr, &addrlen)) < 0){
+        while(true){
+            if((rlen=recvfrom(rsock, msg+len, min(mlen-len,maxlen), MSG_NOSIGNAL, (struct sockaddr*)&raddr, &addrlen)) < 0){
                 int err=NETWORKUDP_GETERROR;
                 if(err==11){ //error 11 is timeout, no data was received but nothing is broken
                     rlen=0;
@@ -90,7 +96,6 @@ namespace robosub {
                     return err;
                 }
             }
-
             len+=rlen;
         }
 
@@ -168,6 +173,10 @@ namespace robosub {
 	    inet_pton(AF_INET, ssaddr.c_str(), &saddr.sin_addr.s_addr);
 	    saddr.sin_port=htons(port);
 
+	    //if(setsockopt(rsock, SOL_SOCKET, SO_SNDBUF, &tv, sizeof(tv)) < 0){
+          //   return NETWORKUDP_GETERROR;
+        //}
+
 	    initsend=1;
 	    return 0;
 	}
@@ -190,16 +199,17 @@ namespace robosub {
 	    return 0;
 	}
 
-    const int maxlen2=1024;
+    const int maxlen2=1500;
 	//transmits len bytes in the char array msg
 	int UDPS::send(int len, char *msg){
 	    if(!initsend)return 8;
 
         int tlen=0;
 
+        int slen;
+
         while(true){
-            int slen;
-            if((slen=sendto(ssock, msg+tlen, min(len-tlen,maxlen2), 0, (struct sockaddr*)&saddr, sizeof(saddr))) < 0){
+            if((slen=sendto(ssock, msg+tlen, min(len-tlen,maxlen2), MSG_NOSIGNAL | MSG_DONTWAIT, (struct sockaddr*)&saddr, sizeof(saddr))) < 0){
                 return NETWORKUDP_GETERROR;
             }
             tlen+=slen;

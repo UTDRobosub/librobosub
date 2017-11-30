@@ -74,9 +74,6 @@ int main(int argc, char** argv)
 			String(Util::toStringWithPrecision(cam.getFrameRate())) + String(" FPS"),
 			Point(16, 16), Scalar(255, 255, 255), Drawing::Anchor::BOTTOM_LEFT, 0.5);
 		Drawing::text(output,
-			String(Util::toStringWithPrecision(cam.getFrameRate())) + String(" FPS"),
-			Point(16, 16), Scalar(255, 255, 255), Drawing::Anchor::BOTTOM_LEFT, 0.5);
-		Drawing::text(output,
 			String("Mu = ") + Util::toStringWithPrecision(mu.val[0]) + String("  Sigma = ") + Util::toStringWithPrecision(sigma.val[0]),
 			Point(120, 16), Scalar(255, 255, 255), Drawing::Anchor::BOTTOM_LEFT, 0.5);
 
