@@ -41,7 +41,7 @@ int main(int argc, char** argv)
 
     UDPS udps;
     UDPR udpr;
-    if(mode==1)cout<<"initSend err "<<udps.initSend(20202,"localhost")<<endl;
+    if(mode==1)cout<<"initSend err "<<udps.initSend(20202,"10.8.0.2")<<endl;
     else cout<<"initRecv err "<<udpr.initRecv(20202)<<endl;
 
 	while (running){
@@ -55,7 +55,7 @@ int main(int argc, char** argv)
             Mat frame1;
             resize(_frame,frame1,Size(),0.5,0.5);
 
-            cvtColor(frame1,frame1,COLOR_BGR2GRAY,CV_8U);
+            //cvtColor(frame1,frame1,COLOR_BGR2GRAY,CV_8U);
 
             frame1=frame1.clone(); //make it continuous
             memcpy(raw,frame1.data,len);
@@ -68,7 +68,7 @@ int main(int argc, char** argv)
 
             cout<<"recv err "<<udpr.recv(len,len2,raw2)<<endl;
 
-            Mat frame2(rows/2,cols/2,CV_8UC1,raw2);
+            Mat frame2(rows/2,cols/2,CV_8UC3,raw2);
 
             resize(frame2,frame2,Size(),2,2);
 
