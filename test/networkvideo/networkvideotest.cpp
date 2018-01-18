@@ -12,10 +12,29 @@ void catchSignal(int signal) {
 	running = false;
 }
 
-int main(int argc, char** argv)
-{
-    int mode;
-    cin>>mode;
+int main(int argc, char** argv){
+
+	int mode;
+	int port;
+	string addr;
+
+	cout<<"Enter mode (0 for receive, 1 for send): ";
+	cin>>mode;
+
+    cout<<"Enter port: ";
+    cin>>port;
+
+	if(mode==1){
+        cin.ignore(100000,'\n');
+        cout<<"Enter address to send to (leave blank for local): ";
+        if(cin.peek()!='\n'){
+            cin>>addr;
+            cin.ignore(100000,'\n');
+        }else{
+            addr="127.0.0.1";
+            cout<<addr<<endl;
+        }
+	}
 
 	//catch signal
 	signal(SIGINT, catchSignal);
@@ -47,8 +66,8 @@ int main(int argc, char** argv)
 
     UDPS udps;
     UDPR udpr;
-    if(mode==1)cout<<"initSend err "<<udps.initSend(20202,"127.0.0.1")<<endl;
-    else cout<<"initRecv err "<<udpr.initRecv(20202)<<endl;
+    if(mode==1)cout<<"initSend err "<<udps.initSend(port,addr)<<endl;
+    else cout<<"initRecv err "<<udpr.initRecv(port)<<endl;
 
     Mat frame1;
 

@@ -13,8 +13,10 @@ int main(){
 	int port;
 	int port2;
 	string addr;
+
 	cout<<"Enter mode (0 for receive, 1 for send, 2 for bi-directional): ";
 	cin>>mode;
+
 	if(mode==2){
         cout<<"Enter port for receiving: ";
         cin>>port;
@@ -24,9 +26,17 @@ int main(){
         cout<<"Enter port: ";
         cin>>port;
 	}
+
 	if(mode==1 || mode==2){
-        cout<<"Enter address (leave blank for receive mode): ";
-        cin>>addr;
+        cin.ignore(100000,'\n');
+        cout<<"Enter address to send to (leave blank for local): ";
+        if(cin.peek()!='\n'){
+            cin>>addr;
+            cin.ignore(100000,'\n');
+        }else{
+            addr="127.0.0.1";
+            cout<<addr<<endl;
+        }
 	}
 
     if(mode==0){
