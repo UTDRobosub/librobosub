@@ -38,8 +38,8 @@ int main(int argc, char** argv)
     }
 
     const int vals = 1;
-    int size = sizeof(uchar)*3;
-    int len=rows*cols*vals*size;
+    const int size = sizeof(uchar)*3;
+    const int len=rows*cols*vals*size;
     char raw2[len];
     int len2;
 
@@ -47,7 +47,7 @@ int main(int argc, char** argv)
 
     UDPS udps;
     UDPR udpr;
-    if(mode==1)cout<<"initSend err "<<udps.initSend(20202,"10.8.0.2")<<endl;
+    if(mode==1)cout<<"initSend err "<<udps.initSend(20202,"127.0.0.1")<<endl;
     else cout<<"initRecv err "<<udpr.initRecv(20202)<<endl;
 
     Mat frame1;
@@ -78,7 +78,7 @@ int main(int argc, char** argv)
 
             Mat frame2(rows,cols,CV_8UC3,raw2);
 
-            ImageTransform::scale(frame2, screenRes - Size(128,128));
+            ImageTransform::scale(frame2, Size(cols,rows));
 
             imshow("Frame2", frame2);
 
