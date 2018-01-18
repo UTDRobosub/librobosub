@@ -34,12 +34,19 @@ add_library(${LIBRARY_NAME} SHARED ${SOURCES} ${HEADERS})
 install(TARGETS ${LIBRARY_NAME} DESTINATION lib/${PROJECT_NAME})
 # Install library headers
 install(FILES ${HEADERS} DESTINATION include/${PROJECT_NAME})
+# Install so find_package works
+#install(FILES ${LIBRARY_NAME}-config.cmake)
 # Link OpenCV
 target_link_libraries(${LIBRARY_NAME} ${OpenCV_LIBS})
-#Enable C++11
+# Enable C++11
 target_compile_features(${LIBRARY_NAME} PRIVATE cxx_range_for)
 
-#Tests
+# Export
+#set(ROBOSUB_INCLUDE_DIRS ${HEADERS})
+install(TARGETS ${LIBRARY_NAME} DESTINATION lib EXPORT ${LIBRARY_NAME}-config)
+install(EXPORT ${LIBRARY_NAME}-config DESTINATION lib/${LIBRARY_NAME})
+
+# Tests
 add_executable(test-networkudp test/networkudp/networkudptest.cpp)
 target_link_libraries(test-networkudp ${OpenCV_LIBS} ${LIBRARY_NAME})
 target_compile_features(test-networkudp PRIVATE cxx_range_for)
