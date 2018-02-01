@@ -12,39 +12,50 @@ void catchSignal(int signal) {
 	running = false;
 }
 
+const int MODE_RECEIVE = 0;
+const int MODE_SEND = 1;
+
 int main(int argc, char** argv){
 
-	int mode;
-	int port;
-	string addr;
+		const String keys =
+	        "{help h usage ? |         | print this message     }"
+	        "{@mode          |         | 'send' or 'receive'    }"
+	        "{p port         |2000     | port to send/listen to }"
+					"{h host         |127.0.0.1| port to send on (not applicable for receive) }"
+					"{c cols         |1280     | image buffer columns }"
+					"{r rows         |720      | image buffer rows }"
+	        ;
 
-	cout<<"Enter mode (0 for receive, 1 for send): ";
-	cin>>mode;
+		CommandLineParser parser(argc, argv, keys);
+		parser.about("Network Video Transfer Test");
+		if (parser.has("help"))
+		{
+		    parser.printMessage();
+		    return 0;
+		}
+		if (!parser.has("@mode")) {
+				cout << "Mode is required." << endl << endl;
+				parser.printMessage();
+				return 0;
+		}
+		if (!parser.check())
+		{
+		    parser.printErrors();
+		    return 0;
+		}
 
-    cout<<"Enter port: ";
-    cin>>port;
+		int mode = parser.get<String>("@mode")[0] == 's' ? MODE_SEND : MODE_RECEIVE;
+		int port = parser.get<int>("port");
+		String addr = parser.get<String>("host");
+		const int cols = parser.get<int>("cols");
+		const int rows = parser.get<int>("rows");
 
-	if(mode==1){
-        cin.ignore(100000,'\n');
-        cout<<"Enter address to send to (leave blank for local): ";
-        if(cin.peek()!='\n'){
-            cin>>addr;
-            cin.ignore(100000,'\n');
-        }else{
-            addr="127.0.0.1";
-            cout<<addr<<endl;
-        }
-	}
-
-	//catch signal
-	signal(SIGINT, catchSignal);
-
-    const int cols = 1280;
-	const int rows = 720;
+		//catch signal
+		signal(SIGINT, catchSignal);
 
     Size screenRes;
     Camera cam(0);
-    if(mode==1){
+    if(mode == MODE_SEND){
         if (!cam.isOpen()){
             cout<<"Camera failed to open."<<endl;
             return -1;
@@ -52,7 +63,7 @@ int main(int argc, char** argv){
         Size output = cam.setFrameSizeToMaximum();
         cout << output << endl;
         assert(output.width == cols && output.height == rows);
-    }else{
+    } else {
         screenRes = Util::getDesktopResolution();
     }
 
@@ -69,12 +80,12 @@ int main(int argc, char** argv){
 
     UDPS udps;
     UDPR udpr;
-    if(mode==1)cout<<"initSend err "<<udps.initSend(port,addr)<<endl;
+    if(mode == MODE_SEND)cout<<"initSend err "<<udps.initSend(port,addr)<<endl;
     else cout<<"initRecv err "<<udpr.initRecv(port)<<endl;
 
     Mat frame1;
 
-    if(mode==1){
+    if(mode == MODE_SEND){
 
         while(running){
 
@@ -83,11 +94,6 @@ int main(int argc, char** argv){
             //ImageTransform::resize(frame1, Size(cols,rows));
 
             //cvtColor(frame1,frame1,COLOR_BGR2GRAY,CV_8U);
-
-            Drawing::text(frame1,
-                String(Util::toStringWithPrecision(cam.getFrameRate())) + String(" FPS"),
-                Point(16, 16), Scalar(255, 255, 255), Drawing::Anchor::BOTTOM_LEFT, 0.5
-            );
 
             frame1=frame1.clone(); //make it continuous
 
@@ -102,11 +108,19 @@ int main(int argc, char** argv){
                 cout<<"send err "<<senderr<<endl;
             }
 
-            imshow("Frame1-changed", frame1);
+						Drawing::text(frame1,
+                String(Util::toStringWithPrecision(cam.getFrameRate())) + String(" FPS"),
+                Point(16, 16), Scalar(255, 255, 255), Drawing::Anchor::BOTTOM_LEFT, 0.5
+            );
+
+            imshow("Sending Frame", frame1);
 
             if (waitKey(1) >= 0) break;
         }
-    }else{
+    } else {
+
+				FPS fps = FPS();
+				int droppedFrames = 0;
 
         while(running){
 
@@ -120,7 +134,7 @@ int main(int argc, char** argv){
             if(len2total==len*2){
                 len2total=0;
                 cout<<"overflow"<<endl;
-            }else{
+            } else {
 
                 for(int i=len2total-len2; i<len2total; i++){
                     if(raw2[i] & 0x01){
@@ -128,14 +142,20 @@ int main(int argc, char** argv){
                         cout<<"start "<<i<<endl;
                     }
                     if(raw2[i] & 0x02){
-                        if(raw2start!=-1 && i-raw2start==len-1){
+                        if(raw2start != -1 && i-raw2start == len - 1){
+														//complete frame received
+
                             memcpy(raw2final,raw2+raw2start,i-raw2start);
-                            memcpy(raw2,raw2+i+1,len2total-i-1);
+                            // memcpy(raw2,raw2+i+1,len2total-i-1);
                             len2total=len2total-i-1;
+
                             raw2start=-1;
                             cout<<"end "<<i<<endl;
+														fps.frame();
                         }else{
+														//drop frame
                             len2total=0;
+														droppedFrames++;
                         }
                     }
                 }
@@ -145,7 +165,16 @@ int main(int argc, char** argv){
 
             Mat frame2(rows,cols,CV_8UC3,raw2final);
 
-            ImageTransform::scale(frame2, Size(cols,rows));
+            //ImageTransform::scale(frame2, Size(cols,rows));
+
+						Drawing::text(frame2,
+                String(Util::toStringWithPrecision(fps.fps())) + String(" FPS"),
+                Point(16, 16), Scalar(255, 255, 255), Drawing::Anchor::BOTTOM_LEFT, 0.5
+            );
+						Drawing::text(frame2,
+                String(Util::toStringWithPrecision(droppedFrames, 2)) + String(" Dropped Frames"),
+                Point(16, 60), Scalar(255, 255, 255), Drawing::Anchor::BOTTOM_LEFT, 0.5
+            );
 
             imshow("Frame2", frame2);
 
