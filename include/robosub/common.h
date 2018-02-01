@@ -27,6 +27,12 @@
     #define EXPORT
 #endif
 
+#ifdef _DEBUG
+    #define DEBUG
+#else
+    #define RELEASE
+#endif
+
 namespace robosub { }
 namespace cv { }
 

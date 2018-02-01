@@ -22,10 +22,9 @@ BOOL APIENTRY DllMain(HMODULE hModule,
 
 #endif
 
-#include "time.h"
+#include "timeutil.h"
 #include "fps.h"
 #include "util.h"
 #include "videoio.h"
 #include "image.h"
 #include "networkudp.h"
-#include "networkimage.h"

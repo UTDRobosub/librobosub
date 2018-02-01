@@ -1,11 +1,11 @@
 #pragma once
 
 #include "common.h"
-#include "time.h"
+#include "timeutil.h"
 
-namespace robosub 
+namespace robosub
 {
-	class FPS 
+	class FPS
 	{
 	private:
 		static const int BUFFER_LENGTH = 7;

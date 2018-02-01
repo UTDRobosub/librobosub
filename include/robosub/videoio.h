@@ -3,6 +3,7 @@
 #include "common.h"
 #include "time.h"
 #include "fps.h"
+#include "util.h"
 #include <opencv2/opencv.hpp>
 
 namespace robosub
@@ -23,11 +24,27 @@ namespace robosub
 		FPS* fps;
 
 	public:
+
+		///Camera calibration information
+		struct CalibrationData {
+			Mat cameraMatrix;
+			Mat distortionMatrix;
+			Size cameraResolution;
+
+			EXPORT CalibrationData();
+			EXPORT CalibrationData(Size cameraResolution);
+			EXPORT CalibrationData(Mat cameraMatrix, Mat distortionMatrix, Size cameraResolution) {
+				this->cameraMatrix = cameraMatrix;
+				this->distortionMatrix = distortionMatrix;
+				this->cameraResolution = cameraResolution;
+			}
+		};
+
 		///Begin capturing using a live camera feed
 		///Index 0 is the primary camera, 1 is secondary, etc.
 		EXPORT Camera(int index);
 		///Begin capturing using a recorded file or IP camera
-		EXPORT Camera(cv::String file);
+		EXPORT Camera(string file);
 		///Camera destructor
 		EXPORT ~Camera();
 
@@ -40,6 +57,14 @@ namespace robosub
 		EXPORT bool retrieveFrameBGR(Mat& img);
 		///Retrieve and decode the current frame (greyscale)
 		EXPORT bool retrieveFrameGrey(Mat& img);
+
+		///Prepare single-camera calibration data from XML file
+		///This method will also scale camera parameters appropriately for the camera
+		EXPORT CalibrationData* loadCalibrationDataFromXML(string filename);
+		///Undistort frame
+		EXPORT Mat undistort(Mat& input, CalibrationData& calib);
+		///Compute optimal undistorted points
+		EXPORT void undistortPoints(InputArray& points, OutputArray& undistortedPoints, CalibrationData& calib);
 
 		///Get stream frame rate
 		EXPORT double getFrameRate();
