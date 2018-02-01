@@ -22,8 +22,9 @@ int main(int argc, char** argv){
 	        "{@mode          |         | 'send' or 'receive'    }"
 	        "{p port         |2000     | port to send/listen to }"
 					"{h host         |127.0.0.1| port to send on (not applicable for receive) }"
-					"{c cols         |1280     | image buffer columns }"
-					"{r rows         |720      | image buffer rows }"
+					"{vc cols        |1280     | image buffer columns }"
+					"{vr rows        |720      | image buffer rows }"
+					"{c cam camera   |0        | camera id }"
 	        ;
 
 		CommandLineParser parser(argc, argv, keys);
@@ -49,12 +50,13 @@ int main(int argc, char** argv){
 		String addr = parser.get<String>("host");
 		const int cols = parser.get<int>("cols");
 		const int rows = parser.get<int>("rows");
+		const int camera = parser.get<int>("camera");
 
 		//catch signal
 		signal(SIGINT, catchSignal);
 
     Size screenRes;
-    Camera cam(0);
+    Camera cam(camera);
     if(mode == MODE_SEND){
         if (!cam.isOpen()){
             cout<<"Camera failed to open."<<endl;
@@ -176,7 +178,7 @@ int main(int argc, char** argv){
                 Point(16, 60), Scalar(255, 255, 255), Drawing::Anchor::BOTTOM_LEFT, 0.5
             );
 
-            imshow("Frame2", frame2);
+            imshow("Receiving Frame", frame2);
 
             if (waitKey(1) >= 0) break;
         }
