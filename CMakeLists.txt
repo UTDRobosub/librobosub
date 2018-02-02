@@ -14,6 +14,10 @@ ENDIF()
 project(librobosub CXX)
 find_package(OpenCV REQUIRED)
 find_package (Threads)
+set(Boost_USE_STATIC_LIBS ON)
+set(Boost_USE_MULTITHREADED ON)
+set(Boost_USE_STATIC_RUNTIME ON)
+find_package(Boost REQUIRED)
 set (CMAKE_CXX_STANDARD 11)
 
 IF (UNIX)
@@ -28,16 +32,16 @@ file(GLOB SOURCES src/*.cpp)
 file(GLOB HEADERS include/**/*.h)
 # Include header files
 include_directories(include)
+include_directories(${Boost_INCLUDE_DIRS})
 # Create shared library
 add_library(${LIBRARY_NAME} SHARED ${SOURCES} ${HEADERS})
+target_link_libraries(${LIBRARY_NAME} ${Boost_LIBRARIES})
 # Install library
 install(TARGETS ${LIBRARY_NAME} DESTINATION lib/${PROJECT_NAME})
 # Install library headers
 install(FILES ${HEADERS} DESTINATION include/${PROJECT_NAME})
 # Install so find_package works
 #install(FILES ${LIBRARY_NAME}-config.cmake)
-# Link OpenCV
-target_link_libraries(${LIBRARY_NAME} ${OpenCV_LIBS})
 # Enable C++11
 target_compile_features(${LIBRARY_NAME} PRIVATE cxx_range_for)
 
@@ -62,15 +66,3 @@ target_compile_features(test-video PRIVATE cxx_range_for)
 add_executable(test-stereo test/stereo/stereotest.cpp)
 target_link_libraries(test-stereo ${OpenCV_LIBS} ${LIBRARY_NAME})
 target_compile_features(test-stereo PRIVATE cxx_range_for)
-
-#add_executable(test-videostab test/videostab/videostab.cpp)
-#target_link_libraries(test-videostab ${OpenCV_LIBS} ${CMAKE_THREAD_LIBS_INIT})
-#target_compile_features(test-videostab PRIVATE cxx_range_for)
-
-#Add special windows DLLS
-#if(MSVC)
-#add_custom_command(TARGET project POST_BUILD
-# COMMAND ${CMAKE_COMMAND} -E copy_directory
-#"${PROJECT_SOURCE_DIR}/lib"
-#        $<TARGET_FILE_DIR:project>)
-#endif()

@@ -167,8 +167,6 @@ int main(int argc, char** argv){
 
             Mat frame2(rows,cols,CV_8UC3,raw2final);
 
-            //ImageTransform::scale(frame2, Size(cols,rows));
-
 						Drawing::text(frame2,
                 String(Util::toStringWithPrecision(fps.fps())) + String(" FPS"),
                 Point(16, 16), Scalar(255, 255, 255), Drawing::Anchor::BOTTOM_LEFT, 0.5
@@ -177,6 +175,8 @@ int main(int argc, char** argv){
                 String(Util::toStringWithPrecision(droppedFrames, 2)) + String(" Dropped Frames"),
                 Point(16, 60), Scalar(255, 255, 255), Drawing::Anchor::BOTTOM_LEFT, 0.5
             );
+
+						//ImageTransform::scale(frame2, Size(cols,rows));
 
             imshow("Receiving Frame", frame2);
 
