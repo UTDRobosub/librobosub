@@ -99,6 +99,7 @@ int main(int argc, char** argv){
 
             frame1=frame1.clone(); //make it continuous
 
+            /*
             for(int i=0; i<len; i++){
                 ((char*)frame1.data)[i]=((char*)frame1.data)[i] & 0xFC; //make low-order 2 bits of every byte 0 to identify the middle of a frame
             }
@@ -108,7 +109,9 @@ int main(int argc, char** argv){
             int senderr=udps.send(len,(char*)frame1.data);
             if(senderr!=0){
                 cout<<"send err "<<senderr<<endl;
-            }
+            }*/
+
+            SendFrame(&udps,&frame1);
 
 						Drawing::text(frame1,
                 String(Util::toStringWithPrecision(cam.getFrameRate())) + String(" FPS"),
@@ -126,6 +129,7 @@ int main(int argc, char** argv){
 
         while(running){
 
+            /*
             int recverr=udpr.recv(len*2-len2total,len2,raw2+len2total);
             if(recverr!=0){
                 cout<<"recv err "<<recverr<<endl;
@@ -165,20 +169,22 @@ int main(int argc, char** argv){
 
             //if(len2total>=len)len2total-=len;
 
-            Mat frame2(rows,cols,CV_8UC3,raw2final);
+            Mat frame2(rows,cols,CV_8UC3,raw2final);*/
 
-						Drawing::text(frame2,
+            Mat *frame2 = RecvFrame(&udpr);
+
+						Drawing::text(*frame2,
                 String(Util::toStringWithPrecision(fps.fps())) + String(" FPS"),
                 Point(16, 16), Scalar(255, 255, 255), Drawing::Anchor::BOTTOM_LEFT, 0.5
             );
-						Drawing::text(frame2,
+						Drawing::text(*frame2,
                 String(Util::toStringWithPrecision(droppedFrames, 2)) + String(" Dropped Frames"),
                 Point(16, 60), Scalar(255, 255, 255), Drawing::Anchor::BOTTOM_LEFT, 0.5
             );
 
 						//ImageTransform::scale(frame2, Size(cols,rows));
 
-            imshow("Receiving Frame", frame2);
+            imshow("Receiving Frame", *frame2);
 
             if (waitKey(1) >= 0) break;
         }
