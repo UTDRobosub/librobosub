@@ -74,7 +74,7 @@ namespace robosub{
 			
 			//copy some of the bytes into the packet data buffer
 			for(int j=0; j<networkVideo_packetDataPixels; j++){
-				int sd = ((data[dataloc + j*3 + 0]&0b11111000)<<11) | ((data[dataloc + j*3 + 1]&0b11111000)<<6) | ((data[dataloc + j*3 + 2]&0b11111000)<<1) | 0b1;
+				int sd = ((data[dataloc + j*3 + 0]&0b11111000)<<8) | ((data[dataloc + j*3 + 1]&0b11111000)<<3) | ((data[dataloc + j*3 + 2]&0b11111000)>>2) | 0b1;
 				//condense the pixels into 2 bytes, 5 bits per color, then a 1 in the LSB position
 				//bit format: BBBBBGGG GGRRRRR1
 				packetdata[networkVideo_packetHeadSize + j*networkVideo_pixelSize + 0] = secondbyte(sd);
@@ -122,9 +122,9 @@ namespace robosub{
 			
 			for(int i=0; i<networkVideo_packetDataPixels; i++){
 				int pixel = twobytes(packetdata + networkVideo_packetHeadSize + i*networkVideo_pixelSize);
-				networkVideo_recvFrameData[dataloc + i*3 + 0] = (pixel & 0b1111100000000000) >> 8;
-				networkVideo_recvFrameData[dataloc + i*3 + 1] = (pixel & 0b0000011111000000) >> 3;
-				networkVideo_recvFrameData[dataloc + i*3 + 2] = (pixel & 0b0000000000111110) << 2;
+				networkVideo_recvFrameData[dataloc + i*3 + 0] = (pixel>>8)&0b11111000;
+				networkVideo_recvFrameData[dataloc + i*3 + 1] = (pixel>>3)&0b11111000;
+				networkVideo_recvFrameData[dataloc + i*3 + 2] = (pixel<<2)&0b11111000;
 			}
 			
 			//memcpy(networkVideo_recvFrameData+packetloc, packetdata+networkVideo_packetHeadSize, networkVideo_packetDataSize);
