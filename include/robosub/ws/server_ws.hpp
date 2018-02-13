@@ -17,36 +17,36 @@
 #ifdef USE_STANDALONE_ASIO
 #include <asio.hpp>
 #include <asio/steady_timer.hpp>
-namespace SimpleWeb {
+namespace robosub::ws {
   using error_code = std::error_code;
   using errc = std::errc;
   namespace make_error_code = std;
-} // namespace SimpleWeb
+} // namespace robosub::ws
 #else
 #include <boost/asio.hpp>
 #include <boost/asio/steady_timer.hpp>
-namespace SimpleWeb {
+namespace robosub::ws {
   namespace asio = boost::asio;
   using error_code = boost::system::error_code;
   namespace errc = boost::system::errc;
   namespace make_error_code = boost::system::errc;
-} // namespace SimpleWeb
+} // namespace robosub::ws
 #endif
 
 // Late 2017 TODO: remove the following checks and always use std::regex
 #ifdef USE_BOOST_REGEX
 #include <boost/regex.hpp>
-namespace SimpleWeb {
+namespace robosub::ws {
   namespace regex = boost;
 }
 #else
 #include <regex>
-namespace SimpleWeb {
+namespace robosub::ws {
   namespace regex = std;
 }
 #endif
 
-namespace SimpleWeb {
+namespace robosub::ws {
   template <class socket_type>
   class SocketServer;
 
@@ -464,7 +464,7 @@ namespace SimpleWeb {
      *
      * Example use:
      * server.on_upgrade=[&socket_server] (auto socket, auto request) {
-     *   auto connection=std::make_shared<SimpleWeb::SocketServer<SimpleWeb::WS>::Connection>(std::move(socket));
+     *   auto connection=std::make_shared<robosub::ws::SocketServer<robosub::ws::WS>::Connection>(std::move(socket));
      *   connection->method=std::move(request->method);
      *   connection->path=std::move(request->path);
      *   connection->query_string=std::move(request->query_string);
@@ -794,6 +794,6 @@ namespace SimpleWeb {
       });
     }
   };
-} // namespace SimpleWeb
+} // namespace robosub::ws
 
 #endif /* SERVER_WS_HPP */

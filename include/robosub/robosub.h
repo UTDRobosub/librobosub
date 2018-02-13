@@ -29,3 +29,7 @@ BOOL APIENTRY DllMain(HMODULE hModule,
 #include "image.h"
 #include "networkudp.h"
 #include "networkvideo.h"
+
+#ifdef ROBOSUB_COMPILE_WEBSOCKETS
+#include "ws/ws.h"
+#endif

@@ -9,7 +9,7 @@
 #include <boost/asio/ssl.hpp>
 #endif
 
-namespace SimpleWeb {
+namespace robosub::ws {
   using WSS = asio::ssl::stream<asio::ip::tcp::socket>;
 
   template <>
@@ -87,6 +87,6 @@ namespace SimpleWeb {
       });
     }
   };
-} // namespace SimpleWeb
+} // namespace robosub::ws
 
 #endif /* CLIENT_WSS_HPP */

@@ -12,7 +12,7 @@
 #endif
 
 
-namespace SimpleWeb {
+namespace robosub::ws {
   using WSS = asio::ssl::stream<asio::ip::tcp::socket>;
 
   template <>
@@ -76,6 +76,6 @@ namespace SimpleWeb {
       });
     }
   };
-} // namespace SimpleWeb
+} // namespace robosub::ws
 
 #endif /* SERVER_WSS_HPP */

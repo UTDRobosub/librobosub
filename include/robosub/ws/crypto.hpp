@@ -13,7 +13,7 @@
 #include <openssl/md5.h>
 #include <openssl/sha.h>
 
-namespace SimpleWeb {
+namespace robosub::ws {
 // TODO 2017: remove workaround for MSVS 2012
 #if _MSC_VER == 1700                       // MSVS 2012 has no definition for round()
   inline double round(double x) noexcept { // Custom definition of round() for positive numbers

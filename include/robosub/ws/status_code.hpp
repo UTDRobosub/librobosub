@@ -6,7 +6,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace SimpleWeb {
+namespace robosub::ws {
   enum class StatusCode {
     unknown = 0,
     information_continue = 100,
@@ -140,7 +140,7 @@ namespace SimpleWeb {
   }
 
   inline StatusCode status_code(const std::string &status_code_string) noexcept {
-    class StringToStatusCode : public std::unordered_map<std::string, SimpleWeb::StatusCode> {
+    class StringToStatusCode : public std::unordered_map<std::string, robosub::ws::StatusCode> {
     public:
       StringToStatusCode() {
         for(auto &status_code : status_code_strings())
@@ -162,6 +162,6 @@ namespace SimpleWeb {
     }
     return pos->second;
   }
-} // namespace SimpleWeb
+} // namespace robosub::ws
 
 #endif // SIMPLE_WEB_STATUS_CODE_HPP

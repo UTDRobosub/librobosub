@@ -8,7 +8,7 @@
 #include <string>
 #include <unordered_map>
 
-namespace SimpleWeb {
+namespace robosub::ws {
   inline bool case_insensitive_equal(const std::string &str1, const std::string &str2) noexcept {
     return str1.size() == str2.size() &&
            std::equal(str1.begin(), str1.end(), str2.begin(), [](char a, char b) {
@@ -212,7 +212,7 @@ namespace SimpleWeb {
         }
       };
     };
-  }; // namespace SimpleWeb
+  }; // namespace robosub::ws
 
   class RequestMessage {
   public:
@@ -288,26 +288,26 @@ namespace SimpleWeb {
       return true;
     }
   };
-} // namespace SimpleWeb
+} // namespace robosub::ws
 
 #ifdef __SSE2__
 #include <emmintrin.h>
-namespace SimpleWeb {
+namespace robosub::ws {
   inline void spin_loop_pause() noexcept { _mm_pause(); }
-} // namespace SimpleWeb
+} // namespace robosub::ws
 // TODO: need verification that the following checks are correct:
 #elif defined(_MSC_VER) && _MSC_VER >= 1800 && (defined(_M_X64) || defined(_M_IX86))
 #include <intrin.h>
-namespace SimpleWeb {
+namespace robosub::ws {
   inline void spin_loop_pause() noexcept { _mm_pause(); }
-} // namespace SimpleWeb
+} // namespace robosub::ws
 #else
-namespace SimpleWeb {
+namespace robosub::ws {
   inline void spin_loop_pause() noexcept {}
-} // namespace SimpleWeb
+} // namespace robosub::ws
 #endif
 
-namespace SimpleWeb {
+namespace robosub::ws {
   /// Makes it possible to for instance cancel Asio handlers without stopping asio::io_service
   class ScopeRunner {
     /// Scope count that is set to -1 if scopes are to be canceled
@@ -352,6 +352,6 @@ namespace SimpleWeb {
       }
     }
   };
-} // namespace SimpleWeb
+} // namespace robosub::ws
 
 #endif // SIMPLE_WEB_UTILITY_HPP

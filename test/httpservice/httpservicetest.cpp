@@ -1,10 +1,10 @@
-#include "client_ws.hpp"
-#include "server_ws.hpp"
+#define ROBOSUB_COMPILE_WEBSOCKETS
+#include <robosub/robosub.h>
 
 using namespace std;
 
-using WsServer = SimpleWeb::SocketServer<SimpleWeb::WS>;
-using WsClient = SimpleWeb::SocketClient<SimpleWeb::WS>;
+using WsServer = robosub::ws::SocketServer<robosub::ws::WS>;
+using WsClient = robosub::ws::SocketClient<robosub::ws::WS>;
 
 int main() {
   // WebSocket (WS)-server at port 8080 using 1 thread
@@ -18,7 +18,7 @@ int main() {
   //   ws.onmessage=function(evt){console.log(evt.data);};
   //   ws.send("test");
   auto &echo = server.endpoint["^/echo/?$"];
-
+  
   echo.on_message = [](shared_ptr<WsServer::Connection> connection, shared_ptr<WsServer::Message> message) {
     auto message_str = message->string();
 
@@ -29,7 +29,7 @@ int main() {
     auto send_stream = make_shared<WsServer::SendStream>();
     *send_stream << message_str;
     // connection->send is an asynchronous function
-    connection->send(send_stream, [](const SimpleWeb::error_code &ec) {
+    connection->send(send_stream, [](const robosub::ws::error_code &ec) {
       if(ec) {
         cout << "Server: Error sending message. " <<
             // See http://www.boost.org/doc/libs/1_55_0/doc/html/boost_asio/reference.html, Error Codes for error code meanings
@@ -48,7 +48,7 @@ int main() {
   };
 
   // See http://www.boost.org/doc/libs/1_55_0/doc/html/boost_asio/reference.html, Error Codes for error code meanings
-  echo.on_error = [](shared_ptr<WsServer::Connection> connection, const SimpleWeb::error_code &ec) {
+  echo.on_error = [](shared_ptr<WsServer::Connection> connection, const robosub::ws::error_code &ec) {
     cout << "Server: Error in connection " << connection.get() << ". "
          << "Error: " << ec << ", error message: " << ec.message() << endl;
   };
@@ -65,7 +65,7 @@ int main() {
     auto send_stream = make_shared<WsServer::SendStream>();
     *send_stream << message->string();
 
-    connection->send(send_stream, [connection, send_stream](const SimpleWeb::error_code &ec) {
+    connection->send(send_stream, [connection, send_stream](const robosub::ws::error_code &ec) {
       if(!ec)
         connection->send(send_stream); // Sent after the first send operation is finished
     });
@@ -131,7 +131,7 @@ int main() {
   };
 
   // See http://www.boost.org/doc/libs/1_55_0/doc/html/boost_asio/reference.html, Error Codes for error code meanings
-  client.on_error = [](shared_ptr<WsClient::Connection> /*connection*/, const SimpleWeb::error_code &ec) {
+  client.on_error = [](shared_ptr<WsClient::Connection> /*connection*/, const robosub::ws::error_code &ec) {
     cout << "Client: Error: " << ec << ", error message: " << ec.message() << endl;
   };
 

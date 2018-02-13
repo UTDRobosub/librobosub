@@ -15,23 +15,23 @@
 #ifdef USE_STANDALONE_ASIO
 #include <asio.hpp>
 #include <asio/steady_timer.hpp>
-namespace SimpleWeb {
+namespace robosub::ws {
   using error_code = std::error_code;
   using errc = std::errc;
   namespace make_error_code = std;
-} // namespace SimpleWeb
+} // namespace robosub::ws
 #else
 #include <boost/asio.hpp>
 #include <boost/asio/steady_timer.hpp>
-namespace SimpleWeb {
+namespace robosub::ws {
   namespace asio = boost::asio;
   using error_code = boost::system::error_code;
   namespace errc = boost::system::errc;
   namespace make_error_code = boost::system::errc;
-} // namespace SimpleWeb
+} // namespace robosub::ws
 #endif
 
-namespace SimpleWeb {
+namespace robosub::ws {
   template <class socket_type>
   class SocketClient;
 
@@ -722,6 +722,6 @@ namespace SimpleWeb {
       });
     }
   };
-} // namespace SimpleWeb
+} // namespace robosub::ws
 
 #endif /* CLIENT_WS_HPP */
