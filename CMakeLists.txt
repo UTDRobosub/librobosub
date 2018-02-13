@@ -69,6 +69,6 @@ target_link_libraries(test-stereo ${OpenCV_LIBS} ${LIBRARY_NAME})
 target_compile_features(test-stereo PRIVATE cxx_range_for)
 
 add_executable(test-httpservice test/httpservice/httpservicetest.cpp)
-target_link_libraries(test-httpservice ${OpenCV_LIBS} ${LIBRARY_NAME} ${Boost_LIBRARIES} ${OPENSSL_LIBRARIES})
+target_link_libraries(test-httpservice ${OpenCV_LIBS} ${LIBRARY_NAME} ${Boost_LIBRARIES} ${OPENSSL_LIBRARIES} pthread)
 target_include_directories(test-httpservice PRIVATE ${Boost_INCLUDE_DIR})
 target_compile_features(test-httpservice PRIVATE cxx_range_for)
