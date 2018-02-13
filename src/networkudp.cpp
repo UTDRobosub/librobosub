@@ -13,6 +13,8 @@ namespace robosub {
 
     UDPR::UDPR(){
         initrecv=0;
+        recvbuflen=0;
+        recvbuf=(char*)malloc(networkUdp_recvBufSize);
     }
     UDPR::~UDPR(){
         if(initrecv)stopRecv();
@@ -42,7 +44,7 @@ namespace robosub {
              return NETWORKUDP_GETERROR;
         }
 
-        int rb=10240000;
+        int rb=1024*1024;
         if(setsockopt(rsock, SOL_SOCKET, SO_RCVBUF, (const char*)&rb, sizeof(rb)) < 0){
              return NETWORKUDP_GETERROR;
         }
@@ -74,31 +76,45 @@ namespace robosub {
 
 	    return 0;
 	}
+	
+	int UDPR::updateRecvBuf(){
+		
+		if(!initrecv)return 32;
+
+	    socklen_t addrlen=sizeof(raddr);
+		
+		int rlen;
+		if((rlen=recvfrom(rsock, recvbuf+recvbuflen, networkUdp_recvBufSize-recvbuflen, 0, (struct sockaddr*)&raddr, &addrlen)) < 0){
+			int err=NETWORKUDP_GETERROR;
+			if(err==11){ //error 11 is timeout, no data was received but nothing is broken
+				rlen=0;
+			}else{
+				stopRecv();
+				return err;
+			}
+		}
+		
+		recvbuflen+=rlen;
+		
+		return 0;
+	}
 
 	//read up to mlen characters from the receive queue and writes them into memory starting at msg, returning len by reference as the number of bytes read.
 	//does not wait for a message; will read 0 characters
 	int UDPR::recv(int mlen, int& len, char *msg){
-	    if(!initrecv)return 32;
-
-	    socklen_t addrlen=sizeof(raddr);
-
-        len=0;
-
-        int rlen;
-
-        while(true){
-            if((rlen=recvfrom(rsock, msg+len, min(mlen-len,maxlen), 0, (struct sockaddr*)&raddr, &addrlen)) < 0){
-                int err=NETWORKUDP_GETERROR;
-                if(err==11){ //error 11 is timeout, no data was received but nothing is broken
-                    rlen=0;
-                    break;
-                }else{
-                    stopRecv();
-                    return err;
-                }
-            }
-            len+=rlen;
-        }
+		int err;
+		if(err=updateRecvBuf()){
+			return err;
+		}
+		
+		int recvlen = min(recvbuflen, mlen);
+		
+		memcpy(msg,recvbuf,recvlen);
+		memmove(recvbuf,recvbuf+recvlen,recvbuflen-recvlen);
+		
+		recvbuflen -= recvlen;
+		
+		len = recvlen;
 
 	    return 0;
 	}
@@ -134,13 +150,13 @@ namespace robosub {
 		if(!initrecv)return 32;
 
 		char buffer[4096];
-	    int rlen;
+	    int rlen=0;
 	    int err;
-	    if((err=recv(4096,rlen,buffer)) != 0){
+	    if((err=recv(4095,rlen,buffer)) != 0){
             return err;
 	    }
 
-	    char nbuffer[8193];
+	    char nbuffer[8192];
 	    int nrlen;
 	    expandNull(rlen,nrlen,buffer,nbuffer);
 

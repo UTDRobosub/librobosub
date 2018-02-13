@@ -29,7 +29,9 @@
 #endif
 
 namespace robosub {
-
+	
+	const int networkUdp_recvBufSize = 1024*1024*7;
+	
 	//class for receiving
 	//call initRecv on the port to listen on before calling recv
 	//do not use multiple instances on the same port on one device, as receiving requires binding to the port
@@ -37,6 +39,9 @@ namespace robosub {
 		sockaddr_in raddr; //address info to recv on
 		int rsock; //socket info for recving
 		int initrecv; //1 if initRecv has succeeded
+		
+		char *recvbuf; //buffer to insert excess received data into, for later usage
+		int recvbuflen; //number of bytes in the buffer
 
 		public:
 
@@ -45,6 +50,7 @@ namespace robosub {
 
 		EXPORT int initRecv(int);
 		EXPORT int stopRecv();
+		EXPORT int updateRecvBuf();
 		EXPORT int recv(int,int&,char*);
 		EXPORT int recvStr(string&);
 	};
