@@ -18,7 +18,7 @@ int main() {
   //   ws.onmessage=function(evt){console.log(evt.data);};
   //   ws.send("test");
   auto &echo = server.endpoint["^/echo/?$"];
-  
+
   echo.on_message = [](shared_ptr<WsServer::Connection> connection, shared_ptr<WsServer::Message> message) {
     auto message_str = message->string();
 
