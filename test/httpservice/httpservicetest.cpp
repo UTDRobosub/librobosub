@@ -1,4 +1,3 @@
-#define ROBOSUB_COMPILE_WEBSOCKETS
 #include <robosub/robosub.h>
 
 using namespace std;

@@ -62,7 +62,7 @@ namespace robosub {
     DataBucket compress(DataBucket& previousState);
 
     inline friend ostream& operator<<(ostream & lhs, const DataBucket & rhs) {
-      return lhs << rhs._data.dump();
+      return lhs << rhs._data["data"].dump();
     }
 
     //check to ensure that the bucket is inflatable from its previous state
@@ -75,6 +75,16 @@ namespace robosub {
     //remove all data from bucket
     void clear();
   };
+
+  //WebSocket server that ensures that stores connection states for each client and ensures that the newest compressed datagrams are sent to each client
+  // class BucketServer : robosub::ws::SocketServer<robosub::ws::WS> {
+  // private:
+  //
+  // public:
+  //   WebsocketServer();
+  //
+  //
+  // };
 
   // class TelemetryServer {
   // private:

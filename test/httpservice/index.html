@@ -8,10 +8,35 @@
 <script>
 var ws;
 window.onload=function(){
-  ws=new WebSocket("ws://localhost:8080/echo");
-  ws.onmessage=function(evt){console.log(evt.data);};
+  var state = { };
+
+  ws=new WebSocket("ws://localhost:8080/");
+  ws.onmessage=function(evt)
+  {
+    let data = JSON.parse(evt.data);
+    //test if array
+    if (Object.prototype.toString.call(data) === '[object Array]') {
+      //compute deltas
+      for (var i=0; i<data.length; i++) {
+        var op = data[i].op;
+        var path = data[i].path.substring(1).replace("/", ".");
+
+        if (op === "add" || op === "replace") {
+          var value = data[i].value;
+          state[path] = value;
+        } else if (op === "remove") {
+          delete state[path];
+        }
+      }
+    } else {
+      //set state
+      state = data;
+    }
+
+    console.log(state);
+  };
   ws.onopen=function(evt){
-    ws.send("Hello");
+    ws.send("hello");
   }
 }
 function send(message) {

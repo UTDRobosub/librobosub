@@ -96,7 +96,7 @@ namespace robosub {
 
     result["data"] = previousState._data["data"].patch(_data["data"]);
     result["uuid"] = _getUUID();
-    result["locked"] = true;
+    result["locked"] = nullptr;
 
     DataBucket newBucket;
     newBucket._data = result;
