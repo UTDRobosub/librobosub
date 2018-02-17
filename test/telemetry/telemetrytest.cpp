@@ -94,9 +94,7 @@ int main(int argc, char** argv) {
   while(true) {
     previous = current;
 
-    if (!kbhit()) {
-      current["char"] = getchar();
-    }
+    
 
     // robosub::Time::waitMillis(500);
 
