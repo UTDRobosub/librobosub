@@ -7,6 +7,7 @@ using WsServer = robosub::ws::SocketServer<robosub::ws::WS>;
 #include <sys/ioctl.h> // For FIONREAD
 #include <termios.h>
 #include <stdbool.h>
+#include <stdlib.h> //rand
 
 int kbhit(void) {
     static bool initflag = false;
@@ -87,24 +88,24 @@ int main(int argc, char** argv) {
   });
 
   //wait one second for server to start
+  cout << "Starting server..." << endl;
   robosub::Time::waitMillis(1000);
 
   int i=0;
-  char character = 0;
   while(true) {
     previous = current;
 
+    unsigned long milliseconds_since_epoch =
+    std::chrono::system_clock::now().time_since_epoch() /
+    std::chrono::milliseconds(1);
+
+    current["rand"] = rand() % 100;
+    current["index"] = i++ % 1000;
+    current["time"] = milliseconds_since_epoch;
+
+    robosub::Time::waitMillis(50);
     
-
-    // robosub::Time::waitMillis(500);
-
-    // DataBucket compressed = current.compress(previous);
-
-    // cout << previous.toString() << endl;
-    // cout << current.toString() << endl;
-    // cout << compressed.toString() << endl;
-    // current = compressed.inflate(previous);
-    cout << current.toString() << endl;
+    cout << current << endl;
 
     //send update to all active connections
     for(auto &connection : server.get_connections())
@@ -119,10 +120,20 @@ int main(int argc, char** argv) {
       //set new connection state (assume received)
       connectionState[connection] = current;
 
-      //send compressed data
-      auto send_stream = make_shared<WsServer::SendStream>();
-      *send_stream << compressed;
-      connection->send(send_stream);
+      //check if better to send as compressed or uncompressed
+      if (current.toString().length() < compressed.toString().length())
+      {
+        //better to send uncompressed
+        auto send_stream = make_shared<WsServer::SendStream>();
+        *send_stream << compressed;
+        connection->send(send_stream);
+      } else {
+        //send compressed
+        auto send_stream = make_shared<WsServer::SendStream>();
+        *send_stream << current;
+        connection->send(send_stream);
+      }
+
     }
   }
 
