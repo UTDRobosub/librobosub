@@ -95,6 +95,8 @@ int main(int argc, char** argv) {
   while(true) {
     previous = current;
 
+    robosub::Time::waitMillis(100);
+
     unsigned long milliseconds_since_epoch =
     std::chrono::system_clock::now().time_since_epoch() /
     std::chrono::milliseconds(1);
@@ -103,8 +105,6 @@ int main(int argc, char** argv) {
     current["index"] = i++ % 1000;
     current["time"] = milliseconds_since_epoch;
 
-    robosub::Time::waitMillis(50);
-    
     cout << current << endl;
 
     //send update to all active connections

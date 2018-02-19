@@ -3,11 +3,33 @@
     <style include="shared-styles">
       :host {
         display: block;
+        --graph-line-color: rgb(33, 150, 243);
+      }
+      svg {
+        width: 100%;
+        height: 200px;
+      }
+      svg #stop-top {
+        stop-color: var(--graph-line-color);
+        stop-opacity: 0.7;
+      }
+      svg #stop-bottom {
+        stop-color: var(--graph-line-color);
+        stop-opacity: 0;
       }
     </style>
 
-    <svg width="500" height="200" id="svg"></svg>
-
+    <div class="graph">
+      <h4>[[title]]</h4>
+      <svg id="svg">
+        <defs>
+          <linearGradient id="areagrad" x1="0%" x2="0%" y1="0%" y2="100%">
+            <stop offset="0%" id="stop-top"></stop>
+            <stop offset="100%" id="stop-bottom"></stop>
+          </linearGradient>
+        </defs>
+      </svg>
+    </div>
   </template>
 
   <script>
@@ -17,49 +39,103 @@
         return {
           data: { type: Object, observer: "_dataChanged" },
           _dataCache: { type: Array, value: [ ] },
+          _averageValue: { type: Object, value: { } },
+          _averageStart: { type: Number, value: 0 },
 
+          title: String,
           xKey: String,
           yKey: String,
 
-          xMin: Number,
-          xMax: Number,
-          xAutoScale: { type: Boolean, value: false },
+          xSeconds: { type: Number, value: 15 },
+          autoRefresh: { type: Number, value: 1000 },
+          averageOver: { type: Number, value: 0 },
+
           yMin: Number,
           yMax: Number,
-          yAutoScale: { type: Boolean, value: false },
+          yAutoDomain: { type: Boolean, value: false },
           yLabel: { type: String, value: "" }
         }
       }
 
-      _dataChanged(data) {
-        if (!data || !data.time || !data.rand) return;
+      _autoRefresh() {
+        setInterval(() => {
+          if (!this.autoRefresh) return;
+          this._dataChanged(this.data)
+        }, this.autoRefresh);
+      }
 
-        this.push("_dataCache", data);
+      _dataChanged(data) {
+        if (this.averageOver > 0) {
+          //compute average over interval instead
+
+
+        }
+
+        if (data && data[this.xKey] && data[this.yKey]) {
+          this.push("_dataCache", data);
+        }
+
 
         var svg = d3.select(this.$.svg);
 
         var margin = {top: 20, right: 20, bottom: 30, left: 50},
-        width = +svg.attr("width") - margin.left - margin.right,
-        height = +svg.attr("height") - margin.top - margin.bottom;
+        width = +this.$.svg.getBoundingClientRect().width - margin.left - margin.right,
+        height = +this.$.svg.getBoundingClientRect().height - margin.top - margin.bottom;
         var x = d3.scaleTime()
-        .range([0, width]);
+        .rangeRound([0, width])
+        .nice(1);
         var y = d3.scaleLinear()
-        .range([height, 0]);
+        .rangeRound([height, 0])
+        .nice(1);
 
         svg.select("g").remove();
 
+        var color;
+        if (ShadyCSS) {
+          color = ShadyCSS.getComputedStyleValue(this, '--graph-line-color');
+        } else {
+          color = getComputedStyle(this).getPropertyValue('--graph-line-color');
+        }
+
         var g = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
         var line = d3.line()
-          .x(function(d) { return x(d3.timeParse("%Q")(d.time)); })
-          .y(function(d) { return y(d.rand); })
-          // .curve(d3.curveNatural)
+          .x((d) => { return x(d3.timeParse("%Q")(d[this.xKey])); })
+          .y((d) => { return y(d[this.yKey]); })
+          .curve(d3.curveMonotoneX);
 
-        while ( !moment(this._dataCache[0].time).isAfter(moment().subtract(15, 'seconds'))) {
+        var area = d3.area()
+          .x((d) => { return x(d3.timeParse("%Q")(d[this.xKey])); })
+          .y1((d) => { return y(d[this.yKey]); })
+          .y0(y(0))
+          .curve(d3.curveMonotoneX);
+
+          // var areaGradient = svg.append("defs").append("linearGradient")
+          // .attr("id", "areagrad")//id of the gradient
+          // .attr("x1", "0%")
+          // .attr("x2", "0%")
+          // .attr("y1", "0%")
+          // .attr("y2", "100%");//since its a vertical linear gradient
+          // areaGradient.append("stop")
+          // .attr("offset", "0%")
+          // .style("stop-color", "red")//end in red
+          // .style("stop-opacity", 1)
+          //
+          // areaGradient.append("stop")
+          // .attr("offset", "100%")
+          // .style("stop-color", "blue")//start in blue
+          // .style("stop-opacity", 1)
+
+        while (this._dataCache.length > 0 &&  !moment(this._dataCache[0].time).isAfter(moment().subtract(this.xSeconds, 'seconds'))) {
           this.shift("_dataCache");
         }
 
-        x.domain([ moment().subtract(15, 'seconds'), moment() ]);
-        y.domain([0, 100]);
+        x.domain([ moment().subtract(this.xSeconds, 'seconds'), moment() ]);
+
+        if (!this.yAutoDomain)
+          y.domain([this.yMin, this.yMax]);
+        else {
+          y.domain(d3.extent(this.get("_dataCache"), (d) => { return d[this.yKey]; }));
+        }
 
         g.append("g")
           .attr("transform", "translate(0," + height + ")")
@@ -75,20 +151,28 @@
             .attr("y", 6)
             .attr("dy", "0.71em")
             .attr("text-anchor", "end")
-            .text("Random");
+            .text(this.yLabel);
 
         g.append("path")
           .datum(this.get("_dataCache"))
             .attr("fill", "none")
-            .attr("stroke", "steelblue")
+            .attr("stroke", color)
             .attr("stroke-linejoin", "round")
             .attr("stroke-linecap", "round")
             .attr("stroke-width", 1.5)
             .attr("d", line);
+
+        g.append("path")
+          .datum(this.get("_dataCache"))
+            .style("fill", "url(#areagrad)")
+            .attr("stroke", "none")
+            .attr("d", area);
       }
 
       ready() {
         super.ready();
+
+        this._autoRefresh();
       }
     }
 

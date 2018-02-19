@@ -1,0 +1,67 @@
+<!-- shared styles for all views -->
+<dom-module id="shared-styles">
+  <template>
+    <style>
+      :host {
+        --primary-color: var(--paper-blue-500);
+
+        --font-head: {
+          font-family: "Roboto Slab";
+          font-weight: bold;
+        };
+        --font-main: {
+          font-family: "Roboto Condensed";
+        };
+      }
+
+      /** FONTS **/
+      h1, h2, h3, h4, h5, h6 {
+        @apply --font-head;
+      }
+      h2 {
+        font-size: 1.35em;
+      }
+      h2, h3, h4, h5, h6 {
+        margin: 0;
+      }
+
+      /** SPECIAL **/
+      [hidden] {
+        display: none!important;
+      }
+
+      paper-button {
+        background-color: var(--primary-color);
+        color: white;
+        width: 220px;
+        padding: 10px 0;
+        font-family: "Roboto";
+        font-weight: 700;
+        @apply --shadow-elevation-2dp;
+        margin: 0;
+        border-radius: 0;
+      }
+
+      animated-dropdown paper-item iron-icon {
+        margin-right: 12px;
+      }
+
+      iron-grid div.xs12 {
+        display: block!important;
+        padding-right: 12px;
+      }
+
+      div.graph {
+        border: 1px solid var(--paper-grey-600);
+        background-color: var(--paper-grey-50);
+        padding-top: 8px;
+        margin-bottom: 16px;
+        width: 100%;
+      }
+      div.graph > h4 {
+        width: 100%;
+        text-align: center;
+      }
+    </style>
+  </template>
+</dom-module>

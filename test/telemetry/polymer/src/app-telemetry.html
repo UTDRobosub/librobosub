@@ -1,24 +1,91 @@
 <link rel="import" href="../lib/polymer/polymer-element.html">
 
 <link rel="import" href="../lib/iron-collapse/iron-collapse.html">
+<link rel="import" href="../lib/iron-flex-layout/iron-flex-layout.html">
+<link rel="import" href="../lib/iron-grid/iron-grid.html">
 <link rel="import" href="../lib/paper-button/paper-button.html">
+<link rel="import" href="../lib/paper-styles/paper-styles.html">
 
+<link rel="import" href="shared-styles.html">
 <link rel="import" href="elements/app-container.html">
 <link rel="import" href="elements/collapse-container.html">
 <link rel="import" href="elements/graph-line.html">
 
 <dom-module id="app-telemetry">
   <template>
-    <style>
+    <style include="shared-styles">
       :host {
         display: block;
-        font-family: "Roboto Condensed";
+      }
+      #gRandom {
+        --graph-line-color: var(--paper-blue-500);
+      }
+      #gLatency {
+        --graph-line-color: var(--paper-green-500);
+      }
+      div.title {
+        @apply --layout-horizontal;
+        @apply --layout-justified;
+        @apply --layout-center;
+      }
+
+      div.title .status-circle {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        display: none;
+        margin-right: 4px;
+      }
+      @keyframes statusblink {
+        0% { opacity: 0.8; }
+        50% { opacity: 0; }
+        100% { opacity: 0.8; }
+      }
+      div.title .live {
+        background-color: var(--paper-grey-600);
+        padding: 8px 12px;
+        margin-right: 8px;
+        border-radius: 6px;
+        color: white;
+        @apply --font-main;
+      }
+      div.title[status="Connected"] .live {
+        background-color: var(--paper-green-600);
+      }
+      div.title[status="Connection lost"] .live {
+        background-color: var(--paper-red-600);
+      }
+      div.title[status="High latency"] .live {
+        background-color: var(--paper-orange-600);
+      }
+      div.title[status="Connected"] .status-circle,
+      div.title[status="High latency"] .status-circle {
+        display: inline-block;
+        background-color: white;
+        animation-name: statusblink;
+        animation-duration: 2s;
+        animation-iteration-count: infinite;
       }
     </style>
     <app-container>
-      <h2>Robosub Live Telemetry Test</h2>
-      <graph-line data="[[data]]"></graph-line>
-      <graph-line data="[[data]]"></graph-line>
+      <div class="title" status$="[[status]]">
+        <h2>Robosub Live Telemetry Test</h2>
+        <div class="live">
+          <span class="status-circle"></span>
+          [[status]]
+        </div>
+      </div>
+      <br>
+
+      <iron-grid>
+        <div class="xs12 s12 m6">
+          <graph-line id="gRandom" title="Random Numbers" data="[[data]]" x-key="time" x-seconds=30 y-key="rand" y-label="Random" y-min="0" y-max="100" auto-refresh="[[_autoRefreshValue(status)]]"></graph-line>
+        </div>
+        <div class="xs12 s12 m6">
+          <graph-line id="gLatency" title="Latency Between Websockets Server and Browser" data="[[data]]" x-key="time" x-seconds=30 y-key="latency" y-label="Latency (ms)" y-auto-domain average-over=1 auto-refresh="[[_autoRefreshValue(status)]]"></graph-line>
+        </div>
+      </iron-grid>
+
     </app-container>
   </template>
 
@@ -30,12 +97,26 @@
       static get properties() {
         return {
           data: { type: Object, value: { } },
-          running: { type: Boolean, value: true }
+          running: { type: Boolean, value: true },
+          status: { type: String, value: "Connecting" }
         };
+      }
+
+      _autoRefreshValue() {
+        if (this.status === "High latency" || this.status === "Connected")
+          return 0;
+        else
+          return 100; //ms between refresh
       }
 
       ready() {
         super.ready();
+
+        this.initializeWebsockets();
+      }
+
+      initializeWebsockets() {
+        var self = this;
 
         //connect to websocket and begin receiving data
         ws = new WebSocket("ws://localhost:8080/");
@@ -62,11 +143,27 @@
             state = data;
           }
 
+          state.latency = moment().valueOf() - state.time;
+          console.log(state);
+
+          if (state.latency > 30) {
+            self.set("status", "High latency");
+          } else {
+            self.set("status", "Connected");
+          }
+
           this.set("data", state);
         };
         ws.onopen = (evt) => {
           // ws.send("hello");
+          this.set("status", "Connected");
         }
+        ws.onclose = function (event) {
+          console.error("Connection lost due to error", event.code);
+          self.set("status", "Connection lost");
+
+          setTimeout(self.initializeWebsockets.bind(self), 1000);
+        };
       }
     }
 
