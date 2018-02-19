@@ -38,7 +38,7 @@
         .y(function(d) { return y(d.rand); })
         .curve(d3.curveNatural)
 
-      if (moment(graphData[0].time).isBefore(moment().subtract(15, 'seconds'))) {
+      if (!moment(graphData[0].time).isAfter(moment().subtract(15, 'seconds'))) {
         graphData.shift();
       }
 

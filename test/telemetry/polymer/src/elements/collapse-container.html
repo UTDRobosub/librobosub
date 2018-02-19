@@ -1,0 +1,79 @@
+<dom-module id="collapse-container">
+  <template>
+    <style include="shared-styles">
+      :host {
+        display: block;
+        background-color: white;
+        transition: 0.4s background-color;
+      }
+      :host([open]) {
+        background-color: var(--paper-grey-100);
+      }
+      paper-button {
+        width: 100%;
+        @apply --layout-horizontal;
+        @apply --layout-center;
+        @apply --layout-start-justified;
+        background-color: transparent;
+        text-transform: none;
+        padding: 8px 14px;
+        font-size: 14px;
+        box-shadow: none;
+        color: black;
+      }
+      iron-icon {
+        height: 28px;
+        width: 28px;
+        margin-right: 16px;
+      }
+      paper-button[open] {
+        box-shadow: none;
+      }
+      span.light {
+        opacity: 0.75;
+      }
+      iron-collapse {
+        padding-bottom: 6px;
+      }
+      iron-collapse div {
+        width: 100%;
+        padding: 16px;
+      }
+      iron-collapse paper-item {
+        font-weight: 600;
+      }
+    </style>
+
+    <paper-button on-tap="toggle" open$="[[open]]">
+      <iron-icon icon="[[_icon(open)]]"></iron-icon>
+      <h3>[[title]]</h3>
+    </paper-button>
+    <iron-collapse id="collapse" opened="{{open}}">
+      <slot></slot>
+    </iron-collapse>
+
+  </template>
+
+  <script>
+    class CollapseContainer extends Polymer.Element {
+      static get is() { return 'collapse-container'; }
+
+      static get properties() {
+        return {
+          open: { type: Boolean, value: false, reflectToAttribute: true },
+          title: String
+        }
+      }
+
+      toggle() {
+        this.open = !this.open;
+      }
+
+      _icon(open) {
+        return open ? "mdi:chevron-down" : "mdi:chevron-right";
+      }
+    }
+
+    window.customElements.define(CollapseContainer.is, CollapseContainer);
+  </script>
+</dom-module>

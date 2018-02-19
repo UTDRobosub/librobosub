@@ -1,0 +1,7 @@
+{
+  "name": "telemetry-app",
+  "short_name": "telemetry-app",
+  "description": "Telemetry",
+  "start_url": "/",
+  "display": "standalone"
+}

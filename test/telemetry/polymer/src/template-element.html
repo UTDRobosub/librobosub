@@ -1,0 +1,27 @@
+<dom-module id="template-element">
+  <template>
+    <style include="shared-styles">
+      :host {
+        display: block;
+      }
+    </style>
+
+    TemplateElement
+
+  </template>
+
+  <script>
+    class TemplateElement extends Polymer.Element {
+      static get is() { return 'PageAccount'; }
+      static get properties() {
+        return {
+          //insert custom properties here
+        }
+      }
+
+      //insert custom functions here
+    }
+
+    window.customElements.define(TemplateElement.is, TemplateElement);
+  </script>
+</dom-module>

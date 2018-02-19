@@ -1,0 +1,75 @@
+<link rel="import" href="../lib/polymer/polymer-element.html">
+
+<link rel="import" href="../lib/iron-collapse/iron-collapse.html">
+<link rel="import" href="../lib/paper-button/paper-button.html">
+
+<link rel="import" href="elements/app-container.html">
+<link rel="import" href="elements/collapse-container.html">
+<link rel="import" href="elements/graph-line.html">
+
+<dom-module id="app-telemetry">
+  <template>
+    <style>
+      :host {
+        display: block;
+        font-family: "Roboto Condensed";
+      }
+    </style>
+    <app-container>
+      <h2>Robosub Live Telemetry Test</h2>
+      <graph-line data="[[data]]"></graph-line>
+      <graph-line data="[[data]]"></graph-line>
+    </app-container>
+  </template>
+
+  <script>
+    var ws;
+
+    class AppTelemetry extends Polymer.Element {
+      static get is() { return 'app-telemetry'; }
+      static get properties() {
+        return {
+          data: { type: Object, value: { } },
+          running: { type: Boolean, value: true }
+        };
+      }
+
+      ready() {
+        super.ready();
+
+        //connect to websocket and begin receiving data
+        ws = new WebSocket("ws://localhost:8080/");
+        ws.onmessage = (evt) => {
+          var data = JSON.parse(evt.data);
+          var state = JSON.parse(JSON.stringify(this.data));
+
+          //test if array
+          if (Object.prototype.toString.call(data) === '[object Array]') {
+            //compute deltas
+            for (var i=0; i<data.length; i++) {
+              var op = data[i].op;
+              var path = data[i].path.substring(1).replace("/", ".");
+
+              if (op === "add" || op === "replace") {
+                var value = data[i].value;
+                state[path] = value;
+              } else if (op === "remove") {
+                delete state[path];
+              }
+            }
+          } else {
+            //set state
+            state = data;
+          }
+
+          this.set("data", state);
+        };
+        ws.onopen = (evt) => {
+          // ws.send("hello");
+        }
+      }
+    }
+
+    window.customElements.define(AppTelemetry.is, AppTelemetry);
+  </script>
+</dom-module>

@@ -1,0 +1,97 @@
+<dom-module id="graph-line">
+  <template>
+    <style include="shared-styles">
+      :host {
+        display: block;
+      }
+    </style>
+
+    <svg width="500" height="200" id="svg"></svg>
+
+  </template>
+
+  <script>
+    class GraphLine extends Polymer.Element {
+      static get is() { return 'graph-line'; }
+      static get properties() {
+        return {
+          data: { type: Object, observer: "_dataChanged" },
+          _dataCache: { type: Array, value: [ ] },
+
+          xKey: String,
+          yKey: String,
+
+          xMin: Number,
+          xMax: Number,
+          xAutoScale: { type: Boolean, value: false },
+          yMin: Number,
+          yMax: Number,
+          yAutoScale: { type: Boolean, value: false },
+          yLabel: { type: String, value: "" }
+        }
+      }
+
+      _dataChanged(data) {
+        if (!data || !data.time || !data.rand) return;
+
+        this.push("_dataCache", data);
+
+        var svg = d3.select(this.$.svg);
+
+        var margin = {top: 20, right: 20, bottom: 30, left: 50},
+        width = +svg.attr("width") - margin.left - margin.right,
+        height = +svg.attr("height") - margin.top - margin.bottom;
+        var x = d3.scaleTime()
+        .range([0, width]);
+        var y = d3.scaleLinear()
+        .range([height, 0]);
+
+        svg.select("g").remove();
+
+        var g = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+        var line = d3.line()
+          .x(function(d) { return x(d3.timeParse("%Q")(d.time)); })
+          .y(function(d) { return y(d.rand); })
+          // .curve(d3.curveNatural)
+
+        while ( !moment(this._dataCache[0].time).isAfter(moment().subtract(15, 'seconds'))) {
+          this.shift("_dataCache");
+        }
+
+        x.domain([ moment().subtract(15, 'seconds'), moment() ]);
+        y.domain([0, 100]);
+
+        g.append("g")
+          .attr("transform", "translate(0," + height + ")")
+          .call(d3.axisBottom(x))
+          .select(".domain")
+          .remove();
+
+        g.append("g")
+          .call(d3.axisLeft(y))
+          .append("text")
+            .attr("fill", "#000")
+            .attr("transform", "rotate(-90)")
+            .attr("y", 6)
+            .attr("dy", "0.71em")
+            .attr("text-anchor", "end")
+            .text("Random");
+
+        g.append("path")
+          .datum(this.get("_dataCache"))
+            .attr("fill", "none")
+            .attr("stroke", "steelblue")
+            .attr("stroke-linejoin", "round")
+            .attr("stroke-linecap", "round")
+            .attr("stroke-width", 1.5)
+            .attr("d", line);
+      }
+
+      ready() {
+        super.ready();
+      }
+    }
+
+    window.customElements.define(GraphLine.is, GraphLine);
+  </script>
+</dom-module>
