@@ -10,6 +10,7 @@
 <link rel="import" href="elements/app-container.html">
 <link rel="import" href="elements/collapse-container.html">
 <link rel="import" href="elements/graph-line.html">
+<link rel="import" href="elements/graph-value.html">
 
 <dom-module id="app-telemetry">
   <template>
@@ -77,6 +78,10 @@
       </div>
       <br>
 
+      <graph-value style="width: 250px;display:inline-block;margin-right:8px;" title="Robot Time" value="[[_getTime(data.time)]]"></graph-value>
+      <graph-value style="width: 200px;display:inline-block;margin-right:8px;" title="System Time" value="[[currentTime]]"></graph-value>
+      <graph-value style="width: 120px;display:inline-block" title="Latency" value="[[data.latency]] ms"></graph-value>
+
       <iron-grid>
         <div class="xs12 s12 m6">
           <graph-line id="gRandom" title="Random Numbers" data="[[data]]" x-key="time" x-seconds=30 y-key="rand" y-label="Random" y-min="0" y-max="100" auto-refresh="[[_autoRefreshValue(status)]]"></graph-line>
@@ -98,8 +103,13 @@
         return {
           data: { type: Object, value: { } },
           running: { type: Boolean, value: true },
-          status: { type: String, value: "Connecting" }
+          status: { type: String, value: "Connecting" },
+          currentTime: { type: String, value: "" }
         };
+      }
+
+      _getTime(time) {
+        return moment(time).format("hh:mm:ss.SSS a");
       }
 
       _autoRefreshValue() {
@@ -109,10 +119,18 @@
           return 100; //ms between refresh
       }
 
+      _autoRefresh() {
+
+        setInterval(() => {
+          this.set("currentTime", moment().format("hh:mm:ss a"));
+        }, 50);
+      }
+
       ready() {
         super.ready();
 
         this.initializeWebsockets();
+        this._autoRefresh();
       }
 
       initializeWebsockets() {

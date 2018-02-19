@@ -1,0 +1,35 @@
+<dom-module id="graph-value">
+  <template>
+    <style include="shared-styles">
+      :host {
+        display: block;
+        --graph-value-color: rgb(33, 150, 243);
+      }
+      .value {
+        font-family: "Roboto Mono";
+        font-size: 24px;
+        text-align: center;
+        padding: 6px;
+      }
+    </style>
+
+    <div class="graph">
+      <h4>[[title]]</h4>
+      <div class="value">[[value]]</div>
+    </div>
+  </template>
+
+  <script>
+    class GraphValue extends Polymer.Element {
+      static get is() { return 'graph-value'; }
+      static get properties() {
+        return {
+          title: String,
+          value: { type: String, value: "-" },
+        }
+      }
+    }
+
+    window.customElements.define(GraphValue.is, GraphValue);
+  </script>
+</dom-module>
