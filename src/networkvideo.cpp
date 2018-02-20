@@ -113,14 +113,14 @@ namespace robosub{
 			int recvlen;
 			int err;
 			if(err=udpr->recv(networkVideo_packetSize, recvlen, packetdata)){
-				cout<<"RecvFrame: recv err "<<err<<endl;
+				cout<<"RecvFrame: socket.recv error code "<<err<<endl;
 				return 0;
 			}
 			
 			if(recvlen==0){
 				break;
 			}else if(recvlen != networkVideo_packetSize){
-				cout<<"RecvFrame: invalid packet, incorrect length = "<<recvlen<<endl;
+				cout<<"RecvFrame: Invalid packet; Incorrect length = "<<recvlen<<endl;
 			}
 			
 			int frameid =     twobytes(packetdata+0);

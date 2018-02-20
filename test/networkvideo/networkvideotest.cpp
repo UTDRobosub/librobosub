@@ -54,17 +54,19 @@ int main(int argc, char** argv){
 
 	//catch signal
 	signal(SIGINT, catchSignal);
-		
+	
 	int rows,cols;
-
+	
     Size screenRes;
-    Camera cam(camera);
+    //Camera cam(camera);
+    Camera *cam;
     if(mode == MODE_SEND){
-        if (!cam.isOpen()){
+		cam = new Camera(camera);
+        if (!cam->isOpen()){
             cout<<"Camera failed to open."<<endl;
             return -1;
         }
-        Size output = cam.setFrameSizeToMaximum();
+        Size output = cam->setFrameSizeToMaximum();
         cout << output << endl;
         rows=output.height;
         cols=output.width;
@@ -74,26 +76,26 @@ int main(int argc, char** argv){
     }
 	
     cout<<rows<<" "<<cols<<endl;
-
+	
     UDPS udps;
     UDPR udpr;
     if(mode == MODE_SEND)cout<<"initSend err "<<udps.initSend(port,addr)<<endl;
     else cout<<"initRecv err "<<udpr.initRecv(port)<<endl;
-
+	
     Mat frame1;
-
+	
     if(mode == MODE_SEND){
 
         while(running){
 
-            cam.retrieveFrameBGR(frame1);
+            cam->retrieveFrameBGR(frame1);
 			
             frame1=frame1.clone(); //make it continuous
 			
             SendFrame(&udps,&frame1);
 
 			Drawing::text(frame1,
-                String(Util::toStringWithPrecision(cam.getFrameRate())) + String(" FPS"),
+                String(Util::toStringWithPrecision(cam->getFrameRate())) + String(" FPS"),
                 Point(16, 16), Scalar(255, 255, 255), Drawing::Anchor::BOTTOM_LEFT, 0.5
             );
 
@@ -111,7 +113,8 @@ int main(int argc, char** argv){
             Mat *frame2 = RecvFrame(&udpr);
             
             if(frame2==0){
-				cout<<"no frame"<<endl;
+				cout<<"No frame data received yet."<<endl;
+				robosub::Time::waitMillis(200);
             }else{
 				
 				/*
