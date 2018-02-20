@@ -96,6 +96,10 @@ namespace robosub {
 		
 		recvbuflen+=rlen;
 		
+		if(recvbuflen==networkUdp_recvBufSize){
+			cout<<"recv buf full";
+		}
+		
 		return 0;
 	}
 

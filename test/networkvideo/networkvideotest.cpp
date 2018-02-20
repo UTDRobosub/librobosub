@@ -20,7 +20,7 @@ int main(int argc, char** argv){
 	const String keys =
 		"{help h usage ? |         | print this message     }"
 		"{@mode          |         | 'send' or 'receive'    }"
-		"{p port         |8000     | port to send/listen to }"
+		"{p port         |8001     | port to send/listen to }"
 		"{h host         |127.0.0.1| address to send to (not applicable for receive) }"
 		"{vc cols        |1280     | image buffer columns }"
 		"{vr rows        |720      | image buffer rows }"
