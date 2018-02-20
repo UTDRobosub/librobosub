@@ -103,8 +103,8 @@ namespace robosub{
         }
     }
     
-    Mat *networkVideo_recvFrame=0;
-    char networkVideo_recvFrameData[1280*720*3];
+    Mat *networkVideo_recvFrame = 0;
+    char *networkVideo_recvFrameData = 0;
 	
     Mat *RecvFrame(UDPR *udpr){
     	while(true){
@@ -136,6 +136,7 @@ namespace robosub{
 			int pixelloc = packetindex*networkVideo_packetDataPixels;
 			
 			if(networkVideo_recvFrame==0 || rows!=networkVideo_recvFrame->rows || cols!=networkVideo_recvFrame->cols){
+				networkVideo_recvFrameData = (char*)malloc(rows*cols*3);
 				networkVideo_recvFrame = new Mat(rows,cols,CV_8UC3,networkVideo_recvFrameData);
 			}
 			
