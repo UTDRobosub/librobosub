@@ -17,8 +17,8 @@ int main(int argc, char** argv)
 	//catch signal
 	signal(SIGINT, catchSignal);
 
-	Camera cam0 = Camera(1);
-	Camera cam1 = Camera(2);
+	Camera cam0 = Camera(0);
+	Camera cam1 = Camera(1);
 
 	if (!cam0.isOpen()){
         cout<<"Camera 0 failed to open"<<endl;
@@ -83,8 +83,8 @@ int main(int argc, char** argv)
 		// resize(left, left, Size(), 0.5, 0.5);
 		// resize(right, right, Size(), 0.5, 0.5);
 
-		ImageTransform::flip(left, ImageTransform::FlipAxis::HORIZONTAL);
-		ImageTransform::flip(right, ImageTransform::FlipAxis::HORIZONTAL);
+		//ImageTransform::flip(left, ImageTransform::FlipAxis::HORIZONTAL);
+		//ImageTransform::flip(right, ImageTransform::FlipAxis::HORIZONTAL);
 
 		//Prepare matchers
 		/*Ptr<StereoBM> left_matcher = StereoBM::create(max_disp, wsize);
@@ -102,11 +102,11 @@ int main(int argc, char** argv)
 		conf_map = wls_filter->getConfidenceMap();
 
 		//Resize
-		resize(left, left, Size(), 2.0, 2.0);
-		resize(right, right, Size(), 2.0, 2.0);
-		resize(filtered_disp, filtered_disp, Size(), 4.0, 4.0);
+		//resize(left, left, Size(), 2.0, 2.0);
+		//resize(right, right, Size(), 2.0, 2.0);
+		//resize(filtered_disp, filtered_disp, Size(), 4.0, 4.0);
 
-		ximgproc::getDisparityVis(filtered_disp, filtered_disp, 4.0);
+		ximgproc::getDisparityVis(filtered_disp, filtered_disp, 1.0);
 
 		imshow("Filtered Disparity", filtered_disp);
 		imshow("Confidence Map", conf_map);

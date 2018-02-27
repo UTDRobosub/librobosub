@@ -18,7 +18,7 @@ const int MODE_SEND = 1;
 int main(int argc, char** argv){
 
 	const String keys =
-		"{help h usage ? |         | print this message     }"
+		"{help ?         |         | print this message     }"
 		"{@mode          |         | 'send' or 'receive'    }"
 		"{p port         |8001     | port to send/listen to }"
 		"{h host         |127.0.0.1| address to send to (not applicable for receive) }"
