@@ -25,5 +25,7 @@ namespace robosub {
 		~Serial();
 		
 		string readEntireBuffer();
+		void writeOut(char*, int);
+		void writeStr(string);
 	};
 }

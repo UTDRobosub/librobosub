@@ -12,9 +12,16 @@ int main(){
 	Serial ser(port.c_str());
 	
 	while(true){
-		string rv=ser.readEntireBuffer();
-		if(rv!=""){
+		string str;
+		cin>>str;
+		ser.writeStr(str);
+		
+		while(true){
+			string rv=ser.readEntireBuffer();
 			cout<<rv;
+			if(rv==""){
+				break;
+			}
 		}
 	}
 	

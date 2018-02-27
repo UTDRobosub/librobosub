@@ -53,4 +53,13 @@ namespace robosub {
 		
 		return (string)readbuf;
 	}
+	
+	void Serial::writeOut(char *buf, int len){
+		write(file, buf, len);
+	}
+	
+	void Serial::writeStr(string str){
+		char *s = (char*)str.c_str();
+		writeOut(s, str.length());
+	}
 }
