@@ -125,12 +125,12 @@ int main(int argc, char** argv) {
       {
         //better to send uncompressed
         auto send_stream = make_shared<WsServer::SendStream>();
-        *send_stream << compressed;
+        *send_stream << current;
         connection->send(send_stream);
       } else {
         //send compressed
         auto send_stream = make_shared<WsServer::SendStream>();
-        *send_stream << current;
+        *send_stream << compressed;
         connection->send(send_stream);
       }
 
