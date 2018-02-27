@@ -1,0 +1,115 @@
+<dom-module id="graph-controller">
+  <template>
+    <style include="shared-styles">
+      :host {
+        display: block;
+        --graph-controller-color: var(--paper-red-a400);
+      }
+      img {
+        height: 300px;
+        width: calc(300px * 771 / 501);
+      }
+      div.controller {
+        @apply --layout-horizontal;
+        @apply --layout-center;
+        @apply --layout-center-justified;
+      }
+      svg {
+        height: 300px;
+        width: calc(300px * 771 / 501);
+      }
+    </style>
+
+    <div class="graph">
+      <h4>[[title]]</h4>
+      <div class="controller">
+        <svg id="svg"></svg>
+      </div>
+    </div>
+  </template>
+
+  <script>
+    class GraphController extends Polymer.Element {
+      static get is() { return 'graph-controller'; }
+      static get properties() {
+        return {
+          title: String,
+          data: { type: Object, observer: "_dataChanged", value: {
+            mode: "x", //or d
+            a: 1,
+            b: 1,
+            x: 1,
+            y: 1,
+            start: 0,
+            select: 0,
+            //bumpers
+            lb: 0,
+            rb: 0,
+            //trigger (single float - combined mode)
+            t: 0, //-255 to 255
+            //trigger (two buttons)
+            lt: 0,
+            rt: 0,
+            //joystick buttons
+            ldown: 0,
+            rdown: 0,
+            //joysticks (-255 to 255)
+            lx: 0,
+            ly: 0,
+            rx: 0,
+            ry: 0,
+            //dpad
+            dpad: 0
+          }}
+        }
+      }
+
+      _dataChanged(data) {
+        var svg = d3.select(this.$.svg);
+        var width = +this.$.svg.getBoundingClientRect().width;
+        var height = +this.$.svg.getBoundingClientRect().height;
+        // var imageRatio = 501 / 771; //height/width
+        var scale = 300 / 501; //display / original
+
+        const buttonConfig = {
+          a: { t: "c", c: [ 612, 203 ], r: 26 },
+          b: { t: "c", c: [ 665, 151 ], r: 26 },
+          x: { t: "c", c: [ 558, 151 ], r: 26 },
+          y: { t: "c", c: [ 610, 98  ], r: 26 },
+        }
+
+        var color;
+        if (ShadyCSS) {
+          color = ShadyCSS.getComputedStyleValue(this, '--graph-controller-color');
+        } else {
+          color = getComputedStyle(this).getPropertyValue('--graph-controller-color');
+        }
+
+        //controller image
+        svg.append("svg:image")
+        .attr('width', (771 / 501) * 300)
+        .attr('height', 300)
+        .attr("xlink:href", "../img/controller.png");
+
+        Object.keys(buttonConfig).forEach((key) => {
+          if (this.data[key] != 1) return;
+
+          var btn = buttonConfig[key];
+          svg.append("circle")
+          .style("fill", color)
+          .attr("r", btn.r * scale)
+          .attr("cx", btn.c[0] * scale)
+          .attr("cy", btn.c[1] * scale);
+        });
+
+
+      }
+
+      ready() {
+        super.ready();
+      }
+    }
+
+    window.customElements.define(GraphController.is, GraphController);
+  </script>
+</dom-module>
