@@ -18,6 +18,7 @@ namespace robosub {
     }
     UDPR::~UDPR(){
         if(initrecv)stopRecv();
+        free(recvbuf);
     }
 
     int UDPR::initRecv(int port){
@@ -77,7 +78,7 @@ namespace robosub {
 	    return 0;
 	}
 	
-	int UDPR::updateRecvBuf(){
+	int UDPR::readEntireBuffer(){
 		
 		if(!initrecv)return 32;
 
@@ -107,7 +108,7 @@ namespace robosub {
 	//does not wait for a message; will read 0 characters
 	int UDPR::recv(int mlen, int& len, char *msg){
 		int err;
-		if(err=updateRecvBuf()){
+		if(err=readEntireBuffer()){
 			return err;
 		}
 		

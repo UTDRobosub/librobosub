@@ -8,11 +8,13 @@ namespace robosub {
 		readbuf = (char*)malloc(maxreadbuflen);
 		
 		file = open(filename.c_str(), O_RDWR | O_NOCTTY);
-		if(file<0){ cout<<"Serial port \'"<<filename<<"\' failed to open: error "<<errno<<endl; }
+		if(file<0){
+			cout<<"Serial port \'"<<filename<<"\' failed to open: error "<<errno<<endl;
+		}
 		
 		memset(&tty, 0, sizeof(tty));
 		if(tcgetattr(file, &tty)!=0){
-			cout<<"tty tcgetattr error "<<errno<<endl;
+			cout<<"Serial port \'"<<filename<<"\' tty tcgetattr error "<<errno<<endl;
 		}
 		
 		cfsetospeed(&tty, B9600);
@@ -38,7 +40,7 @@ namespace robosub {
 		tcflush(file, TCIFLUSH);
 		
 		if(tcsetattr(file, TCSANOW, &tty)!=0){
-			cout<<"tty tcsetattr error "<<errno<<endl;
+			cout<<"Serial port \'"<<filename<<"\' tty tcsetattr error "<<errno<<endl;
 		}
 	}
 	
@@ -47,19 +49,42 @@ namespace robosub {
 		close(file);
 	}
 	
-	string Serial::readEntireBuffer(){
-		readbuflen = read(file, readbuf, maxreadbuflen);
+	void Serial::readEntireBuffer(){
+		readbuflen += read(file, readbuf+readbuflen, maxreadbuflen-readbuflen);
+		
+		if(readbuflen==maxreadbuflen){
+			cout<<"Serial port \'"<<filename<<"\' read buffer full"<<endl;
+		}
+	}
+	
+	int Serial::readLen(char *buf, int maxlen){
+		readEntireBuffer();
+		
+		int readlen = min(maxlen, readbuflen);
+		
+		memcpy(buf, readbuf, readlen);
+		memmove(readbuf, readbuf+readlen, readbuflen-readlen);
+		
+		readbuflen-=readlen;
+		
+		return readlen;
+	}
+	
+	string Serial::readStr(){
+		readEntireBuffer();
 		readbuf[readbuflen] = '\0';
+		
+		readbuflen = 0;
 		
 		return (string)readbuf;
 	}
 	
-	void Serial::writeOut(char *buf, int len){
+	void Serial::writeLen(char *buf, int len){
 		write(file, buf, len);
 	}
 	
 	void Serial::writeStr(string str){
 		char *s = (char*)str.c_str();
-		writeOut(s, str.length());
+		writeLen(s, str.length());
 	}
 }

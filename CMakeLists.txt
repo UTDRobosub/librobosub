@@ -82,6 +82,11 @@ target_link_libraries(test-telemetry ${LIBRARY_NAME})
 target_include_directories(test-telemetry PRIVATE ${Boost_INCLUDE_DIR})
 target_compile_features(test-telemetry PRIVATE cxx_range_for)
 
+add_executable(test-telemetryserial test/telemetryserial/telemetryserialtest.cpp)
+target_link_libraries(test-telemetryserial ${LIBRARY_NAME})
+target_include_directories(test-telemetryserial PRIVATE ${Boost_INCLUDE_DIR})
+target_compile_features(test-telemetryserial PRIVATE cxx_range_for)
+
 file(GLOB CAMERACALIB_SOURCES test/interactive-calibration/*.cpp)
 add_executable(app-cameracalib ${CAMERACALIB_SOURCES})
 target_link_libraries(app-cameracalib ${LIBRARY_NAME})

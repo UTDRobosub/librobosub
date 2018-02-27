@@ -20,12 +20,15 @@ namespace robosub {
 		int readbuflen;
 		const int maxreadbuflen = 8192;
 		
+		void readEntireBuffer();
+		
 		public:
 		Serial(string);
 		~Serial();
 		
-		string readEntireBuffer();
-		void writeOut(char*, int);
+		int readLen(char*, int);
+		string readStr();
+		void writeLen(char*, int);
 		void writeStr(string);
 	};
 }

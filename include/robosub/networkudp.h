@@ -41,7 +41,9 @@ namespace robosub {
 		char *recvbuf; //buffer to insert excess received data into, for later usage
 		int recvbuflen; //number of bytes in the buffer
 		const int maxrecvbuflen = 1024*1024*7;
-
+		
+		int readEntireBuffer();
+		
 		public:
 
         EXPORT UDPR();
@@ -49,7 +51,6 @@ namespace robosub {
 
 		EXPORT int initRecv(int);
 		EXPORT int stopRecv();
-		EXPORT int updateRecvBuf();
 		EXPORT int recv(int,int&,char*);
 		EXPORT int recvStr(string&);
 	};
