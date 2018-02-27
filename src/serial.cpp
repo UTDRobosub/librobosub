@@ -30,7 +30,7 @@ namespace robosub {
 		tty.c_oflag = 0; //no remap, no delay
 		
 		tty.c_cc[VMIN] = 0; //non-blocking read
-		tty.c_cc[VTIME] = 1; //100 ms read timeout
+		tty.c_cc[VTIME] = 0; //100 ms read timeout
 		
 		tty.c_cflag |= CREAD | CLOCAL; //turn on read and ignore control lines
 		tty.c_iflag &= ~(IXON | IXOFF | IXANY); //no flow control;
