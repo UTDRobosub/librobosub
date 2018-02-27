@@ -25,6 +25,9 @@
       #gLatency {
         --graph-line-color: var(--paper-green-500);
       }
+      #gSerial {
+        --graph-line-color: var(--paper-purple-500);
+      }
       div.title {
         @apply --layout-horizontal;
         @apply --layout-justified;
@@ -89,6 +92,9 @@
         </div>
         <div class="xs12 s12 m6">
           <graph-line id="gLatency" title="Latency Between Websockets Server and Browser" data="[[data]]" x-key="time" x-seconds=30 y-key="latency" y-label="Latency (ms)" y-auto-domain average-over=1 auto-refresh="[[_autoRefreshValue(status)]]"></graph-line>
+        </div>
+        <div class="xs12 s12 m6">
+          <graph-line id="gSerial" title="Serial data output" data="[[data]]" x-key="time" x-seconds=30 y-key="serial" y-label="Serial Data" y-auto-domain average-over=1 auto-refresh="[[_autoRefreshValue(status)]]"></graph-line>
         </div>
         <div class="xs12 s12 m6">
           <graph-controller id="gController1" title="Controller 1"></graph-controller>

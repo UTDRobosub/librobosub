@@ -14,10 +14,11 @@ namespace robosub {
     UDPR::UDPR(){
         initrecv=0;
         recvbuflen=0;
-        recvbuf=(char*)malloc(networkUdp_recvBufSize);
+        recvbuf=(char*)malloc(maxrecvbuflen);
     }
     UDPR::~UDPR(){
         if(initrecv)stopRecv();
+        free(recvbuf);
     }
 
     int UDPR::initRecv(int port){
@@ -77,14 +78,14 @@ namespace robosub {
 	    return 0;
 	}
 	
-	int UDPR::updateRecvBuf(){
+	int UDPR::readEntireBuffer(){
 		
 		if(!initrecv)return 32;
 
 	    socklen_t addrlen=sizeof(raddr);
 		
 		int rlen;
-		if((rlen=recvfrom(rsock, recvbuf+recvbuflen, networkUdp_recvBufSize-recvbuflen, 0, (struct sockaddr*)&raddr, &addrlen)) < 0){
+		if((rlen=recvfrom(rsock, recvbuf+recvbuflen, maxrecvbuflen-recvbuflen, 0, (struct sockaddr*)&raddr, &addrlen)) < 0){
 			int err=NETWORKUDP_GETERROR;
 			if(err==11){ //error 11 is timeout, no data was received but nothing is broken
 				rlen=0;
@@ -96,7 +97,7 @@ namespace robosub {
 		
 		recvbuflen+=rlen;
 		
-		if(recvbuflen==networkUdp_recvBufSize){
+		if(recvbuflen==maxrecvbuflen){
 			cout<<"recv buf full";
 		}
 		
@@ -107,7 +108,7 @@ namespace robosub {
 	//does not wait for a message; will read 0 characters
 	int UDPR::recv(int mlen, int& len, char *msg){
 		int err;
-		if(err=updateRecvBuf()){
+		if(err=readEntireBuffer()){
 			return err;
 		}
 		

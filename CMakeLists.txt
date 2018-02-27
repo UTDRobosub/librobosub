@@ -68,6 +68,10 @@ add_executable(test-stereo test/stereo/stereotest.cpp)
 target_link_libraries(test-stereo ${LIBRARY_NAME})
 target_compile_features(test-stereo PRIVATE cxx_range_for)
 
+add_executable(test-serial test/serial/serialtest.cpp)
+target_link_libraries(test-serial ${LIBRARY_NAME})
+target_compile_features(test-serial PRIVATE cxx_range_for)
+
 add_executable(test-httpservice test/httpservice/httpservicetest.cpp)
 target_link_libraries(test-httpservice ${LIBRARY_NAME})
 target_include_directories(test-httpservice PRIVATE ${Boost_INCLUDE_DIR})
@@ -77,6 +81,11 @@ add_executable(test-telemetry test/telemetry/telemetrytest.cpp)
 target_link_libraries(test-telemetry ${LIBRARY_NAME})
 target_include_directories(test-telemetry PRIVATE ${Boost_INCLUDE_DIR})
 target_compile_features(test-telemetry PRIVATE cxx_range_for)
+
+add_executable(test-telemetryserial test/telemetryserial/telemetryserialtest.cpp)
+target_link_libraries(test-telemetryserial ${LIBRARY_NAME})
+target_include_directories(test-telemetryserial PRIVATE ${Boost_INCLUDE_DIR})
+target_compile_features(test-telemetryserial PRIVATE cxx_range_for)
 
 file(GLOB CAMERACALIB_SOURCES test/interactive-calibration/*.cpp)
 add_executable(app-cameracalib ${CAMERACALIB_SOURCES})
