@@ -68,6 +68,10 @@ add_executable(test-stereo test/stereo/stereotest.cpp)
 target_link_libraries(test-stereo ${LIBRARY_NAME})
 target_compile_features(test-stereo PRIVATE cxx_range_for)
 
+add_executable(test-serial test/serial/serialtest.cpp)
+target_link_libraries(test-serial ${LIBRARY_NAME})
+target_compile_features(test-serial PRIVATE cxx_range_for)
+
 add_executable(test-httpservice test/httpservice/httpservicetest.cpp)
 target_link_libraries(test-httpservice ${LIBRARY_NAME})
 target_include_directories(test-httpservice PRIVATE ${Boost_INCLUDE_DIR})

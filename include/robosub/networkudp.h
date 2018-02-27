@@ -29,10 +29,8 @@
 #endif
 
 namespace robosub {
-	
-	const int networkUdp_recvBufSize = 1024*1024*7;
-	
-	//class for receiving
+	//class for receiving over UDP
+	//handles one port
 	//call initRecv on the port to listen on before calling recv
 	//do not use multiple instances on the same port on one device, as receiving requires binding to the port
 	class UDPR{
@@ -42,6 +40,7 @@ namespace robosub {
 		
 		char *recvbuf; //buffer to insert excess received data into, for later usage
 		int recvbuflen; //number of bytes in the buffer
+		const int maxrecvbuflen = 1024*1024*7;
 
 		public:
 
@@ -55,7 +54,8 @@ namespace robosub {
 		EXPORT int recvStr(string&);
 	};
 
-	//class for sending
+	//class for sending over UDP
+	//handles one port and one host
 	//call initSend on the port and address to send to before calling send
 	class UDPS{
 		sockaddr_in saddr; //address info to send on

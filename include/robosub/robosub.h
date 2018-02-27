@@ -30,3 +30,4 @@ BOOL APIENTRY DllMain(HMODULE hModule,
 #include "networkudp.h"
 #include "networkvideo.h"
 #include "telemetry.h"
+#include "serial.h"
