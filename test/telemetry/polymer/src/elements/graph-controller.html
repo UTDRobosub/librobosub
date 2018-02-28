@@ -18,10 +18,32 @@
         height: 300px;
         width: calc(300px * 771 / 501);
       }
+      div.flex {
+        @apply --layout-horizontal;
+        @apply --layout-center-justified;
+        @apply --layout-center;
+      }
+      div.live {
+        background-color: var(--paper-green-600);
+        padding: 4px 6px;
+        margin-left: 12px;
+        border-radius: 6px;
+        color: white;
+        font-size: 14px;
+        @apply --font-main;
+      }
+      div.live[disconnected] {
+        background-color: var(--paper-grey-600);
+      }
     </style>
 
     <div class="graph">
-      <h4>[[title]]</h4>
+      <div class="flex">
+        <h4>[[title]]</h4>
+        <div class="live" disconnected$=[[!data.connected]]>
+          [[_getConnectedText(data.connected)]]
+        </div>
+      </div>
       <div class="controller">
         <svg id="svg"></svg>
       </div>
@@ -35,21 +57,22 @@
         return {
           title: String,
           data: { type: Object, observer: "_dataChanged", value: {
+            connected: 0,
             mode: "x", //or d
             a: 1,
             b: 1,
             x: 1,
             y: 1,
-            start: 0,
-            select: 0,
+            start: 1,
+            select: 1,
             //bumpers
-            lb: 0,
-            rb: 0,
+            lb: 1,
+            rb: 1,
             //trigger (single float - combined mode)
             t: 0, //-255 to 255
             //trigger (two buttons)
-            lt: 0,
-            rt: 0,
+            lt: 1,
+            rt: 1,
             //joystick buttons
             ldown: 0,
             rdown: 0,
@@ -59,9 +82,34 @@
             rx: 0,
             ry: 0,
             //dpad
-            dpad: 0
+            left: 1,
+            right:1,
+            up: 1,
+            down: 1
           }}
         }
+      }
+
+      _getConnectedText(connected) {
+        return connected ? "Connected" : "Not connected";
+      }
+
+      _rotatePoint(p, c, angle) {
+        var sin = Math.sin(angle * Math.PI / 180.0);
+        var cos = Math.cos(angle * Math.PI / 180.0);
+        var xnew = (p[0] - c[0]) * cos + (p[1] - c[1]) * sin;
+        var ynew = -(p[0] - c[0]) * sin + (p[1] - c[1]) * cos;
+        return [xnew + c[0], ynew + c[1]];
+      }
+
+      _affine(data, c, angle, d) {
+        var ret = [ ];
+        for (var i=0; i<data.length; i++) {
+          ret[i] = this._rotatePoint(data[i], c, angle);
+          ret[i][0] += d[0];
+          ret[i][1] += d[1];
+        }
+        return ret;
       }
 
       _dataChanged(data) {
@@ -71,13 +119,7 @@
         // var imageRatio = 501 / 771; //height/width
         var scale = 300 / 501; //display / original
 
-        const buttonConfig = {
-          a: { t: "c", c: [ 612, 203 ], r: 26 },
-          b: { t: "c", c: [ 665, 151 ], r: 26 },
-          x: { t: "c", c: [ 558, 151 ], r: 26 },
-          y: { t: "c", c: [ 610, 98  ], r: 26 },
-        }
-
+        //get color
         var color;
         if (ShadyCSS) {
           color = ShadyCSS.getComputedStyleValue(this, '--graph-controller-color');
@@ -91,18 +133,142 @@
         .attr('height', 300)
         .attr("xlink:href", "../img/controller.png");
 
+        //render buttons
+        const leftDpad = [
+          [151, 153],
+          [132, 135],
+          [109, 135],
+          [102, 141],
+          [101, 153],
+          [102, 168],
+          [110, 172],
+          [134, 171],
+          [151, 153]
+        ];
+        const start = [
+          [302, 126],
+          [292, 136],
+          [302, 148],
+          [324, 148],
+          [336, 136],
+          [324, 126],
+          [302, 126]
+        ];
+        const lt = [
+          [242, 57],
+          [242, 36],
+          [242, 17],
+          [265, 20],
+          [274, 25],
+          [283, 35],
+          [288, 57],
+          [250, 57],
+          [242, 57]
+        ];
+        const rt = [
+          [521, 57],
+          [521, 36],
+          [521, 17],
+          [501, 19],
+          [489, 25],
+          [480, 35],
+          [476, 57],
+          [489, 57],
+          [507, 57],
+          [521, 57]
+        ];
+        const lb = [
+          [162, 38],
+          [179, 38],
+          [193, 40],
+          [202, 41],
+          [207, 42],
+          [208, 40],
+          [206, 36],
+          [187, 30],
+          [175, 28],
+          [162, 28],
+          [148, 28],
+          [139, 30],
+          [129, 34],
+          [123, 37],
+          [120, 39],
+          [120, 41],
+          [122, 44],
+          [142, 39],
+          [162, 38]
+        ];
+        const rb = this._affine(lb, [0, 0], 0, [440, 0]);
+        const select = this._affine(start, [ 0, 0 ], 0, [ 143, 0 ])
+        const upDpad = this._affine(leftDpad, [ 160, 152 ], -90, [ 0, 0 ]);
+        const downDpad = this._affine(leftDpad, [ 160, 152 ], 90, [ 0, 0 ]);
+        const rightDpad = this._affine(leftDpad, [ 160, 152 ], 180, [ 0, 0 ]);
+        const buttonConfig = {
+          a: { t: "c", c: [ 612, 203 ], r: 26 },
+          b: { t: "c", c: [ 665, 151 ], r: 26 },
+          x: { t: "c", c: [ 558, 151 ], r: 26 },
+          y: { t: "c", c: [ 610, 98  ], r: 26 },
+          left: { t: "p", d: leftDpad },
+          up: { t: "p", d: upDpad },
+          down: { t: "p", d: downDpad },
+          right: { t: "p", d: rightDpad },
+          start: { t: "p", d: start },
+          select: { t: "p", d: select },
+          lt: { t: "p", d: lt },
+          rt: { t: "p", d: rt },
+          lb: { t: "p", d: lb },
+          rb: { t: "p", d: rb }
+        };
+        const joyConfig = {
+          l: { c: [ 272, 256 ], r: 40 },
+          r: { c: [ 502, 256 ], r: 40 },
+        };
+
+        //render buttons
         Object.keys(buttonConfig).forEach((key) => {
           if (this.data[key] != 1) return;
 
           var btn = buttonConfig[key];
-          svg.append("circle")
-          .style("fill", color)
-          .attr("r", btn.r * scale)
-          .attr("cx", btn.c[0] * scale)
-          .attr("cy", btn.c[1] * scale);
+
+          if (btn.t == "c") {
+            //draw as circle
+            svg.append("circle")
+            .style("fill", color)
+            .attr("r", btn.r * scale)
+            .attr("cx", btn.c[0] * scale)
+            .attr("cy", btn.c[1] * scale);
+          } else if (btn.t == "p") {
+            //draw as closed path
+            var line = d3.line()
+            .x((d) => {
+              return d[0] * scale;
+            })
+            .y((d) => {
+              return d[1] * scale;
+            })
+            .curve(d3.curveCardinalClosed);
+
+            svg.append("path")
+            .attr("d", line(btn.d))
+            .attr("fill", color);
+          }
         });
 
-
+        //render joysticks
+        var lx = this.data.lx / 255.0 * joyConfig.l.r + joyConfig.l.c[0];
+        var ly = this.data.ly / 255.0 * joyConfig.l.r + joyConfig.l.c[1];
+        var rx = this.data.rx / 255.0 * joyConfig.r.r + joyConfig.r.c[0];
+        var ry = this.data.ry / 255.0 * joyConfig.r.r + joyConfig.r.c[1];
+        svg.append("circle")
+        .style("fill", color)
+        .attr("r", 5)
+        .attr("cx", lx * scale)
+        .attr("cy", ly * scale);
+        svg.append("circle")
+        .style("fill", color)
+        .attr("r", 5)
+        .attr("cx", rx * scale)
+        .attr("cy", ry * scale);
       }
 
       ready() {
