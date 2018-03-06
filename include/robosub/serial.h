@@ -23,7 +23,7 @@ namespace robosub {
 		void readEntireBuffer();
 		
 		public:
-		Serial(string);
+		Serial(string, int);
 		~Serial();
 		
 		void flushBuffer();

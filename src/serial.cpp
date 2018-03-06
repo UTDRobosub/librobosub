@@ -2,10 +2,46 @@
 #include "robosub/serial.h"
 
 namespace robosub {
-	Serial::Serial(string fn){
+	Serial::Serial(string fn, int baud){
 		filename = fn;
 		readbuflen = 0;
 		readbuf = (char*)malloc(maxreadbuflen);
+		
+		int ibaud = 0;
+		switch(ibaud){
+			case 0:       ibaud = B0;       break;
+			case 50:      ibaud = B50;      break;
+			case 75:      ibaud = B75;      break;
+			case 110:     ibaud = B110;     break;
+			case 134:     ibaud = B134;     break;
+			case 150:     ibaud = B150;     break;
+			case 200:     ibaud = B200;     break;
+			case 300:     ibaud = B300;     break;
+			case 600:     ibaud = B600;     break;
+			case 1200:    ibaud = B1200;    break;
+			case 1800:    ibaud = B1800;    break;
+			case 2400:    ibaud = B2400;    break;
+			case 4800:    ibaud = B4800;    break;
+			case 9600:    ibaud = B9600;    break;
+			case 19200:   ibaud = B19200;   break;
+			case 38400:   ibaud = B38400;   break;
+			case 57600:   ibaud = B57600;   break;
+			case 115200:  ibaud = B115200;  break;
+			case 230400:  ibaud = B230400;  break;
+			case 460800:  ibaud = B460800;  break;
+			case 500000:  ibaud = B500000;  break;
+			case 576000:  ibaud = B576000;  break;
+			case 921600:  ibaud = B921600;  break;
+			case 1000000: ibaud = B1000000; break;
+			case 1152000: ibaud = B1152000; break;
+			case 1500000: ibaud = B1500000; break;
+			case 2000000: ibaud = B2000000; break;
+			case 2500000: ibaud = B2500000; break;
+			case 3000000: ibaud = B3000000; break;
+			case 3500000: ibaud = B3500000; break;
+			case 4000000: ibaud = B4000000; break;
+			default: cout<<"Serial port \'"<<filename<<"\' invalid baud rate specified"<<endl;
+		}
 		
 		file = open(filename.c_str(), O_RDWR | O_NOCTTY);
 		if(file<0){
@@ -17,8 +53,8 @@ namespace robosub {
 			cout<<"Serial port \'"<<filename<<"\' tty tcgetattr error "<<errno<<endl;
 		}
 		
-		cfsetospeed(&tty, B9600);
-		cfsetispeed(&tty, B9600);
+		cfsetospeed(&tty, ibaud);
+		cfsetispeed(&tty, ibaud);
 		
 		tty.c_cflag &= ~PARENB; //8n1
 		tty.c_cflag &= ~CSTOPB;

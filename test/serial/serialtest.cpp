@@ -72,7 +72,7 @@ int main(){
 	
 	string port = Util::execCLI("ls /dev | grep tty[AU]");
 	cout<<"using serial port /dev/"<<port<<endl;
-	Serial serial = Serial("/dev/" + port.substr(0,port.length()-1));
+	Serial serial = Serial("/dev/" + port.substr(0,port.length()-1), 115200);
 	
 	while(true){
 		char serdata[256];
