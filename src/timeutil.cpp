@@ -32,9 +32,8 @@ namespace robosub {
 	}
 	long long Time::millis()
 	{
-		struct timespec t;
-		clock_gettime(CLOCK_MONOTONIC, &t);
-		return (t.tv_sec * 1000) + (t.tv_nsec*1e-6);
+		return std::chrono::system_clock::now().time_since_epoch() /
+    std::chrono::milliseconds(1);
 	}
 #endif
 
