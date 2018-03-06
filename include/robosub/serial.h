@@ -27,6 +27,7 @@ namespace robosub {
 		~Serial();
 		
 		void flushBuffer();
+		void flushUpToButNotIncludingFlag(char, char);
 		
 		int readLen(char*, int);
 		int readToChar(char*, int, char);
