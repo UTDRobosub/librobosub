@@ -26,8 +26,11 @@ namespace robosub {
 		Serial(string);
 		~Serial();
 		
+		void flushBuffer();
+		
 		int readLen(char*, int);
-		int readToNull(char*, int);
+		int readToChar(char*, int, char);
+		int readToFlag(char*, int, char, char);
 		string readStr();
 		void writeLen(char*, int);
 		void writeStr(string);

@@ -48,6 +48,10 @@ namespace robosub {
 		free(readbuf);
 		close(file);
 	}
+	 
+	void Serial::flushBuffer(){
+		readbuflen = 0;
+	}
 	
 	void Serial::readEntireBuffer(){
 		readbuflen += read(file, readbuf+readbuflen, maxreadbuflen-readbuflen);
@@ -70,25 +74,30 @@ namespace robosub {
 		return readlen;
 	}
 	
-	int Serial::readToNull(char *buf, int maxlen){
-		readEntireBuffer();
-		
-		int firstnull=0;
-		for(int i=0; i<readbuflen; i++){
-			if(readbuf[i]=='\0'){
-				firstnull=i;
-				break;
+	int strFindFirstFlag(char *buf, int maxlen, char until, char mask){
+		for(int i=0; i<maxlen; i++){
+			if((buf[i]&mask)==until){
+				return i;
 			}
 		}
 		
-		int readlen = min(maxlen, firstnull);
+		return -1;
+	}
+	
+	int Serial::readToChar(char *buf, int maxlen, char until){
+		return readToFlag(buf, maxlen, until, 0xFF);
+	}
+	
+	int Serial::readToFlag(char *buf, int maxlen, char until, char mask){
+		readEntireBuffer();
 		
-		memcpy(buf, readbuf, readlen);
-		memmove(readbuf, readbuf+firstnull, readbuflen-firstnull);
+		int firstloc = strFindFirstFlag(readbuf, readbuflen, until, mask) + 1;
+		if(firstloc==-1) return -2;
+		else if(firstloc>maxlen) return -1;
 		
-		readbuflen -= firstnull;
+		int rlen = readLen(buf, firstloc);
 		
-		return readlen;
+		return rlen;
 	}
 	
 	string Serial::readStr(){
