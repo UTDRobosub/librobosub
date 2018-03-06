@@ -4,6 +4,7 @@
 #include <robosub/timeutil.h>
 #include <robosub/serial.h>
 #include <robosub/telemetry.h>
+#include <robosub/util.h>
 
 using namespace robosub;
 using WsServer = robosub::ws::SocketServer<robosub::ws::WS>;
@@ -51,7 +52,7 @@ int main(int argc, char** argv) {
   server.config.thread_pool_size = 1;
   //server.config.address = "0.0.0.0";
   
-  string port = exec("ls /dev | grep tty[AU]");
+  string port = Util::execCLI("ls /dev | grep tty[AU]");
   Serial serial = Serial("/dev/" + port.substr(0,port.length()-1));
   
   //endpoint state storage
@@ -121,14 +122,14 @@ int main(int argc, char** argv) {
     current["time"] = milliseconds_since_epoch;
     
     char serdata[100];
-    int serlen = serial.readToNull(serdata, 100);
+    int serlen = serial.readToChar(serdata, 100, '\0');
     serdata[serlen]='\0';
     
     if(serlen>0){
 		cout<<serlen<<endl;
 		cout<<serdata<<endl;
 		
-		current["serial"] = stoi(serdata, nullptr, 10);
+		current["serial"] = 5;
 	}
 
     cout << current << endl;
