@@ -55,6 +55,9 @@ namespace robosub {
 
 		///Get resolution of screen on currently running machine
 		EXPORT static Size getDesktopResolution();
+		
+		//execute the specified shell command and return the result
+		EXPORT static string execCLI(string);
 	};
 
 	template EXPORT String Util::toStringWithPrecision(const float value, const int n);

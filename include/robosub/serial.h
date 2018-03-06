@@ -27,6 +27,7 @@ namespace robosub {
 		~Serial();
 		
 		int readLen(char*, int);
+		int readToNull(char*, int);
 		string readStr();
 		void writeLen(char*, int);
 		void writeStr(string);
