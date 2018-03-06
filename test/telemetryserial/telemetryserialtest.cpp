@@ -21,18 +21,6 @@ using WsServer = robosub::ws::SocketServer<robosub::ws::WS>;
 #include <string>
 #include <array>
 
-std::string exec(const char* cmd) {
-    std::array<char, 128> buffer;
-    std::string result;
-    std::shared_ptr<FILE> pipe(popen(cmd, "r"), pclose);
-    if (!pipe) throw std::runtime_error("popen() failed!");
-    while (!feof(pipe.get())) {
-        if (fgets(buffer.data(), 128, pipe.get()) != nullptr)
-            result += buffer.data();
-    }
-    return result;
-}
-
 int kbhit(void) {
     static bool initflag = false;
     static const int STDIN = 0;
@@ -132,8 +120,14 @@ int main(int argc, char** argv) {
     current["index"] = i++ % 1000;
     current["time"] = milliseconds_since_epoch;
     
-    string serdata = serial.readStr();
-    if(serdata.length()>0){
+    char serdata[100];
+    int serlen = serial.readToNull(serdata, 100);
+    serdata[serlen]='\0';
+    
+    if(serlen>0){
+		cout<<serlen<<endl;
+		cout<<serdata<<endl;
+		
 		current["serial"] = stoi(serdata, nullptr, 10);
 	}
 

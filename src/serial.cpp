@@ -65,7 +65,28 @@ namespace robosub {
 		memcpy(buf, readbuf, readlen);
 		memmove(readbuf, readbuf+readlen, readbuflen-readlen);
 		
-		readbuflen-=readlen;
+		readbuflen -= readlen;
+		
+		return readlen;
+	}
+	
+	int Serial::readToNull(char *buf, int maxlen){
+		readEntireBuffer();
+		
+		int firstnull=0;
+		for(int i=0; i<readbuflen; i++){
+			if(readbuf[i]=='\0'){
+				firstnull=i;
+				break;
+			}
+		}
+		
+		int readlen = min(maxlen, firstnull);
+		
+		memcpy(buf, readbuf, readlen);
+		memmove(readbuf, readbuf+firstnull, readbuflen-firstnull);
+		
+		readbuflen -= firstnull;
 		
 		return readlen;
 	}
