@@ -31,16 +31,20 @@ ENDIF()
 # Find files
 file(GLOB SOURCES src/*.cpp)
 file(GLOB HEADERS include/**/*.h)
+file(GLOB WS_HEADERS include/**/ws/*.h include/**/ws/*.hpp)
+file(GLOB JSON_HEADERS include/**/json/*.h include/**/json/*.hpp)
 # Include header files
 include_directories(include)
 include_directories(${Boost_INCLUDE_DIRS} ${OPENSSL_INCLUDE_DIR})
 # Create shared library
-add_library(${LIBRARY_NAME} SHARED ${SOURCES} ${HEADERS})
+add_library(${LIBRARY_NAME} SHARED ${SOURCES} ${HEADERS} ${WS_HEADERS} ${JSON_HEADERS})
 target_link_libraries(${LIBRARY_NAME} PUBLIC ${OpenCV_LIBS} ${Boost_LIBRARIES} ${OPENSSL_LIBRARIES} pthread)
 # Install library
 install(TARGETS ${LIBRARY_NAME} DESTINATION lib/${PROJECT_NAME})
 # Install library headers
 install(FILES ${HEADERS} DESTINATION include/${PROJECT_NAME})
+install(FILES ${WS_HEADERS} DESTINATION include/${PROJECT_NAME}/ws)
+install(FILES ${JSON_HEADERS} DESTINATION include/${PROJECT_NAME}/json)
 # Install so find_package works
 #install(FILES ${LIBRARY_NAME}-config.cmake)
 # Enable C++11
