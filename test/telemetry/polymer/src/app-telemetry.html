@@ -9,6 +9,7 @@
 <link rel="import" href="shared-styles.html">
 <link rel="import" href="elements/app-container.html">
 <link rel="import" href="elements/collapse-container.html">
+<link rel="import" href="elements/graph-controller.html">
 <link rel="import" href="elements/graph-line.html">
 <link rel="import" href="elements/graph-value.html">
 
@@ -94,6 +95,9 @@
         </div>
         <div class="xs12 s12 m6">
           <graph-line id="gSerial" title="Serial data output" data="[[data]]" x-key="time" x-seconds=30 y-key="serial" y-label="Serial Data" y-auto-domain average-over=1 auto-refresh="[[_autoRefreshValue(status)]]"></graph-line>
+        </div>
+        <div class="xs12 s12 m6">
+          <graph-controller id="gController1" title="Controller 1"></graph-controller>
         </div>
       </iron-grid>
 
