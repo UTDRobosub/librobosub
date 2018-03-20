@@ -212,10 +212,6 @@ namespace robosub::ws {
 
     public:
 
-      std::shared_ptr<Connection> get_connection() {
-        return this->connection;
-      }
-
       /// fin_rsv_opcode: 129=one fragment, text, 130=one fragment, binary, 136=close connection.
       /// See http://tools.ietf.org/html/rfc6455#section-5.2 for more information
       void send(const std::shared_ptr<SendStream> &send_stream, const std::function<void(const error_code &)> &callback = nullptr,
@@ -337,6 +333,10 @@ namespace robosub::ws {
 
       if(internal_io_service)
         io_service->stop();
+    }
+
+    std::shared_ptr<Connection> get_connection() {
+      return this->connection;
     }
 
     virtual ~SocketClientBase() noexcept {
