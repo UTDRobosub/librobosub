@@ -8,7 +8,7 @@ using WsClient = robosub::ws::SocketClient<robosub::ws::WS>;
 int main() {
   // WebSocket (WS)-server at port 8080 using 1 thread
   WsServer server;
-  server.config.port = 8080;
+  server.config.port = 8081;
 
   // Example 1: echo WebSocket endpoint
   // Added debug messages for example use of the callbacks
@@ -95,6 +95,8 @@ int main() {
   // Wait for server to start so that the client can connect
   this_thread::sleep_for(chrono::seconds(1));
 
+  cout << "Started robot service demo" << endl;
+
   // Example 4: Client communication with server
   // Possible output:
   //   Server: Opened connection 0x7fcf21600380
@@ -106,35 +108,35 @@ int main() {
   //   Client: Sending close connection
   //   Server: Closed connection 0x7fcf21600380 with status code 1000
   //   Client: Closed connection with status code 1000
-  WsClient client("localhost:8080/echo");
-  client.on_message = [](shared_ptr<WsClient::Connection> connection, shared_ptr<WsClient::Message> message) {
-    cout << "Client: Message received: \"" << message->string() << "\"" << endl;
-
-    cout << "Client: Sending close connection" << endl;
-    connection->send_close(1000);
-  };
-
-  client.on_open = [](shared_ptr<WsClient::Connection> connection) {
-    cout << "Client: Opened connection" << endl;
-
-    string message = "Hello";
-    cout << "Client: Sending message: \"" << message << "\"" << endl;
-
-    auto send_stream = make_shared<WsClient::SendStream>();
-    *send_stream << message;
-    connection->send(send_stream);
-  };
-
-  client.on_close = [](shared_ptr<WsClient::Connection> /*connection*/, int status, const string & /*reason*/) {
-    cout << "Client: Closed connection with status code " << status << endl;
-  };
-
-  // See http://www.boost.org/doc/libs/1_55_0/doc/html/boost_asio/reference.html, Error Codes for error code meanings
-  client.on_error = [](shared_ptr<WsClient::Connection> /*connection*/, const robosub::ws::error_code &ec) {
-    cout << "Client: Error: " << ec << ", error message: " << ec.message() << endl;
-  };
-
-  client.start();
+  // WsClient client("localhost:8080/echo");
+  // client.on_message = [](shared_ptr<WsClient::Connection> connection, shared_ptr<WsClient::Message> message) {
+  //   cout << "Client: Message received: \"" << message->string() << "\"" << endl;
+  //
+  //   cout << "Client: Sending close connection" << endl;
+  //   connection->send_close(1000);
+  // };
+  //
+  // client.on_open = [](shared_ptr<WsClient::Connection> connection) {
+  //   cout << "Client: Opened connection" << endl;
+  //
+  //   string message = "Hello";
+  //   cout << "Client: Sending message: \"" << message << "\"" << endl;
+  //
+  //   auto send_stream = make_shared<WsClient::SendStream>();
+  //   *send_stream << message;
+  //   connection->send(send_stream);
+  // };
+  //
+  // client.on_close = [](shared_ptr<WsClient::Connection> /*connection*/, int status, const string & /*reason*/) {
+  //   cout << "Client: Closed connection with status code " << status << endl;
+  // };
+  //
+  // // See http://www.boost.org/doc/libs/1_55_0/doc/html/boost_asio/reference.html, Error Codes for error code meanings
+  // client.on_error = [](shared_ptr<WsClient::Connection> /*connection*/, const robosub::ws::error_code &ec) {
+  //   cout << "Client: Error: " << ec << ", error message: " << ec.message() << endl;
+  // };
+  //
+  // client.start();
 
   server_thread.join();
 }
