@@ -335,14 +335,12 @@ namespace robosub::ws {
         io_service->stop();
     }
 
-    std::shared_ptr<Connection> get_connection() {
-      return this->connection;
-    }
-
     virtual ~SocketClientBase() noexcept {
       handler_runner->stop();
       stop();
     }
+
+    std::shared_ptr<Connection> connection;
 
     /// If you have your own asio::io_service, store its pointer here before running start().
     std::shared_ptr<asio::io_service> io_service;
@@ -354,7 +352,6 @@ namespace robosub::ws {
     unsigned short port;
     std::string path;
 
-    std::shared_ptr<Connection> connection;
     std::mutex connection_mutex;
 
     std::shared_ptr<ScopeRunner> handler_runner;
