@@ -20,12 +20,14 @@ double calib::calibController::estimateCoverageQuality()
 
     std::fill(pointsInCell.begin(), pointsInCell.end(), 0);
 
-    for(std::vector<std::vector<cv::Point2f> >::iterator it = mCalibData->imagePoints.begin(); it != mCalibData->imagePoints.end(); ++it)
-        for(std::vector<cv::Point2f>::iterator pointIt = (*it).begin(); pointIt != (*it).end(); ++pointIt) {
-            int i = (int)((*pointIt).x / xGridStep);
-            int j = (int)((*pointIt).y / yGridStep);
-            pointsInCell[i*gridSize + j]++;
-        }
+    if (mBoardType != chAruco) {
+        for(std::vector<std::vector<cv::Point2f> >::iterator it = mCalibData->imagePoints.begin(); it != mCalibData->imagePoints.end(); ++it)
+            for(std::vector<cv::Point2f>::iterator pointIt = (*it).begin(); pointIt != (*it).end(); ++pointIt) {
+                int i = (int)((*pointIt).x / xGridStep);
+                int j = (int)((*pointIt).y / yGridStep);
+                pointsInCell[i*gridSize + j]++;
+            }
+    }
 
     for(std::vector<cv::Mat>::iterator it = mCalibData->allCharucoCorners.begin(); it != mCalibData->allCharucoCorners.end(); ++it)
         for(int l = 0; l < (*it).size[0]; l++) {
@@ -45,8 +47,8 @@ calib::calibController::calibController()
     mCalibFlags = 0;
 }
 
-calib::calibController::calibController(cv::Ptr<calib::calibrationData> data, int initialFlags, bool autoTuning, int minFramesNum) :
-    mCalibData(data)
+calib::calibController::calibController(cv::Ptr<calib::calibrationData> data, int initialFlags, bool autoTuning, int minFramesNum, CalibType calibType, TemplateType boardType) :
+    mCalibData(data), mCalibType(calibType), mBoardType(boardType)
 {
     mCalibFlags = initialFlags;
     mNeedTuning = autoTuning;
@@ -57,7 +59,7 @@ calib::calibController::calibController(cv::Ptr<calib::calibrationData> data, in
 
 void calib::calibController::updateState()
 {
-    if(mCalibData->cameraMatrix.total()) {
+    if(mCalibData->cameraMatrix.total() && mCalibType == Pinhole) {
         const double relErrEps = 0.05;
         bool fConfState = false, cConfState = false, dConfState = true;
         if(sigmaMult*mCalibData->stdDeviations.at<double>(0) / mCalibData->cameraMatrix.at<double>(0,0) < relErrEps &&
@@ -72,12 +74,14 @@ void calib::calibController::updateState()
                 dConfState = false;
 
         mConfIntervalsState = fConfState && cConfState && dConfState;
+    } else if (mCalibData->cameraMatrix.total() && mCalibType != Pinhole) {
+        mConfIntervalsState = true;
     }
 
     if(getFramesNumberState())
         mCoverageQualityState = estimateCoverageQuality() > 1.8 ? true : false;
 
-    if (getFramesNumberState() && mNeedTuning) {
+    if (getFramesNumberState() && mNeedTuning && mCalibType == Pinhole) {
         if( !(mCalibFlags & cv::CALIB_FIX_ASPECT_RATIO) &&
             mCalibData->cameraMatrix.total()) {
             double fDiff = fabs(mCalibData->cameraMatrix.at<double>(0,0) -
@@ -182,8 +186,8 @@ double calib::calibDataController::estimateGridSubsetQuality(size_t excludedInde
     }
 }
 
-calib::calibDataController::calibDataController(cv::Ptr<calib::calibrationData> data, int maxFrames, double convParameter) :
-    mCalibData(data), mParamsFileName("CamParams.xml")
+calib::calibDataController::calibDataController(cv::Ptr<calib::calibrationData> data, int maxFrames, double convParameter, CalibType calibType) :
+    mCalibData(data), mParamsFileName("CamParams.xml"), mCalibType(calibType)
 {
     mMaxFramesNum = maxFrames;
     mAlpha = convParameter;
@@ -196,6 +200,7 @@ calib::calibDataController::calibDataController()
 
 void calib::calibDataController::filterFrames()
 {
+    if (mCalibType != Pinhole) return;
     size_t numberOfFrames = std::max(mCalibData->allCharucoIds.size(), mCalibData->imagePoints.size());
     CV_Assert(numberOfFrames == mCalibData->perViewErrors.total());
     if(numberOfFrames >= mMaxFramesNum) {
@@ -303,30 +308,58 @@ bool calib::calibDataController::saveCurrentCameraParameters() const
     return success;
 }
 
-void calib::calibDataController::printParametersToConsole(std::ostream &output) const
+void calib::calibDataController::printParametersToConsole(std::ostream &output, CalibType calibType) const
 {
     const char* border = "---------------------------------------------------";
     output << border << std::endl;
     output << "Frames used for calibration: " << std::max(mCalibData->objectPoints.size(), mCalibData->allCharucoCorners.size())
            << " \t RMS = " << mCalibData->totalAvgErr << std::endl;
-    if(mCalibData->cameraMatrix.at<double>(0,0) == mCalibData->cameraMatrix.at<double>(1,1))
-        output << "F = " << mCalibData->cameraMatrix.at<double>(1,1) << " +- " << sigmaMult*mCalibData->stdDeviations.at<double>(1) << std::endl;
-    else
-        output << "Fx = " << mCalibData->cameraMatrix.at<double>(0,0) << " +- " << sigmaMult*mCalibData->stdDeviations.at<double>(0) << " \t "
-               << "Fy = " << mCalibData->cameraMatrix.at<double>(1,1) << " +- " << sigmaMult*mCalibData->stdDeviations.at<double>(1) << std::endl;
-    output << "Cx = " << mCalibData->cameraMatrix.at<double>(0,2) << " +- " << sigmaMult*mCalibData->stdDeviations.at<double>(2) << " \t"
-           << "Cy = " << mCalibData->cameraMatrix.at<double>(1,2) << " +- " << sigmaMult*mCalibData->stdDeviations.at<double>(3) << std::endl;
-    output << "K1 = " << mCalibData->distCoeffs.at<double>(0) << " +- " << sigmaMult*mCalibData->stdDeviations.at<double>(4) << std::endl;
-    output << "K2 = " << mCalibData->distCoeffs.at<double>(1) << " +- " << sigmaMult*mCalibData->stdDeviations.at<double>(5) << std::endl;
-    output << "K3 = " << mCalibData->distCoeffs.at<double>(4) << " +- " << sigmaMult*mCalibData->stdDeviations.at<double>(8) << std::endl;
-    output << "TD1 = " << mCalibData->distCoeffs.at<double>(2) << " +- " << sigmaMult*mCalibData->stdDeviations.at<double>(6) << std::endl;
-    output << "TD2 = " << mCalibData->distCoeffs.at<double>(3) << " +- " << sigmaMult*mCalibData->stdDeviations.at<double>(7) << std::endl;
+
+    if (calibType == Pinhole) {
+        if(mCalibData->cameraMatrix.at<double>(0,0) == mCalibData->cameraMatrix.at<double>(1,1))
+            output << "F = " << mCalibData->cameraMatrix.at<double>(1,1) << " +- " << sigmaMult*mCalibData->stdDeviations.at<double>(1) << std::endl;
+        else
+            output << "Fx = " << mCalibData->cameraMatrix.at<double>(0,0) << " +- " << sigmaMult*mCalibData->stdDeviations.at<double>(0) << " \t "
+                   << "Fy = " << mCalibData->cameraMatrix.at<double>(1,1) << " +- " << sigmaMult*mCalibData->stdDeviations.at<double>(1) << std::endl;
+        output << "Cx = " << mCalibData->cameraMatrix.at<double>(0,2) << " +- " << sigmaMult*mCalibData->stdDeviations.at<double>(2) << " \t"
+               << "Cy = " << mCalibData->cameraMatrix.at<double>(1,2) << " +- " << sigmaMult*mCalibData->stdDeviations.at<double>(3) << std::endl;
+        output << "K1 = " << mCalibData->distCoeffs.at<double>(0) << " +- " << sigmaMult*mCalibData->stdDeviations.at<double>(4) << std::endl;
+        output << "K2 = " << mCalibData->distCoeffs.at<double>(1) << " +- " << sigmaMult*mCalibData->stdDeviations.at<double>(5) << std::endl;
+        output << "K3 = " << mCalibData->distCoeffs.at<double>(4) << " +- " << sigmaMult*mCalibData->stdDeviations.at<double>(8) << std::endl;
+        output << "TD1 = " << mCalibData->distCoeffs.at<double>(2) << " +- " << sigmaMult*mCalibData->stdDeviations.at<double>(6) << std::endl;
+        output << "TD2 = " << mCalibData->distCoeffs.at<double>(3) << " +- " << sigmaMult*mCalibData->stdDeviations.at<double>(7) << std::endl;
+    }
+    else {
+        if(mCalibData->cameraMatrix.at<double>(0,0) == mCalibData->cameraMatrix.at<double>(1,1))
+            output << "F = " << mCalibData->cameraMatrix.at<double>(1,1) << std::endl;
+        else
+            output << "Fx = " << mCalibData->cameraMatrix.at<double>(0,0) << " \t "
+                   << "Fy = " << mCalibData->cameraMatrix.at<double>(1,1) << std::endl;
+        output << "Cx = " << mCalibData->cameraMatrix.at<double>(0,2) << " \t"
+               << "Cy = " << mCalibData->cameraMatrix.at<double>(1,2) << std::endl;
+        output << "K1 = " << mCalibData->distCoeffs.at<double>(0) << std::endl;
+        output << "K2 = " << mCalibData->distCoeffs.at<double>(1) << std::endl;
+        output << "K3 = " << mCalibData->distCoeffs.at<double>(4)  << std::endl;
+        output << "TD1 = " << mCalibData->distCoeffs.at<double>(2) << std::endl;
+        output << "TD2 = " << mCalibData->distCoeffs.at<double>(3)  << std::endl;
+    }
 }
 
 void calib::calibDataController::updateUndistortMap()
 {
-    cv::initUndistortRectifyMap(mCalibData->cameraMatrix, mCalibData->distCoeffs, cv::noArray(),
-                                cv::getOptimalNewCameraMatrix(mCalibData->cameraMatrix, mCalibData->distCoeffs, mCalibData->imageSize, 0.0, mCalibData->imageSize),
-                                mCalibData->imageSize, CV_16SC2, mCalibData->undistMap1, mCalibData->undistMap2);
-
+    if (mCalibType == Pinhole) {
+      cv::initUndistortRectifyMap(mCalibData->cameraMatrix, mCalibData->distCoeffs, cv::noArray(),
+                                  cv::getOptimalNewCameraMatrix(mCalibData->cameraMatrix, mCalibData->distCoeffs, mCalibData->imageSize, 0.0, mCalibData->imageSize),
+                                  mCalibData->imageSize, CV_16SC2, mCalibData->undistMap1, mCalibData->undistMap2);
+    } else if (mCalibType == Fisheye) {
+      cv::Mat P;
+      cv::fisheye::estimateNewCameraMatrixForUndistortRectify(mCalibData->cameraMatrix, mCalibData->distCoeffs,
+                                                              mCalibData->imageSize,cv::noArray(), P);
+      cv::fisheye::initUndistortRectifyMap(mCalibData->cameraMatrix, mCalibData->distCoeffs, cv::noArray(),
+                                  P, mCalibData->imageSize, CV_16SC2, mCalibData->undistMap1, mCalibData->undistMap2);
+    } else if (mCalibType == Omni) {
+      cv::omnidir::initUndistortRectifyMap(mCalibData->cameraMatrix, mCalibData->distCoeffs, mCalibData->omniXi,
+        cv::noArray(), cv::getOptimalNewCameraMatrix(mCalibData->cameraMatrix, mCalibData->distCoeffs, mCalibData->imageSize, 0.0, mCalibData->imageSize), mCalibData->imageSize, CV_16SC2, mCalibData->undistMap1, mCalibData->undistMap2,
+        cv::omnidir::RECTIFY_STEREOGRAPHIC);
+    }
 }

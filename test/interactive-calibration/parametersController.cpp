@@ -123,8 +123,23 @@ bool calib::parametersController::loadFromParser(cv::CommandLineParser &parser)
         mCapParams.charucoMarkerSize = 100;
     }
     else {
-        std::cerr << "Wrong template name\n";
+        std::cerr << "Invalid template type\n";
         return false;
+    }
+
+    std::string calibType = parser.get<std::string>("ct");
+    if (calibType.find("pinhole", 0) == 0) {
+      mCapParams.calibType = Pinhole;
+    }
+    else if (calibType.find("fisheye", 0) == 0) {
+      mCapParams.calibType = Fisheye;
+    }
+    else if (calibType.find("omni", 0) == 0) {
+      mCapParams.calibType = Omni;
+    }
+    else {
+      std::cerr << "Invalid calibration type\n";
+      return false;
     }
 
     if(parser.has("w") && parser.has("h")) {

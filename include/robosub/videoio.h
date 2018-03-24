@@ -60,11 +60,11 @@ namespace robosub
 
 		///Prepare single-camera calibration data from XML file
 		///This method will also scale camera parameters appropriately for the camera
-		EXPORT CalibrationData* loadCalibrationDataFromXML(string filename);
+		EXPORT static CalibrationData* loadCalibrationDataFromXML(const string filename, const Size frameSize);
 		///Undistort frame
-		EXPORT Mat undistort(Mat& input, CalibrationData& calib);
+		EXPORT static Mat undistort(Mat& input, CalibrationData& calib);
 		///Compute optimal undistorted points
-		EXPORT void undistortPoints(InputArray& points, OutputArray& undistortedPoints, CalibrationData& calib);
+		EXPORT static void undistortPoints(InputArray& points, OutputArray& undistortedPoints, CalibrationData& calib);
 
 		///Get stream frame rate
 		EXPORT double getFrameRate();

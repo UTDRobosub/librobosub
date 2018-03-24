@@ -32,7 +32,7 @@ int main(int argc, char** argv)
 	cam1.setFrameSize(cam0.getFrameSize());
 
 	//calibration data for both cameras is currently the same
-	Camera::CalibrationData calibrationData = *cam0.loadCalibrationDataFromXML("../config/seawit_cameracalib.xml");
+	Camera::CalibrationData calibrationData = *Camera::loadCalibrationDataFromXML("../config/seawit_cameracalib.xml", cam0.getFrameSize());
 
 	Mat _frame0, _frame1, left, right, left_disp, right_disp, filtered_disp;
 	//cout << cam0.setFrameSizeToMaximum() << endl;
@@ -74,8 +74,8 @@ int main(int argc, char** argv)
 		cam0.retrieveFrameBGR(_frame0);
 		cam1.retrieveFrameBGR(_frame1);
 
-		_frame0 = cam0.undistort(_frame0, calibrationData);
-		_frame1 = cam1.undistort(_frame1, calibrationData);
+		_frame0 = Camera::undistort(_frame0, calibrationData);
+		_frame1 = Camera::undistort(_frame1, calibrationData);
 
 		cvtColor(_frame0, left, COLOR_BGR2GRAY, CV_8U);
 		cvtColor(_frame1, right, COLOR_BGR2GRAY, CV_8U);

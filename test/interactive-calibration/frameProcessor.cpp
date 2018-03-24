@@ -82,10 +82,13 @@ bool CalibProcessor::detectAndParseChAruco(const cv::Mat &frame)
     cv::aruco::detectMarkers(frame, mArucoDictionary, corners, ids, cv::aruco::DetectorParameters::create(), rejected);
     cv::aruco::refineDetectedMarkers(frame, board, corners, ids, rejected);
     cv::Mat currentCharucoCorners, currentCharucoIds;
-    if(ids.size() > 0)
-        cv::aruco::interpolateCornersCharuco(corners, ids, frame, mCharucoBoard, currentCharucoCorners,
-                                         currentCharucoIds);
-    if(ids.size() > 0) cv::aruco::drawDetectedMarkers(frame, corners);
+    if(ids.size() > 0) {
+      cv::aruco::interpolateCornersCharuco(corners, ids, frame, mCharucoBoard, currentCharucoCorners,
+         currentCharucoIds);
+      cv::aruco::drawDetectedMarkers(frame, corners);
+      cv::aruco::getBoardObjectAndImagePoints(board, currentCharucoCorners, currentCharucoIds,
+         mCurrentObjectPoints, mCurrentImagePoints);
+    }
 
     if(currentCharucoCorners.total() > 3) {
         float centerX = 0, centerY = 0;
@@ -159,6 +162,9 @@ void CalibProcessor::saveFrameData()
     case chAruco:
         mCalibData->allCharucoCorners.push_back(mCurrentCharucoCorners);
         mCalibData->allCharucoIds.push_back(mCurrentCharucoIds);
+
+        mCalibData->imagePoints.push_back(mCurrentImagePoints);
+        mCalibData->objectPoints.push_back(mCurrentObjectPoints);
         break;
     case AcirclesGrid:
         objectPoints.reserve(mBoardSize.height*mBoardSize.width);
@@ -316,7 +322,8 @@ cv::Mat CalibProcessor::processFrame(const cv::Mat &frame)
     if(mTemplateLocations.size() == mDelayBetweenCaptures && isTemplateFound) {
         if(cv::norm(mTemplateLocations.front() - mTemplateLocations.back()) < mMaxTemplateOffset) {
             saveFrameData();
-            bool isFrameBad = checkLastFrame();
+            //bool isFrameBad = checkLastFrame();
+            bool isFrameBad = false;
             if (!isFrameBad) {
                 std::string displayMessage = cv::format("Frame # %d captured", std::max(mCalibData->imagePoints.size(),
                                                                                         mCalibData->allCharucoCorners.size()));
@@ -384,8 +391,8 @@ void ShowProcessor::drawGridPoints(const cv::Mat &frame)
                            POINT_SIZE, cv::Scalar(0, 255, 0), 1, cv::LINE_AA);
 }
 
-ShowProcessor::ShowProcessor(cv::Ptr<calibrationData> data, cv::Ptr<calibController> controller, TemplateType board) :
-    mCalibdata(data), mController(controller), mBoardType(board)
+ShowProcessor::ShowProcessor(cv::Ptr<calibrationData> data, cv::Ptr<calibController> controller, TemplateType board, CalibType calibType) :
+    mCalibdata(data), mController(controller), mBoardType(board), mCalibType(calibType)
 {
     mNeedUndistort = true;
     mVisMode = Grid;
@@ -403,7 +410,14 @@ cv::Mat ShowProcessor::processFrame(const cv::Mat &frame)
         if (mNeedUndistort && mController->getFramesNumberState()) {
             if(mVisMode == Grid)
                 drawGridPoints(frame);
+
+            //undistort
+//            if (mCalibType == Pinhole)
             cv::remap(frame, frameCopy, mCalibdata->undistMap1, mCalibdata->undistMap2, cv::INTER_LINEAR);
+//            else if (mCalibType == Fisheye) {
+//                cv::fisheye::undistortImage(frame, frameCopy, mCalibdata->cameraMatrix, mCalibdata->distCoeffs);
+//            }
+
             int baseLine = 100;
             cv::Size textSize = cv::getTextSize("Undistorted view", 1, mTextSize, 2, &baseLine);
             cv::Point textOrigin(baseLine, frame.rows - (int)(2.5*textSize.height));
@@ -415,11 +429,15 @@ cv::Mat ShowProcessor::processFrame(const cv::Mat &frame)
                 drawGridPoints(frameCopy);
         }
         std::string displayMessage;
-        if(mCalibdata->stdDeviations.at<double>(0) == 0)
+        if (mCalibType != Pinhole) {
+            displayMessage = cv::format("Fx = %d Fy = %d RMS = %.3f", (int)mCalibdata->cameraMatrix.at<double>(0,0),
+                                        (int)mCalibdata->cameraMatrix.at<double>(1,1), mCalibdata->totalAvgErr);
+        }
+        else if(mCalibdata->stdDeviations.at<double>(0) == 0)
             displayMessage = cv::format("F = %d RMS = %.3f", (int)mCalibdata->cameraMatrix.at<double>(0,0), mCalibdata->totalAvgErr);
         else
             displayMessage = cv::format("Fx = %d Fy = %d RMS = %.3f", (int)mCalibdata->cameraMatrix.at<double>(0,0),
-                                            (int)mCalibdata->cameraMatrix.at<double>(1,1), mCalibdata->totalAvgErr);
+                                        (int)mCalibdata->cameraMatrix.at<double>(1,1), mCalibdata->totalAvgErr);
         if(mController->getRMSState() && mController->getFramesNumberState())
             displayMessage.append(" OK");
 
@@ -428,11 +446,14 @@ cv::Mat ShowProcessor::processFrame(const cv::Mat &frame)
         cv::Point textOrigin = cv::Point(baseLine, 2*textSize.height);
         cv::putText(frameCopy, displayMessage, textOrigin, 1, mTextSize - 1, textColor, 2, cv::LINE_AA);
 
-        if(mCalibdata->stdDeviations.at<double>(0) == 0)
+        if (mCalibType != Pinhole) {
+            displayMessage = "";
+        } else if(mCalibdata->stdDeviations.at<double>(0) == 0)
             displayMessage = cv::format("DF = %.2f", mCalibdata->stdDeviations.at<double>(1)*sigmaMult);
         else
             displayMessage = cv::format("DFx = %.2f DFy = %.2f", mCalibdata->stdDeviations.at<double>(0)*sigmaMult,
                                                     mCalibdata->stdDeviations.at<double>(1)*sigmaMult);
+
         if(mController->getConfidenceIntrervalsState() && mController->getFramesNumberState())
             displayMessage.append(" OK");
         cv::putText(frameCopy, displayMessage, cv::Point(baseLine, 4*textSize.height), 1, mTextSize - 1, textColor, 2, cv::LINE_AA);

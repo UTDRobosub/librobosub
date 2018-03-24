@@ -6,6 +6,7 @@
 #define CALIB_COMMON_HPP
 
 #include <opencv2/core.hpp>
+#include <opencv2/ccalib/omnidir.hpp>
 
 #include <memory>
 #include <vector>
@@ -14,14 +15,15 @@
 namespace calib
 {
     #define OVERLAY_DELAY 1000
-    #define IMAGE_MAX_WIDTH 1280
-    #define IMAGE_MAX_HEIGHT 960
+    #define IMAGE_MAX_WIDTH 1920
+    #define IMAGE_MAX_HEIGHT 1080
 
     bool showOverlayMessage(const std::string& message);
 
     enum InputType { Video, Pictures };
     enum InputVideoSource { Camera, File };
     enum TemplateType { AcirclesGrid, Chessboard, chAruco, DoubleAcirclesGrid };
+    enum CalibType { Pinhole, Fisheye, Omni };
 
     static const std::string mainWindowName = "Calibration";
     static const std::string gridWindowName = "Board locations";
@@ -40,6 +42,7 @@ namespace calib
         cv::Mat distCoeffs;
         cv::Mat stdDeviations;
         cv::Mat perViewErrors;
+        cv::Mat omniXi;
         std::vector<cv::Mat> rvecs;
         std::vector<cv::Mat> tvecs;
         double totalAvgErr;
@@ -77,6 +80,7 @@ namespace calib
         InputType captureMethod;
         InputVideoSource source;
         TemplateType board;
+        CalibType calibType;
         cv::Size boardSize;
         int charucoDictName;
         int calibrationStep;

@@ -96,3 +96,8 @@ add_executable(app-cameracalib ${CAMERACALIB_SOURCES})
 target_link_libraries(app-cameracalib ${LIBRARY_NAME})
 target_include_directories(app-cameracalib PRIVATE ${Boost_INCLUDE_DIR})
 target_compile_features(app-cameracalib PRIVATE cxx_range_for)
+
+#add_executable(app-cameracalib2 test/interactive-calibrationv2/calib.cpp)
+#target_link_libraries(app-cameracalib2 ${LIBRARY_NAME})
+#target_include_directories(app-cameracalib2 PRIVATE ${Boost_INCLUDE_DIR})
+#target_compile_features(app-cameracalib2 PRIVATE cxx_range_for)

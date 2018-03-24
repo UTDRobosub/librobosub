@@ -22,12 +22,14 @@ namespace calib {
         bool mNeedTuning;
         bool mConfIntervalsState;
         bool mCoverageQualityState;
+        CalibType mCalibType;
+        TemplateType mBoardType;
 
         double estimateCoverageQuality();
     public:
         calibController();
         calibController(cv::Ptr<calibrationData> data, int initialFlags, bool autoTuning,
-                        int minFramesNum);
+                        int minFramesNum, CalibType calibType, TemplateType boardType);
 
         void updateState();
 
@@ -48,10 +50,11 @@ namespace calib {
         std::string mParamsFileName;
         unsigned mMaxFramesNum;
         double mAlpha;
+        CalibType mCalibType;
 
         double estimateGridSubsetQuality(size_t excludedIndex);
     public:
-        calibDataController(cv::Ptr<calibrationData> data, int maxFrames, double convParameter);
+        calibDataController(cv::Ptr<calibrationData> data, int maxFrames, double convParameter, CalibType calibType);
         calibDataController();
 
         void filterFrames();
@@ -60,7 +63,7 @@ namespace calib {
         void rememberCurrentParameters();
         void deleteAllData();
         bool saveCurrentCameraParameters() const;
-        void printParametersToConsole(std::ostream &output) const;
+        void printParametersToConsole(std::ostream &output, CalibType calibType) const;
         void updateUndistortMap();
     };
 

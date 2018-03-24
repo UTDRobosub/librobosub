@@ -92,10 +92,10 @@ namespace robosub {
 		this->cameraResolution = cameraResolution;
 	}
 
-	Camera::CalibrationData* Camera::loadCalibrationDataFromXML(string filename)
+	Camera::CalibrationData* Camera::loadCalibrationDataFromXML(const string filename, const Size frameSize)
 	{
 		FileStorage fs;
-		CalibrationData* calibData = new CalibrationData();
+		auto* calibData = new CalibrationData();
 		if (!Util::fileExists(filename)) throw std::invalid_argument("File does not exist");
 		fs.open(filename, FileStorage::READ);
 		fs["cameraMatrix"] >> calibData->cameraMatrix;
@@ -106,15 +106,17 @@ namespace robosub {
 		assert(calibData->distortionMatrix.cols == 5 && calibData->distortionMatrix.rows == 1);
 		//verify aspect ratio
 		assert((calibData->cameraResolution.width / calibData->cameraResolution.height) ==
-			(this->getFrameSize().width / this->getFrameSize().height));
+			(frameSize.width / frameSize.height));
 		//scale camera params by change in frame size
-		//calibData->cameraMatrix *= (double)this->getFrameSize().width / (double)calibData->cameraResolution.width;
+		calibData->cameraMatrix.at<double>(0, 2) *= (double)frameSize.width / (double)calibData->cameraResolution.width; //cx
+        calibData->cameraMatrix.at<double>(1, 2) *= (double)frameSize.height / (double)calibData->cameraResolution.height; //cy
+        calibData->cameraMatrix.at<double>(0, 0) *= (double)frameSize.width / (double)calibData->cameraResolution.width; //fx
+        calibData->cameraMatrix.at<double>(1, 1) *= (double)frameSize.height / (double)calibData->cameraResolution.height; //fy
 		return calibData;
 	}
 
 	Mat Camera::undistort(Mat& frame, CalibrationData& calib)
 	{
-		//THE PROBLEM: Selection is actually done on an UNDISTORTED image but expects results in the distored plane!
 		Mat output;
 		cv::undistort(frame, output, calib.cameraMatrix, calib.distortionMatrix);
 		return output;

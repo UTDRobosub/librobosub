@@ -6,6 +6,7 @@
 #include <opencv2/calib3d.hpp>
 #include <opencv2/cvconfig.h>
 #include <opencv2/highgui.hpp>
+#include <opencv2/ccalib/omnidir.hpp>
 
 #ifdef HAVE_OPENCV_ARUCO
 #include <opencv2/aruco/charuco.hpp>
@@ -31,6 +32,7 @@ const std::string keys  =
         "{ci       | 0       | Default camera id }"
         "{flip     | false   | Vertical flip of input frames }"
         "{t        | circles | Template for calibration (circles, chessboard, dualCircles, charuco) }"
+        "{ct       | pinhole | Calibration type (pinhole, fisheye, omni) }"
         "{sz       | 16.3    | Distance between two nearest centers of circles or squares on calibration board}"
         "{dst      | 295     | Distance between white and black parts of daulCircles template}"
         "{w        |         | Width of template (in corners or circles)}"
@@ -116,14 +118,14 @@ int main(int argc, char** argv)
     int calibrationFlags = 0;
     if(intParams.fastSolving) calibrationFlags |= cv::CALIB_USE_QR;
     cv::Ptr<calibController> controller(new calibController(globalData, calibrationFlags,
-                                                         parser.get<bool>("ft"), capParams.minFramesNum));
+                                                         parser.get<bool>("ft"), capParams.minFramesNum, capParams.calibType, capParams.board));
     cv::Ptr<calibDataController> dataController(new calibDataController(globalData, capParams.maxFramesNum,
-                                                                     intParams.filterAlpha));
+                                                                     intParams.filterAlpha, capParams.calibType));
     dataController->setParametersFileName(parser.get<std::string>("of"));
 
     cv::Ptr<FrameProcessor> capProcessor, showProcessor;
     capProcessor = cv::Ptr<FrameProcessor>(new CalibProcessor(globalData, capParams));
-    showProcessor = cv::Ptr<FrameProcessor>(new ShowProcessor(globalData, controller, capParams.board));
+    showProcessor = cv::Ptr<FrameProcessor>(new ShowProcessor(globalData, controller, capParams.board, capParams.calibType));
 
     if(parser.get<std::string>("vis").find("window") == 0) {
         static_cast<ShowProcessor*>(showProcessor.get())->setVisualizationMode(Window);
@@ -167,7 +169,7 @@ int main(int argc, char** argv)
                 globalData->imageSize = pipeline->getImageSize();
                 calibrationFlags = controller->getNewFlags();
 
-                if(capParams.board != chAruco) {
+                if((capParams.board != chAruco) && (capParams.calibType == Pinhole)) {
                     globalData->totalAvgErr =
                             cv::calibrateCamera(globalData->objectPoints, globalData->imagePoints,
                                                     globalData->imageSize, globalData->cameraMatrix,
@@ -175,23 +177,41 @@ int main(int argc, char** argv)
                                                     globalData->stdDeviations, cv::noArray(), globalData->perViewErrors,
                                                     calibrationFlags, solverTermCrit);
                 }
-                else {
+                else if (capParams.calibType == Fisheye) {
+                  globalData->totalAvgErr =
+                    cv::fisheye::calibrate(globalData->objectPoints, globalData->imagePoints,
+                                          globalData->imageSize, globalData->cameraMatrix,
+                                          globalData->distCoeffs, cv::noArray(), cv::noArray(),
+                                          0, solverTermCrit);
+                }
+                else if (capParams.calibType == Omni) {
+                    globalData->totalAvgErr =
+                            cv::omnidir::calibrate(globalData->objectPoints, globalData->imagePoints,
+                                                    globalData->imageSize, globalData->cameraMatrix,
+                                                    globalData->omniXi, globalData->distCoeffs, cv::noArray(), cv::noArray(),
+                                                    0, solverTermCrit);
+                }
+                else if (capParams.board == chAruco){
 #ifdef HAVE_OPENCV_ARUCO
                     cv::Ptr<cv::aruco::Dictionary> dictionary =
                             cv::aruco::getPredefinedDictionary(cv::aruco::PREDEFINED_DICTIONARY_NAME(capParams.charucoDictName));
                     cv::Ptr<cv::aruco::CharucoBoard> charucoboard =
                                 cv::aruco::CharucoBoard::create(capParams.boardSize.width, capParams.boardSize.height,
                                                                 capParams.charucoSquareLenght, capParams.charucoMarkerSize, dictionary);
+
                     globalData->totalAvgErr =
-                            cv::aruco::calibrateCameraCharuco(globalData->allCharucoCorners, globalData->allCharucoIds,
-                                                           charucoboard, globalData->imageSize,
-                                                           globalData->cameraMatrix, globalData->distCoeffs,
-                                                           cv::noArray(), cv::noArray(), globalData->stdDeviations, cv::noArray(),
-                                                           globalData->perViewErrors, calibrationFlags, solverTermCrit);
+                          cv::aruco::calibrateCameraCharuco(globalData->allCharucoCorners, globalData->allCharucoIds,
+                             charucoboard, globalData->imageSize,
+                             globalData->cameraMatrix, globalData->distCoeffs,
+                             cv::noArray(), cv::noArray(), globalData->stdDeviations, cv::noArray(),
+                             globalData->perViewErrors, calibrationFlags, solverTermCrit);
 #endif
                 }
+                std::cout << globalData->cameraMatrix << std::endl;
+                std::cout << globalData->distCoeffs << std::endl;
+                std::cout << globalData->totalAvgErr << std::endl;
                 dataController->updateUndistortMap();
-                dataController->printParametersToConsole(std::cout);
+                dataController->printParametersToConsole(std::cout, capParams.calibType);
                 controller->updateState();
                 for(int j = 0; j < capParams.calibrationStep; j++)
                     dataController->filterFrames();

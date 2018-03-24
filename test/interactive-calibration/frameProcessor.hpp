@@ -35,6 +35,7 @@ protected:
     cv::Size mBoardSize;
     std::vector<cv::Point2f> mTemplateLocations;
     std::vector<cv::Point2f> mCurrentImagePoints;
+    std::vector<cv::Point3f> mCurrentObjectPoints;
     cv::Mat mCurrentCharucoCorners;
     cv::Mat mCurrentCharucoIds;
 
@@ -79,11 +80,12 @@ protected:
     bool mNeedUndistort;
     double mGridViewScale;
     double mTextSize;
+    CalibType mCalibType;
 
     void drawBoard(cv::Mat& img, cv::InputArray points);
     void drawGridPoints(const cv::Mat& frame);
 public:
-    ShowProcessor(cv::Ptr<calibrationData> data, cv::Ptr<calibController> controller, TemplateType board);
+    ShowProcessor(cv::Ptr<calibrationData> data, cv::Ptr<calibController> controller, TemplateType board, CalibType calibType);
     virtual cv::Mat processFrame(const cv::Mat& frame);
     virtual bool isProcessed() const;
     virtual void resetState();
