@@ -4,6 +4,7 @@
 <framesCount>13</framesCount>
 <cameraResolution>
   1280 720</cameraResolution>
+<calibrationModel>pinhole</calibrationModel>
 <cameraMatrix type_id="opencv-matrix">
   <rows>3</rows>
   <cols>3</cols>

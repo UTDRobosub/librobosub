@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<opencv_storage>
+<calibrationDate>"Sun 25 Mar 2018 08:37:55 PM CDT"</calibrationDate>
+<calibrationModel>fisheye</calibrationModel>
+<framesCount>42</framesCount>
+<cameraResolution>
+  1280 720</cameraResolution>
+<cameraMatrix type_id="opencv-matrix">
+  <rows>3</rows>
+  <cols>3</cols>
+  <dt>d</dt>
+  <data>
+    4.0743665431525210e+02 0. 6.3950000000000000e+02 0.
+    4.0743665431525210e+02 3.5950000000000000e+02 0. 0. 1.</data></cameraMatrix>
+<distortionMatrix type_id="opencv-matrix">
+  <rows>4</rows>
+  <cols>1</cols>
+  <dt>d</dt>
+  <data>
+    0. 0. 0. 0.</data></distortionMatrix>
+<avgReprojectionError>2.1042506470305850e+02</avgReprojectionError>
+</opencv_storage>

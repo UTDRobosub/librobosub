@@ -57,7 +57,8 @@ namespace robosub {
 	    #ifdef WINDOWS
             if (!cap->retrieve(img)) return false;
         #else
-            if (!cap->read(img)) return false;
+            if (!cap->grab()) return false;
+			if (!cap->retrieve(img)) return false;
         #endif
 		updateRetrieveTime();
 		return true;
@@ -68,12 +69,18 @@ namespace robosub {
         #ifdef WINDOWS
             if (!cap->retrieve(img)) return false;
         #else
-            if (!cap->read(img)) return false;
+			if (!cap->grab()) return false;
+			if (!cap->retrieve(img)) return false;
         #endif
 		updateRetrieveTime();
 		cvtColor(img, img, COLOR_BGR2GRAY, CV_8UC1);
 		return true;
 	}
+
+    void Camera::convertFrameToGrayscale(Mat &bgr, Mat &gray)
+    {
+        cvtColor(bgr, gray, COLOR_BGR2GRAY, CV_8UC1);
+    }
 
 	Camera::CalibrationData::CalibrationData()
 	{
@@ -81,14 +88,21 @@ namespace robosub {
 		this->distortionMatrix = Mat();
 		this->cameraMatrix = Mat();
 	}
-	Camera::CalibrationData::CalibrationData(Size cameraResolution)
+	Camera::CalibrationData::CalibrationData(Size cameraResolution, Model model)
 	{
 		this->cameraMatrix = Mat::eye(3, 3, CV_64F);
 		cameraMatrix.at<double>(0, 0) = 0.5;
 		cameraMatrix.at<double>(1, 1) = 0.5;
 		cameraMatrix.at<double>(0, 2) = (double)cameraResolution.width / 2.0;
 		cameraMatrix.at<double>(1, 2) = (double)cameraResolution.height / 2.0;
-		this->distortionMatrix = Mat::zeros(5, 1, CV_64F);
+        switch(model) {
+            case PINHOLE:
+                this->distortionMatrix = Mat::zeros(5, 1, CV_64F);
+                break;
+            case FISHEYE:
+                this->distortionMatrix = Mat::zeros(4, 1, CV_64F);
+        }
+
 		this->cameraResolution = cameraResolution;
 	}
 
@@ -99,11 +113,22 @@ namespace robosub {
 		if (!Util::fileExists(filename)) throw std::invalid_argument("File does not exist");
 		fs.open(filename, FileStorage::READ);
 		fs["cameraMatrix"] >> calibData->cameraMatrix;
-		fs["dist_coeffs"] >> calibData->distortionMatrix;
+		fs["distortionMatrix"] >> calibData->distortionMatrix;
 		fs["cameraResolution"] >> calibData->cameraResolution;
+        string modelType;
+        fs["calibrationModel"] >> modelType;
 		fs.release();
+
+        CalibrationData::Model model;
+        if (modelType == "pinhole") model = CalibrationData::Model::PINHOLE;
+        else if (modelType == "fisheye") model = CalibrationData::Model::FISHEYE;
+        else {
+            throw std::invalid_argument("Model type is not supported");
+        }
+        calibData->model = model;
+
 		assert(calibData->cameraMatrix.cols == 3 && calibData->cameraMatrix.rows == 3);
-		assert(calibData->distortionMatrix.cols == 5 && calibData->distortionMatrix.rows == 1);
+		assert(calibData->distortionMatrix.cols == 1 || calibData->distortionMatrix.rows == 1);
 		//verify aspect ratio
 		assert((calibData->cameraResolution.width / calibData->cameraResolution.height) ==
 			(frameSize.width / frameSize.height));
@@ -118,7 +143,14 @@ namespace robosub {
 	Mat Camera::undistort(Mat& frame, CalibrationData& calib)
 	{
 		Mat output;
-		cv::undistort(frame, output, calib.cameraMatrix, calib.distortionMatrix);
+        switch(calib.model) {
+            case CalibrationData::Model::PINHOLE:
+                cv::undistort(frame, output, calib.cameraMatrix, calib.distortionMatrix, calib.cameraMatrix);
+                break;
+            case CalibrationData::Model::FISHEYE:
+                cv::fisheye::undistortImage(frame, output, calib.cameraMatrix, calib.distortionMatrix, calib.cameraMatrix);
+                break;
+        }
 		return output;
 	}
 
@@ -171,8 +203,8 @@ namespace robosub {
 	}
 
 	bool Camera::isLiveStream()
-	{
-		if (!init) return testLiveStream();
-		return liveStream;
-	}
+    {
+        if (!init) return testLiveStream();
+        return liveStream;
+    }
 }

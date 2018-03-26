@@ -21,10 +21,11 @@ int main(int argc, char** argv){
 		"{help ?         |         | print this message     }"
 		"{@mode          |         | 'send' or 'receive'    }"
 		"{p port         |8001     | port to send/listen to }"
-		"{h host         |127.0.0.1| address to send to (not applicable for receive) }"
-		"{vc cols        |1280     | image buffer columns }"
-		"{vr rows        |720      | image buffer rows }"
-		"{c cam camera   |0        | camera id }"
+        "{d no-display   |false    | disable visualization (send only, faster) }"
+		"{h host         |127.0.0.1| address to send to (send only) }"
+		"{vc cols        |1280     | image buffer columns (send only)  }"
+		"{vr rows        |720      | image buffer rows (send only)  }"
+		"{c cam camera   |0        | camera id (send only) }"
 	;
 
 	CommandLineParser parser(argc, argv, keys);
@@ -48,6 +49,7 @@ int main(int argc, char** argv){
 	int mode = parser.get<String>("@mode")[0] == 's' ? MODE_SEND : MODE_RECEIVE;
 	int port = parser.get<int>("port");
 	String addr = parser.get<String>("host");
+    bool showDisplay = !parser.get<bool>("d");
 	//int cols = parser.get<int>("cols");
 	//int rows = parser.get<int>("rows");
 	const int camera = parser.get<int>("camera");
@@ -69,7 +71,6 @@ int main(int argc, char** argv){
         }
         frameSize = cam->setFrameSize(frameSize);
         cout << frameSize << endl;
-        //assert(output.width == cols && output.height == rows);
     } else {
         screenRes = Util::getDesktopResolution();
     }
@@ -81,33 +82,33 @@ int main(int argc, char** argv){
 
     Mat frame1;
 
+    //load calibration data - run AFTER resolution set
+    Camera::CalibrationData calibrationData = *Camera::loadCalibrationDataFromXML("../config/fisheye180_cameracalib_fisheye.xml", frameSize);
+
     if(mode == MODE_SEND){
 
         while(running){
 
             cam->retrieveFrameBGR(frame1);
 
-            frame1 = frame1.clone(); //make it continuous
-
-			//frame1 = Camera::undistort(frame1, calibrationData);
+            //frame1 = frame1.clone(); //make it continuous
+			frame1 = Camera::undistort(frame1, calibrationData);
 
             ImageTransform::flip(frame1, ImageTransform::FlipAxis::HORIZONTAL);
 
             SendFrame(&udps,&frame1);
 
-			Drawing::text(frame1,
-                String(Util::toStringWithPrecision(cam->getFrameRate())) + String(" FPS"),
-                Point(16, 16), Scalar(255, 255, 255), Drawing::Anchor::BOTTOM_LEFT, 0.5
-            );
+            if (showDisplay) {
+                Drawing::text(frame1,
+                    String(Util::toStringWithPrecision(cam->getFrameRate())) + String(" FPS"),
+                    Point(16, 16), Scalar(255, 255, 255), Drawing::Anchor::BOTTOM_LEFT, 0.5
+                );
 
-            imshow("Sending Frame", frame1);
-
-            waitKey(1);
+                imshow("Sending Frame", frame1);
+                waitKey(1);
+            }
         }
     } else {
-
-        //load calibration data - run AFTER resolution set
-        Camera::CalibrationData calibrationData = *Camera::loadCalibrationDataFromXML("../config/fisheye180_cameracalibv2.xml", frameSize);
 
 		FPS fps = FPS();
         Mat frame3;
@@ -116,16 +117,16 @@ int main(int argc, char** argv){
 
             Mat* frame2 = RecvFrame(&udpr);
 
-            if(frame2 == 0){
+            if(frame2 == 0) {
 				cout<<"No frame data received yet."<<endl;
 				robosub::Time::waitMillis(200);
             } else {
                 fps.frame();
 
-                frame3 = Camera::undistort(*frame2, calibrationData);
+				frame3 = frame2->clone();
 
                 Drawing::text(frame3,
-					String(Util::toStringWithPrecision(fps.fps())) + String(" FPS"),
+					String(Util::toStringWithPrecision(fps.fps())) + String(" packets/s"),
 					Point(16, 16), Scalar(255, 255, 255), Drawing::Anchor::BOTTOM_LEFT, 0.5
 				);
 

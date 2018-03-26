@@ -12,8 +12,6 @@ enum Model {
     OMNI
 };
 
-
-
 bool detectAndParseChessboard(const cv::Mat &grey, cv::Mat &frame, Size &patternSize, vector<Point2f> &currentImagePoints)
 {
     int chessBoardFlags = cv::CALIB_CB_ADAPTIVE_THRESH | cv::CALIB_CB_NORMALIZE_IMAGE | cv::CALIB_CB_FAST_CHECK;

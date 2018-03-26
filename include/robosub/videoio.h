@@ -27,16 +27,23 @@ namespace robosub
 
 		///Camera calibration information
 		struct CalibrationData {
+			enum Model {
+				PINHOLE,
+				FISHEYE
+			};
+
 			Mat cameraMatrix;
 			Mat distortionMatrix;
 			Size cameraResolution;
+			Model model;
 
 			EXPORT CalibrationData();
-			EXPORT CalibrationData(Size cameraResolution);
-			EXPORT CalibrationData(Mat cameraMatrix, Mat distortionMatrix, Size cameraResolution) {
+			EXPORT CalibrationData(Size cameraResolution, Model model);
+			EXPORT CalibrationData(Mat cameraMatrix, Mat distortionMatrix, Size cameraResolution, Model model) {
 				this->cameraMatrix = cameraMatrix;
 				this->distortionMatrix = distortionMatrix;
 				this->cameraResolution = cameraResolution;
+				this->model = model;
 			}
 		};
 
@@ -57,6 +64,8 @@ namespace robosub
 		EXPORT bool retrieveFrameBGR(Mat& img);
 		///Retrieve and decode the current frame (greyscale)
 		EXPORT bool retrieveFrameGrey(Mat& img);
+        ///Convert a frame from BGR to Grayscale
+        EXPORT static void convertFrameToGrayscale(Mat& bgr, Mat& gray);
 
 		///Prepare single-camera calibration data from XML file
 		///This method will also scale camera parameters appropriately for the camera
