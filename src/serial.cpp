@@ -2,7 +2,130 @@
 #include "robosub/serial.h"
 
 namespace robosub {
+	
+	////////////////////////////////////////////////////////////////////////////////////////////
+	//Encoding and decoding; not part of Serial class.
+	//Copy and paste this code into an arduino and it will still work.
+	
+	int strFindFirstMasked(char *buf, int maxlen, char until, char mask){
+		for(int i=0; i<maxlen; i++){
+			if((buf[i]&mask)==until){
+				return i;
+			}
+		}
+		
+		return -1;
+	}
+	
+	int strFindLastMasked(char *buf, int maxlen, char until, char mask){
+		for(int i=maxlen-1; i>=0; i--){
+			if((buf[i]&mask)==until){
+				return i;
+			}
+		}
+	}
+	
+	const char Serial_MsgBeginChar = '[';
+	const char Serial_MsgEndChar = ']';
+	const char Serial_EscapeChar = '\\';
+	
+	int Serial_SpecialCharCount = 3;
+	const char Serial_SpecialChars[] = {
+		Serial_MsgBeginChar,
+		Serial_MsgEndChar,
+		Serial_EscapeChar,
+	};
+	const char Serial_SpecialCharEscapes[] = {
+		'(',
+		')',
+		'/',
+	};
+
+	int SerialDataEncode(char *decoded, int decodedlen, char *encoded){
+		int encodedlen = 0;
+		
+		encoded[encodedlen++] = Serial_MsgBeginChar;
+		
+		for(int ci=0; ci<decodedlen; ci++){
+			char c = decoded[ci];
+			
+			bool special = false;
+			for(int scci=0; scci<Serial_SpecialCharCount; scci++){
+				if(c==Serial_SpecialChars[scci]){
+					encoded[encodedlen++] = Serial_EscapeChar;
+					encoded[encodedlen++] = Serial_SpecialCharEscapes[scci];
+					special = true;
+				}
+			}
+			
+			if(!special){
+				encoded[encodedlen++] = c;
+			}
+		}
+		
+		encoded[encodedlen++] = Serial_MsgEndChar;
+		
+		return encodedlen;
+	}
+
+	int SerialDataDecode(char *encoded, int encodedlen, char *decoded){
+		int decodedlen = 0;
+		
+		for(int ci=0; ci<encodedlen; ci++){
+			char c = encoded[ci];
+			
+			if(c==Serial_EscapeChar){ //if the current character is the escape, the next character is an escaped special char
+				ci++;
+				c = encoded[ci];
+				
+				bool special = false;
+				for(int scci=0; scci<Serial_SpecialCharCount; scci++){
+					if(c==Serial_SpecialCharEscapes[scci]){
+						decoded[decodedlen++] = Serial_SpecialChars[scci];
+						special = true;
+					}
+				}
+				
+				if(!special){ //the last character was the escape but the current one does not match any special characters
+					//cout<<"Error: Escaped non-special char "<<c<<endl;
+				}
+			}else{ //otherwise it's a regular character
+				decoded[decodedlen++] = c;
+			}
+		}
+		
+		return decodedlen;
+	}
+	
+	int SerialReadAndRemoveFirstEncodedDataFromBuffer(char *buf, int *buflen, char *decoded, int maxdecodedlen){
+		int startloc = strFindFirstMasked(buf, *buflen, Serial_MsgBeginChar, 0xFF); //find the first start marker in the string
+		int endloc = strFindFirstMasked(buf+startloc+1, *buflen-startloc-1, Serial_MsgEndChar, 0xFF);
+		
+		if(startloc!=-1 && endloc!=-1){
+			endloc += startloc+1;
+			
+			startloc = strFindLastMasked(buf, endloc, Serial_MsgBeginChar, 0xFF);
+			
+			int encodedlen = endloc-startloc-1;
+			char *encoded = (char*)malloc(encodedlen+1);
+			
+			memcpy(encoded, buf+startloc+1, encodedlen);
+			
+			memmove(buf, buf+endloc, *buflen-endloc-1);
+			*buflen -= endloc+1;
+			
+			return SerialDataDecode(encoded, encodedlen, decoded);
+		}
+		
+		return 0;
+	}
+	
+	////////////////////////////////////////////////////////////////////////////////////////////
+	
+	//sorry about the flow, this is what happens when you have a possibility for errors in the constructor
 	Serial::Serial(string fn, int baud){
+		connected = false;
+		
 		filename = fn;
 		readbuflen = 0;
 		readbuf = (char*)malloc(maxreadbuflen);
@@ -46,37 +169,41 @@ namespace robosub {
 		file = open(filename.c_str(), O_RDWR | O_NOCTTY);
 		if(file<0){
 			cout<<"Serial port \'"<<filename<<"\' failed to open: error "<<errno<<endl;
-		}
-		
-		memset(&tty, 0, sizeof(tty));
-		if(tcgetattr(file, &tty)!=0){
-			cout<<"Serial port \'"<<filename<<"\' tty tcgetattr error "<<errno<<endl;
-		}
-		
-		cfsetospeed(&tty, ibaud);
-		cfsetispeed(&tty, ibaud);
-		
-		tty.c_cflag &= ~PARENB; //8n1
-		tty.c_cflag &= ~CSTOPB;
-		tty.c_cflag &= ~CSIZE;
-		tty.c_cflag |= CS8;
-		tty.c_cflag &= ~CRTSCTS; //no flow control
-		
-		tty.c_lflag = 0; //no protocol
-		tty.c_oflag = 0; //no remap, no delay
-		
-		tty.c_cc[VMIN] = 0; //non-blocking read
-		tty.c_cc[VTIME] = 0; //100 ms read timeout
-		
-		tty.c_cflag |= CREAD | CLOCAL; //turn on read and ignore control lines
-		tty.c_iflag &= ~(IXON | IXOFF | IXANY); //no flow control;
-		tty.c_iflag &= ~(ICANON | ECHO | ECHOE | ISIG); //raw
-		tty.c_oflag &= ~OPOST; //raw
-		
-		tcflush(file, TCIFLUSH);
-		
-		if(tcsetattr(file, TCSANOW, &tty)!=0){
-			cout<<"Serial port \'"<<filename<<"\' tty tcsetattr error "<<errno<<endl;
+		}else{
+			
+			memset(&tty, 0, sizeof(tty));
+			if(tcgetattr(file, &tty)!=0){
+				cout<<"Serial port \'"<<filename<<"\' tty tcgetattr error "<<errno<<endl;
+			}else{
+				
+				cfsetospeed(&tty, ibaud);
+				cfsetispeed(&tty, ibaud);
+				
+				tty.c_cflag &= ~PARENB; //8n1
+				tty.c_cflag &= ~CSTOPB;
+				tty.c_cflag &= ~CSIZE;
+				tty.c_cflag |= CS8;
+				tty.c_cflag &= ~CRTSCTS; //no flow control
+				
+				tty.c_lflag = 0; //no protocol
+				tty.c_oflag = 0; //no remap, no delay
+				
+				tty.c_cc[VMIN] = 0; //non-blocking read
+				tty.c_cc[VTIME] = 0; //100 ms read timeout
+				
+				tty.c_cflag |= CREAD | CLOCAL; //turn on read and ignore control lines
+				tty.c_iflag &= ~(IXON | IXOFF | IXANY); //no flow control;
+				tty.c_iflag &= ~(ICANON | ECHO | ECHOE | ISIG); //raw
+				tty.c_oflag &= ~OPOST; //raw
+				
+				tcflush(file, TCIFLUSH);
+				
+				if(tcsetattr(file, TCSANOW, &tty)!=0){
+					cout<<"Serial port \'"<<filename<<"\' tty tcsetattr error "<<errno<<endl;
+				}else{
+					connected = true;
+				}
+			}
 		}
 	}
 	
@@ -84,12 +211,14 @@ namespace robosub {
 		free(readbuf);
 		close(file);
 	}
-	 
-	void Serial::flushBuffer(){
-		readbuflen = 0;
-	}
 	
+	//reads all available data into the local buffer
 	void Serial::readEntireBuffer(){
+		if(!connected){
+			cout<<"Serial port \'"<<filename<<"\' tried to read but not connected"<<endl;
+			return;
+		}
+		
 		readbuflen += read(file, readbuf+readbuflen, maxreadbuflen-readbuflen);
 		
 		if(readbuflen==maxreadbuflen){
@@ -97,12 +226,25 @@ namespace robosub {
 		}
 	}
 	
+	//whether it was successfully initialized and is currently operational
+	bool Serial::isConnected(){
+		return connected;
+	}
+	
+	//empty the buffer of unprocessed received data
+	void Serial::flushBuffer(){
+		readbuflen = 0;
+	}
+	
+	//reads up to maxlen chars from the beginning of the receive buffer
 	int Serial::readLen(char *buf, int maxlen){
 		readEntireBuffer();
 		
 		int readlen = min(maxlen, readbuflen);
 		
-		memcpy(buf, readbuf, readlen);
+		if(buf!=nullptr){
+			memcpy(buf, readbuf, readlen);
+		}
 		memmove(readbuf, readbuf+readlen, readbuflen-readlen);
 		
 		readbuflen -= readlen;
@@ -110,24 +252,14 @@ namespace robosub {
 		return readlen;
 	}
 	
-	int strFindFirstFlag(char *buf, int maxlen, char until, char mask){
-		for(int i=0; i<maxlen; i++){
-			if((buf[i]&mask)==until){
-				return i;
-			}
-		}
-		
-		return -1;
-	}
-	
+	//reads until it encounters until or has read maxlen chars
 	int Serial::readToChar(char *buf, int maxlen, char until){
 		return readToFlag(buf, maxlen, until, 0xFF);
 	}
 	
+	//reads until it encounters a byte whose masked bits equal until, or it has read maxlen chars
 	int Serial::readToFlag(char *buf, int maxlen, char until, char mask){
-		readEntireBuffer();
-		
-		int firstloc = strFindFirstFlag(readbuf, readbuflen, until, mask) + 1;
+		int firstloc = strFindFirstMasked(readbuf, readbuflen, until, mask) + 1;
 		if(firstloc==-1) return -2;
 		else if(firstloc>maxlen) return -1;
 		
@@ -136,6 +268,7 @@ namespace robosub {
 		return rlen;
 	}
 	
+	//reads all available data into a c++ string; may discard data if the buffer contains null characters
 	string Serial::readStr(){
 		readEntireBuffer();
 		readbuf[readbuflen] = '\0';
@@ -145,12 +278,54 @@ namespace robosub {
 		return (string)readbuf;
 	}
 	
+	//transmits len chars out of buf
 	void Serial::writeLen(char *buf, int len){
+		if(!connected){
+			cout<<"Serial port \'"<<filename<<"\' tried to write but not connected"<<endl;
+			return;
+		}
+		
 		write(file, buf, len);
 	}
 	
+	//transmits the string
 	void Serial::writeStr(string str){
 		char *s = (char*)str.c_str();
 		writeLen(s, str.length());
+	}
+	
+	//reads and decodes the first available packet, discarding data after the packet is maxdecodedlen bytes in size
+	int Serial::readDecodeLen(char *decoded, int maxdecodedlen){
+		readEntireBuffer();
+		
+		return SerialReadAndRemoveFirstEncodedDataFromBuffer(readbuf, &readbuflen, decoded, maxdecodedlen);
+	}
+	
+	//reads and decodes the first available packet into a string; may discard data if the packet contains nulls
+	string Serial::readDecodeStr(){
+		readEntireBuffer();
+		
+		char decoded[1024];
+		
+		int decodedlen = SerialReadAndRemoveFirstEncodedDataFromBuffer(readbuf, &readbuflen, decoded, 1024);
+		
+		decoded[decodedlen] = '\0';
+		
+		return (string)decoded;
+	}
+	
+	//encodes and transmits decodedlen chars out of decoded
+	void Serial::writeEncodeLen(char *decoded, int decodedlen){
+		char encoded[decodedlen*2];
+		
+		int encodedlen = SerialDataEncode(decoded, decodedlen, encoded); //leave space at the beginning of encoded for the start character
+		
+		writeLen(encoded, encodedlen);
+	}
+	
+	//encodes and transmits the string
+	void Serial::writeEncodeStr(string str){
+		char *s = (char*)str.c_str();
+		writeEncodeLen(s, str.length());
 	}
 }
