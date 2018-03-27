@@ -93,6 +93,7 @@ int main(int argc, char** argv){
 
             //frame1 = frame1.clone(); //make it continuous
 			frame1 = Camera::undistort(frame1, calibrationData);
+			//ImageTransform::rotate(frame1, 90);
 
             ImageTransform::flip(frame1, ImageTransform::FlipAxis::HORIZONTAL);
 
