@@ -132,7 +132,7 @@ int main(int argc, char** argv) {
         current["index"] = i++ % 1000; //force refresh approx every second
         current["rand"] = rand() % 100;
 
-        robosub::Time::waitMillis(100);
+        robosub::Time::waitMillis(1);
         unsigned long milliseconds_since_epoch = robosub::Time::millis();
 
         //send data to connections

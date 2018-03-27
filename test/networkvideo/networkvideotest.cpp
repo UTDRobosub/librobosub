@@ -91,11 +91,11 @@ int main(int argc, char** argv){
 
             cam->retrieveFrameBGR(frame1);
 
-            frame1 = frame1.clone(); //make it continuous
+            //frame1 = frame1.clone(); //make it continuous
 			frame1 = Camera::undistort(frame1, calibrationData);
-			ImageTransform::rotate(frame1, 90);
+			//ImageTransform::rotate(frame1, 90);
 
-            //ImageTransform::flip(frame1, ImageTransform::FlipAxis::HORIZONTAL);
+            ImageTransform::flip(frame1, ImageTransform::FlipAxis::HORIZONTAL);
 
             SendFrame(&udps,&frame1);
 
