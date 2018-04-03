@@ -20,6 +20,7 @@ int main(){
 	
 	char decoded[1024];
 	
+	/*
 	while(serial1.isConnected()){
 		
 		string sendstr;
@@ -32,6 +33,14 @@ int main(){
 		if(readstr.length()!=0){
 			cout<<readstr<<endl;
 		}
+	}*/
+	
+	while(serial1.isConnected()){
+		serial1.readDecodeLen(decoded, 1024);
+		
+		int data = decoded[0] | decoded[1]<<8;
+		
+		cout<<data<<endl;
 	}
 	
 	return 0;

@@ -1,6 +1,7 @@
 #include <robosub/robosub.h>
 #include <stdio.h>
 #include <stdlib.h> //rand
+#include <robosub/serial.h>
 
 using namespace std;
 using namespace robosub;
@@ -23,7 +24,27 @@ void handleMissionControlState(DataBucket state) {
 
 }
 
+Serial *serial1;
+
+void initRobotState(){
+	string port = Util::execCLI("ls /dev | grep tty[AU]");
+	cout<<"using serial port /dev/"<<port<<endl;
+	serial1 = new Serial("/dev/" + port.substr(0,port.length()-1), 115200);
+}
+
+char decoded[1024];
+
+void updateRobotState(DataBucket& state){
+	serial1->readDecodeLen(decoded, 1024);
+	
+	int data = decoded[0];
+	
+	state["pin"] = data;
+}
+
 int main(int argc, char** argv) {
+	initRobotState();
+	
     //prepare buckets to store data
     DataBucket current;
     DataBucket receivedState;
@@ -134,6 +155,8 @@ int main(int argc, char** argv) {
 
         robosub::Time::waitMillis(1);
         unsigned long milliseconds_since_epoch = robosub::Time::millis();
+        
+        updateRobotState(current);
 
         //send data to connections
         for(auto &connection : server.get_connections())
