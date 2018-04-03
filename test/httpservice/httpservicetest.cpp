@@ -148,12 +148,15 @@ int main(int argc, char** argv) {
     cout << "Server started" << endl;
 
     int i = 0;
+    Telemetry telemetry = Telemetry();
 
     while(true) {
         current["index"] = i++ % 1000; //force refresh approx every second
         current["rand"] = rand() % 100;
+        current["cpu"] = telemetry.getSystemCPUUsage();
+        current["ram"] = telemetry.getSystemRAMUsage();
 
-        robosub::Time::waitMillis(1);
+        robosub::Time::waitMicros(1); //tight loop, just not so tight as to peg the processor at 100%
         unsigned long milliseconds_since_epoch = robosub::Time::millis();
         
         updateRobotState(current);
