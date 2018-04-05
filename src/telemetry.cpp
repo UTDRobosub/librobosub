@@ -2,43 +2,38 @@
 
 namespace robosub {
 
-    long long DataBucket::_getUUID() {
-        return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
-    }
-
     DataBucket::DataBucket() {
         _data = json({ });
-        _data["data"] = json({ });
-        _data["uuid"] = _getUUID();
     }
 
     DataBucket::DataBucket(json data) {
         _data = data;
-        _data["data"] = _data;
-        _data["uuid"] = _getUUID();
     }
 
     DataBucket::DataBucket(string string) {
         _data = json::parse(string);
-        _data["data"] = _data;
-        _data["uuid"] = _getUUID();
     }
 
     DataBucket::DataBucket(vector<uint8_t> cborFormat) {
         _data = json::from_cbor(cborFormat);
-        _data["data"] = _data;
-        _data["uuid"] = _getUUID();
     }
 
     bool DataBucket::isCompressed() {
-        return _data["locked"] == true;
+        return _compressed;
     }
 
     DataBucket::reference DataBucket::operator[] (const string key) {
         if (isCompressed()) {
             throw runtime_error("Accessors not allowed on compressed buckets");
         }
-        return _data["data"][key];
+        return _data[key];
+    }
+
+    DataBucket::reference DataBucket::operator[] (const int key) {
+        if (isCompressed()) {
+            throw runtime_error("Accessors not allowed on compressed buckets");
+        }
+        return _data[key];
     }
 
     DataBucket& DataBucket::operator= (const DataBucket& other) {
@@ -47,56 +42,42 @@ namespace robosub {
     }
 
     json DataBucket::toJson() {
-        return _data["data"];
+        return _data;
     }
 
     string DataBucket::toString() {
-        return _data["data"].dump();
+        return _data.dump();
     }
 
     string DataBucket::toPrettyString() {
-        return _data["data"].dump(4); //number of spaces to indent
+        return _data.dump(4); //number of spaces to indent
     }
 
     vector<uint8_t> DataBucket::toCbor() {
-        return json::to_cbor(_data["data"]);
+        return json::to_cbor(_data);
     }
 
     void DataBucket::clear() {
         _data.clear();
-        _data["data"] = { };
-        _data["uuid"] = _getUUID();
-        _data["locked"] = false;
     }
 
     DataBucket DataBucket::compress(DataBucket& previousState) {
-        json diffs = json({ });
-
-        diffs["data"] = json::diff(previousState._data["data"], _data["data"]);
-        diffs["uuid"] = previousState._data["uuid"];
-        diffs["locked"] = true;
+        json diffs = json::diff(previousState._data, _data);
 
         DataBucket newBucket;
         newBucket._data = diffs;
+        newBucket._compressed = true;
         return newBucket;
-    }
-
-    bool DataBucket::isInflatable(DataBucket& previousState) {
-        return (previousState._data["uuid"] == _data["uuid"]) && (isCompressed() && !previousState.isCompressed());
     }
 
     DataBucket DataBucket::inflate(DataBucket& previousState) {
         cout << previousState._data << endl;
         cout << _data << endl;
 
-        if (!isInflatable(previousState))
-            throw runtime_error("Cannot inflate from old or mismatched data");
+        if (!isCompressed())
+            throw runtime_error("Cannot inflate uncompressed data");
 
-        json result = json({ });
-
-        result["data"] = previousState._data["data"].patch(_data["data"]);
-        result["uuid"] = _getUUID();
-        result["locked"] = nullptr;
+        json result = previousState._data.patch(_data);
 
         DataBucket newBucket;
         newBucket._data = result;
@@ -168,10 +149,6 @@ namespace robosub {
         return virtualMemUsed;
     }
 
-    unsigned long long Telemetry::getVirtualMemoryUsedByProcess() {
-        return 0;
-    }
-
     unsigned long long Telemetry::getTotalPhysicalMemory() {
         struct sysinfo memInfo = _pollMemory();
         unsigned long long totalPhysMem = memInfo.totalram;
@@ -186,14 +163,6 @@ namespace robosub {
         //Multiply in next statement to avoid int overflow on right hand side...
         physMemUsed *= memInfo.mem_unit;
         return physMemUsed;
-    }
-
-    unsigned long long Telemetry::getPhysicalMemoryUsedByProcess() {
-        return 0;
-    }
-
-    double Telemetry::getProgramRAMUsage() {
-        return 0;
     }
 
     double Telemetry::getSystemRAMUsage() {

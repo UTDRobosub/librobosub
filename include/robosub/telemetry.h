@@ -21,8 +21,7 @@ namespace robosub {
     class DataBucket {
     private:
         json _data;
-
-        long long _getUUID();
+        bool _compressed = false;
 
     public:
         using BasicJsonType = nlohmann::basic_json<>;
@@ -44,6 +43,8 @@ namespace robosub {
 
         //get or set the value of an object by its key
         reference operator[](const string key);
+        //get position in array
+        reference operator[](const int key);
 
         //copy operator
         DataBucket& operator=(const DataBucket& other);
@@ -67,12 +68,8 @@ namespace robosub {
         DataBucket compress(DataBucket& previousState);
 
         inline friend ostream& operator<<(ostream & lhs, const DataBucket & rhs) {
-            return lhs << rhs._data["data"].dump();
+            return lhs << rhs._data.dump();
         }
-
-        //check to ensure that the bucket is inflatable from its previous state
-        //each bucket has a unique stamp associated with
-        bool isInflatable(DataBucket& previousState);
 
         //reverse delta compression using previous state
         DataBucket inflate(DataBucket& previousState);
@@ -99,13 +96,10 @@ namespace robosub {
 
         unsigned long long getTotalVirtualMemory();
         unsigned long long getTotalVirtualMemoryUsed();
-        unsigned long long getVirtualMemoryUsedByProcess();
 
         unsigned long long getTotalPhysicalMemory();
         unsigned long long getTotalPhysicalMemoryUsed();
-        unsigned long long getPhysicalMemoryUsedByProcess();
 
-        double getProgramRAMUsage();
         double getSystemRAMUsage();
     };
 
