@@ -57,6 +57,10 @@ namespace robosub {
         return json::to_cbor(_data);
     }
 
+    void DataBucket::remove(const string key) {
+        _data.erase(key);
+    }
+
     void DataBucket::clear() {
         _data.clear();
     }

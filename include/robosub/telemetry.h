@@ -76,6 +76,8 @@ namespace robosub {
 
         //remove all data from bucket
         void clear();
+        
+        void remove(const string key);
     };
 
     class Telemetry {
