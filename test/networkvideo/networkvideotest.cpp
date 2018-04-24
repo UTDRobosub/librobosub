@@ -95,7 +95,7 @@ int main(int argc, char** argv){
 			frame1 = Camera::undistort(frame1, calibrationData);
 			//ImageTransform::rotate(frame1, 90);
 
-            ImageTransform::flip(frame1, ImageTransform::FlipAxis::HORIZONTAL);
+            //ImageTransform::flip(frame1, ImageTransform::FlipAxis::HORIZONTAL);
 
             SendFrame(&udps,&frame1);
 

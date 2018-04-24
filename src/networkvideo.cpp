@@ -41,10 +41,12 @@ namespace robosub{
 		data[(y*cols + x)*3 + 2] = thirdbyte (p);
 	}
 	
+	const int pixellocMod = 1040807;
+	
 	int pixellocToIndex(int rows, int cols, int loc){
-		return (rows*cols) - loc - 1;
-		//return loc;
-		//return (rows-(loc%cols)) + (loc-(loc%cols));
+		//return (rows*cols) - loc - 1;
+		
+		return (int)((long long)loc)*((long long)pixellocMod)%(((long long)rows)*((long long)cols));
 	}
 	
     void SendFrame(UDPS *udps, Mat *frame){
@@ -103,8 +105,12 @@ namespace robosub{
         }
     }
     
-    Mat *networkVideo_recvFrame = 0;
     char *networkVideo_recvFrameData = 0;
+    Mat *networkVideo_recvFrame = 0;
+    
+    //int lastFrameId = 0;
+    //int framePacketCount[256];
+    //const int framePacketMin = 100;
 	
     Mat *RecvFrame(UDPR *udpr){
     	while(true){
@@ -128,8 +134,6 @@ namespace robosub{
 			int cols =        twobytes(packetdata+4);
 			int packetindex = twobytes(packetdata+6);
 			
-			//cout<<"res = "<<cols<<"x"<<rows<<endl;
-			
 			int len = rows*cols;
 			int datalen = len*3;
 			
@@ -151,8 +155,6 @@ namespace robosub{
 					networkVideo_recvFrameData[dataloc + 2] = (pixel<<2)&0b11111000;
 				}
 			}
-			
-			//memcpy(networkVideo_recvFrameData+packetloc, packetdata+networkVideo_packetHeadSize, networkVideo_packetDataSize);
     	}
     	
     	return networkVideo_recvFrame;
