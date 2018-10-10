@@ -3,6 +3,8 @@
 #include <signal.h>
 #include <opencv2/ximgproc.hpp>
 
+#include "cvtest.cpp"
+
 using namespace std;
 using namespace robosub;
 
@@ -81,6 +83,10 @@ int main(int argc, char** argv){
     else cout<<"initRecv err "<<udpr.initRecv(port)<<endl;
 
     Mat frame1;
+    
+    if(mode==MODE_RECEIVE){
+		cvtestInit();
+    }
 
     //load calibration data - run AFTER resolution set
     Camera::CalibrationData calibrationData = *Camera::loadCalibrationDataFromXML("../config/fisheye180_cameracalib_fisheye.xml", frameSize);
@@ -92,11 +98,14 @@ int main(int argc, char** argv){
             cam->retrieveFrameBGR(frame1);
 
             //frame1 = frame1.clone(); //make it continuous
-			frame1 = Camera::undistort(frame1, calibrationData);
+			//frame1 = Camera::undistort(frame1, calibrationData);
 			//ImageTransform::rotate(frame1, 90);
 
             //ImageTransform::flip(frame1, ImageTransform::FlipAxis::HORIZONTAL);
-
+			
+			ImageTransform::scale(frame1, 0.5);
+			
+			
             SendFrame(&udps,&frame1);
 
             if (showDisplay) {
@@ -132,9 +141,10 @@ int main(int argc, char** argv){
 				);
 
 				imshow("Receiving Frame", frame3);
+				
+				cvtestDisplay(frame3);
             }
 
-            waitKey(1);
         }
 	}
 

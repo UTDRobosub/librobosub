@@ -36,7 +36,7 @@ int main(){
 	}*/
 	
 	while(serial1.isConnected()){
-		serial1.readDecodeLen(decoded, 1024);
+		cout<<serial1.readDecodeLen(decoded, 1024)<<endl;
 		
 		int data = decoded[0] | decoded[1]<<8;
 		

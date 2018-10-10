@@ -43,7 +43,7 @@ namespace robosub{
 	
 	const int pixellocMod = 1040807;
 	
-	int pixellocToIndex(int rows, int cols, int loc){
+	inline int pixellocToIndex(int rows, int cols, int loc){
 		//return (rows*cols) - loc - 1;
 		
 		return (int)((long long)loc)*((long long)pixellocMod)%(((long long)rows)*((long long)cols));

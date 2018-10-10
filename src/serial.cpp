@@ -96,7 +96,8 @@ namespace robosub {
 
 		return decodedlen;
 	}
-
+	
+	//Returns the number of bytes decoded
 	int SerialReadAndRemoveFirstEncodedDataFromBuffer(char *buf, int *buflen, char *decoded, int maxdecodedlen){
 		int startloc = strFindFirstMasked(buf, *buflen, Serial_MsgBeginChar, 0xFF); //find the first start marker in the string
 		int endloc = strFindFirstMasked(buf+startloc+1, *buflen-startloc-1, Serial_MsgEndChar, 0xFF);
@@ -121,6 +122,7 @@ namespace robosub {
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////
+	//Stop highlighting here; Everything below this line is C++ Only
 
 	//sorry about the flow, this is what happens when you have a possibility for errors in the constructor
 	Serial::Serial(string fn, int baud){
@@ -295,6 +297,7 @@ namespace robosub {
 	}
 
 	//reads and decodes the first available packet, discarding data after the packet is maxdecodedlen bytes in size
+	//returns the length of the packet
 	int Serial::readDecodeLen(char *decoded, int maxdecodedlen){
 		readEntireBuffer();
 
