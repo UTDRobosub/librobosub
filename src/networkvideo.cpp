@@ -50,6 +50,7 @@ namespace robosub{
 		return (int)((long long)loc)*((long long)pixellocMod)%(((long long)rows)*((long long)cols));
 	}
 	
+	//transmits the frame over the NetworkUdp UDPS
     void SendFrame(UDPS *udps, Mat *frame){
     	int frameid=(lastframeid+1)%0x10000; //2 bytes long
     	lastframeid=frameid;
@@ -113,7 +114,10 @@ namespace robosub{
     //int framePacketCount[256];
     //const int framePacketMin = 100;
 	
-    Mat *RecvFrame(UDPR *udpr, int *packetsReceived){
+	//reads all available frame data from the UDPR and puts it into the frame, returning by reference the number of packets read
+    Mat *RecvFrame(UDPR *udpr, int& packetsReceived){
+		packetsReceived = 0;
+		
     	while(true){
 			char packetdata[networkVideo_packetSize];
 			
@@ -157,14 +161,15 @@ namespace robosub{
 				}
 			}
 			
-			*packetsReceived = *packetsReceived+1;
+			packetsReceived++;
     	}
     	
     	return networkVideo_recvFrame;
     }
     
+    //reads all available frame data from the UDPR and puts it into the frame
     Mat *RecvFrame(UDPR *udpr){
 		int packetsReceived = 0;
-		RecvFrame(udpr, &packetsReceived);
+		RecvFrame(udpr, packetsReceived);
     }
 }

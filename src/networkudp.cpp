@@ -21,7 +21,9 @@ namespace robosub {
         free(recvbuf);
     }
 
-    int UDPR::initRecv(int port){
+	//initializes receiving on the specificed port, binding to that port
+	//sets the timeout to the specified value in microseconds; this value can be 0
+    int UDPR::initRecv(int port, int timeout){
         #ifdef NETWORKUDP_WINSOCK
             WSADATA wsad;
             if(WSAStartup(0x0101,&wsad)!=0){
@@ -40,7 +42,7 @@ namespace robosub {
 
         struct timeval tv;
         tv.tv_sec=0;
-        tv.tv_usec=10000;
+        tv.tv_usec=timeout;
         if(setsockopt(rsock, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof(tv)) < 0){
              return NETWORKUDP_GETERROR;
         }
@@ -63,6 +65,7 @@ namespace robosub {
 
 	//closes the socket
 	//should unbind the port and allow it to be bound again, but the OS can take several minutes to actually unbind the port after doing this
+	//if rebinding fails, just change the port
 	int UDPR::stopRecv(){
 	    if(!initrecv)return 128;
 
@@ -78,6 +81,7 @@ namespace robosub {
 	    return 0;
 	}
 	
+	//read all received data into the buffer
 	int UDPR::readEntireBuffer(){
 		
 		if(!initrecv)return 32;
@@ -104,8 +108,8 @@ namespace robosub {
 		return 0;
 	}
 
-	//read up to mlen characters from the receive queue and writes them into memory starting at msg, returning len by reference as the number of bytes read.
-	//does not wait for a message; will read 0 characters
+	//read up to mlen characters from the receive buffer and write them into memory starting at msg, returning len by reference as the number of bytes read.
+	//does not block for a message; will read 0 characters if nothing is available
 	int UDPR::recv(int mlen, int& len, char *msg){
 		int err;
 		if(err=readEntireBuffer()){

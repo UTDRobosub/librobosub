@@ -8,6 +8,6 @@
 
 namespace robosub{
     void SendFrame(UDPS*, Mat*);
-    Mat *RecvFrame(UDPR*, int*);
+    Mat *RecvFrame(UDPR*, int&);
     Mat *RecvFrame(UDPR*);
 }

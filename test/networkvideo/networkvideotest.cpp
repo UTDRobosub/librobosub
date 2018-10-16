@@ -70,16 +70,19 @@ int main(int argc, char** argv){
             cout<<"Camera failed to open."<<endl;
             return -1;
         }
-        frameSize = cam->setFrameSize(frameSize);
+        //frameSize = cam->setFrameSize(frameSize);
+        frameSize = cam->getFrameSize();
         cout << frameSize << endl;
     } else {
         screenRes = Util::getDesktopResolution();
     }
     
+    int receiveTimeoutMicroseconds = 1000;
+    
     UDPS udps;
     UDPR udpr;
     if(mode == MODE_SEND)cout<<"initSend err "<<udps.initSend(port,addr)<<endl;
-    else cout<<"initRecv err "<<udpr.initRecv(port)<<endl;
+    else cout<<"initRecv err "<<udpr.initRecv(port, receiveTimeoutMicroseconds)<<endl;
 
     Mat frame1;
     
@@ -123,7 +126,7 @@ int main(int argc, char** argv){
 		FPS fps = FPS();
         Mat frame3;
         
-        MovingAverage packetsPerFrameAvg(15);
+        MovingAverage packetsPerFrameAvg(100); //moving average of 100 values
         
         int packetsPerFrame;
         int framesPerSecond;
@@ -134,7 +137,7 @@ int main(int argc, char** argv){
         while(running){
 			
 			int packetsLastFrame = 0;
-            Mat* frame2 = RecvFrame(&udpr, &packetsLastFrame);
+            Mat* frame2 = RecvFrame(&udpr, packetsLastFrame);
             
             //cout<<"received "<<packetsLastFrame<<" packets"<<endl;
             
@@ -161,11 +164,11 @@ int main(int argc, char** argv){
 					Point(16,64), Scalar(255,255,255), Drawing::Anchor::BOTTOM_LEFT, 0.5
 				);
 				Drawing::text(frame3,
-					String(Util::toStringWithPrecision(packetsPerFrame) + String(" packets/frame\n")),
+					String(Util::toStringWithPrecision(packetsPerFrame) + String(" packets/frame")),
 					Point(16,48), Scalar(255,255,255), Drawing::Anchor::BOTTOM_LEFT, 0.5
 				);
 				Drawing::text(frame3,
-					String(Util::toStringWithPrecision(packetsPerSecond) + String(" packets/sec\n")),
+					String(Util::toStringWithPrecision(packetsPerSecond) + String(" packets/sec")),
 					Point(16,32), Scalar(255,255,255), Drawing::Anchor::BOTTOM_LEFT, 0.5
 				);
 				Drawing::text(frame3,
