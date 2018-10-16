@@ -1,9 +1,10 @@
 
 #include "robosub/networkvideo.h"
+#include "robosub/timeutil.h"
 
 namespace robosub{
 	const int networkVideo_pixelSize = 2;
-	const int networkVideo_packetSize = 512;
+	const int networkVideo_packetSize = 1000;
 	const int networkVideo_packetHeadSize = 8;
 	const int networkVideo_packetDataSize = networkVideo_packetSize-networkVideo_packetHeadSize;
 	const int networkVideo_packetDataPixels = (int)floor(((float)networkVideo_packetDataSize)/((float)networkVideo_pixelSize));
@@ -112,7 +113,7 @@ namespace robosub{
     //int framePacketCount[256];
     //const int framePacketMin = 100;
 	
-    Mat *RecvFrame(UDPR *udpr){
+    Mat *RecvFrame(UDPR *udpr, int *packetsReceived){
     	while(true){
 			char packetdata[networkVideo_packetSize];
 			
@@ -155,8 +156,15 @@ namespace robosub{
 					networkVideo_recvFrameData[dataloc + 2] = (pixel<<2)&0b11111000;
 				}
 			}
+			
+			*packetsReceived = *packetsReceived+1;
     	}
     	
     	return networkVideo_recvFrame;
+    }
+    
+    Mat *RecvFrame(UDPR *udpr){
+		int packetsReceived = 0;
+		RecvFrame(udpr, &packetsReceived);
     }
 }

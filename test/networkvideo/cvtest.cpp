@@ -6,8 +6,8 @@ using namespace cv;
 
 int main(int argc, char *argv[])
 {
-    Mat img = imread("cat.jpg", CV_LOAD_IMAGE_COLOR);
     if(img.empty())
+    Mat img = imread("cat.jpg", CV_LOAD_IMAGE_COLOR);
        return -1;
     namedWindow( "cat", CV_WINDOW_AUTOSIZE );
     imshow("cat", img);
@@ -87,13 +87,13 @@ void createTrackbars(){
     namedWindow(trackbarWindowName,0);
 
 	//create memory to store trackbar name on window
-	char TrackbarName[50];
+	/*char TrackbarName[50];
 	sprintf( TrackbarName, "H_MIN", H_MIN);
 	sprintf( TrackbarName, "H_MAX", H_MAX);
 	sprintf( TrackbarName, "S_MIN", S_MIN);
 	sprintf( TrackbarName, "S_MAX", S_MAX);
 	sprintf( TrackbarName, "V_MIN", V_MIN);
-	sprintf( TrackbarName, "V_MAX", V_MAX);
+	sprintf( TrackbarName, "V_MAX", V_MAX);*/
 	//create trackbars and insert them into window
 	//3 parameters are: the address of the variable that is changing when the trackbar is moved(eg.H_LOW),
 	//the max value the trackbar can move (eg. H_HIGH),
@@ -244,7 +244,6 @@ void cvtestInit(){
 
 void cvtestDisplay(Mat& cameraFeed){
 
-	
 	Mat HSV;
 	Mat threshold;
 	
@@ -270,6 +269,6 @@ void cvtestDisplay(Mat& cameraFeed){
 
 	//show frames
 	imshow(windowName2,threshold);
-	imshow(windowName,cameraFeed);
+	//imshow(windowName,cameraFeed);
 	imshow(windowName1,HSV);
 }

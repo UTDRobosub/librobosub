@@ -40,7 +40,7 @@ namespace robosub {
 
         struct timeval tv;
         tv.tv_sec=0;
-        tv.tv_usec=10000; //10 ms
+        tv.tv_usec=10000;
         if(setsockopt(rsock, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof(tv)) < 0){
              return NETWORKUDP_GETERROR;
         }

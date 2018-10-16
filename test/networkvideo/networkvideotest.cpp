@@ -63,7 +63,6 @@ int main(int argc, char** argv){
 	int rows,cols;
 
     Size screenRes;
-    //Camera cam(camera);
     Camera *cam;
     if(mode == MODE_SEND){
 		cam = new Camera(camera);
@@ -76,7 +75,7 @@ int main(int argc, char** argv){
     } else {
         screenRes = Util::getDesktopResolution();
     }
-
+    
     UDPS udps;
     UDPR udpr;
     if(mode == MODE_SEND)cout<<"initSend err "<<udps.initSend(port,addr)<<endl;
@@ -85,7 +84,7 @@ int main(int argc, char** argv){
     Mat frame1;
     
     if(mode==MODE_RECEIVE){
-		cvtestInit();
+		//cvtestInit();
     }
 
     //load calibration data - run AFTER resolution set
@@ -96,7 +95,7 @@ int main(int argc, char** argv){
         while(running){
 
             cam->retrieveFrameBGR(frame1);
-
+            
             //frame1 = frame1.clone(); //make it continuous
 			//frame1 = Camera::undistort(frame1, calibrationData);
 			//ImageTransform::rotate(frame1, 90);
@@ -104,7 +103,7 @@ int main(int argc, char** argv){
             //ImageTransform::flip(frame1, ImageTransform::FlipAxis::HORIZONTAL);
 			
 			ImageTransform::scale(frame1, 0.5);
-			
+			//frame1 = frame1.clone();
 			
             SendFrame(&udps,&frame1);
 
@@ -115,34 +114,68 @@ int main(int argc, char** argv){
                 );
 
                 imshow("Sending Frame", frame1);
-                waitKey(1);
+                
+                waitKey(100);
             }
         }
     } else {
 
 		FPS fps = FPS();
         Mat frame3;
+        
+        MovingAverage packetsPerFrameAvg(15);
+        
+        int packetsPerFrame;
+        int framesPerSecond;
+        int packetsPerSecond;
+        int bitsPerSecond;
+        int packetSize = 8*512;
 
         while(running){
-
-            Mat* frame2 = RecvFrame(&udpr);
-
+			
+			int packetsLastFrame = 0;
+            Mat* frame2 = RecvFrame(&udpr, &packetsLastFrame);
+            
+            //cout<<"received "<<packetsLastFrame<<" packets"<<endl;
+            
             if(frame2 == 0) {
 				cout<<"No frame data received yet."<<endl;
-				robosub::Time::waitMillis(200);
+				robosub::Time::waitMillis(500);
             } else {
-                fps.frame();
+				//cout<<"draw frame"<<endl;
+				
+                //cvtestDisplay(*frame2);
 
 				frame3 = frame2->clone();
 
-                Drawing::text(frame3,
-					String(Util::toStringWithPrecision(fps.fps())) + String(" packets/s"),
-					Point(16, 16), Scalar(255, 255, 255), Drawing::Anchor::BOTTOM_LEFT, 0.5
+                fps.frame();
+                
+                packetsPerFrameAvg.insertData((float)packetsLastFrame);
+				packetsPerFrame = (int)packetsPerFrameAvg.getAverage();
+                framesPerSecond = fps.fps();
+                packetsPerSecond = packetsPerFrame*framesPerSecond;
+                bitsPerSecond = packetsPerSecond*packetSize;
+                
+				Drawing::text(frame3,
+					String(Util::toStringWithPrecision(framesPerSecond)) + String(" fps"),
+					Point(16,64), Scalar(255,255,255), Drawing::Anchor::BOTTOM_LEFT, 0.5
 				);
-
+				Drawing::text(frame3,
+					String(Util::toStringWithPrecision(packetsPerFrame) + String(" packets/frame\n")),
+					Point(16,48), Scalar(255,255,255), Drawing::Anchor::BOTTOM_LEFT, 0.5
+				);
+				Drawing::text(frame3,
+					String(Util::toStringWithPrecision(packetsPerSecond) + String(" packets/sec\n")),
+					Point(16,32), Scalar(255,255,255), Drawing::Anchor::BOTTOM_LEFT, 0.5
+				);
+				Drawing::text(frame3,
+					String(Util::toStringWithPrecision(((float)bitsPerSecond)/1024.0f/1024.0f) + String(" Mbits/sec")),
+					Point(16,16), Scalar(255, 255, 255), Drawing::Anchor::BOTTOM_LEFT, 0.5
+				);
+				
 				imshow("Receiving Frame", frame3);
 				
-				cvtestDisplay(frame3);
+				waitKey(10);
             }
 
         }

@@ -90,4 +90,32 @@ namespace robosub {
 		}
 		return result;
 	}
+	
+	MovingAverage::MovingAverage(int len){
+		queueLen = len;
+		queueData = new float[queueLen];
+		clearData();
+	}
+	
+	void MovingAverage::insertData(float newVal){
+		queuePos = (queuePos+1)%queueLen;
+		
+		float lastVal = queueData[queuePos];
+		curSum-=lastVal;
+		
+		queueData[queuePos] = newVal;
+		curSum+=newVal;
+	}
+	
+	void MovingAverage::clearData(){
+		queuePos = 0;
+		for(int i=0; i<queueLen; i++){
+			queueData[i] = 0;
+		}
+		curSum = 0;
+	}
+	
+	float MovingAverage::getAverage(){
+		return curSum/queueLen;
+	}
 }

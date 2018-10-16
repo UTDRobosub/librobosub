@@ -76,4 +76,17 @@ namespace robosub {
 	template EXPORT String Util::toStringWithPrecision(const float value, const int n);
 	template EXPORT String Util::toStringWithPrecision(const double value, const int n);
 	template EXPORT String Util::toStringWithPrecision(const long double value, const int n);
+	
+	class MovingAverage{
+		int queueLen;
+		int queuePos;
+		float *queueData;
+		float curSum;
+		
+		public:
+		MovingAverage(int);
+		void insertData(float);
+		void clearData();
+		float getAverage();
+	};
 }
