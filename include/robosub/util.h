@@ -80,12 +80,12 @@ namespace robosub {
 	class MovingAverage{
 		int queueLen;
 		int queuePos;
-		float *queueData;
-		float curSum;
+		int *queueData;
+		int curSum;
 		
 		public:
 		MovingAverage(int);
-		void insertData(float);
+		void insertData(int);
 		void clearData();
 		float getAverage();
 	};

@@ -84,7 +84,7 @@ namespace robosub {
 	//read all received data into the buffer
 	int UDPR::readEntireBuffer(){
 		
-		if(!initrecv)return 32;
+		if(!initrecv)return 1000;
 
 	    socklen_t addrlen=sizeof(raddr);
 		

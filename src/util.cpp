@@ -91,16 +91,17 @@ namespace robosub {
 		return result;
 	}
 	
+	//Moving average class
 	MovingAverage::MovingAverage(int len){
 		queueLen = len;
-		queueData = new float[queueLen];
+		queueData = new int[queueLen];
 		clearData();
 	}
 	
-	void MovingAverage::insertData(float newVal){
+	void MovingAverage::insertData(int newVal){
 		queuePos = (queuePos+1)%queueLen;
 		
-		float lastVal = queueData[queuePos];
+		int lastVal = queueData[queuePos];
 		curSum-=lastVal;
 		
 		queueData[queuePos] = newVal;
@@ -116,6 +117,6 @@ namespace robosub {
 	}
 	
 	float MovingAverage::getAverage(){
-		return curSum/queueLen;
+		return ((float)curSum)/((float)queueLen);
 	}
 }

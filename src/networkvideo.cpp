@@ -3,6 +3,7 @@
 #include "robosub/timeutil.h"
 
 namespace robosub{
+	const int networkVideo_numFrameIds = 0x10000;
 	const int networkVideo_pixelSize = 2;
 	const int networkVideo_packetSize = 1000;
 	const int networkVideo_packetHeadSize = 8;
@@ -51,19 +52,19 @@ namespace robosub{
 	}
 	
 	//transmits the frame over the NetworkUdp UDPS
-    void SendFrame(UDPS *udps, Mat *frame){
+    void SendFrame(UDPS& udps, Mat& frame){
     	int frameid=(lastframeid+1)%0x10000; //2 bytes long
     	lastframeid=frameid;
     	
-        int rows = frame->rows;
-        int cols = frame->cols;
+        int rows = frame.rows;
+        int cols = frame.cols;
 		
 		int len = rows*cols;
         int datalen = len*3; //3 because 3 bytes per pixel, BGR format.
         
         int numpackets = (int)ceil(((float)(len*networkVideo_pixelSize))/((float)networkVideo_packetDataSize));
 		
-        char *data = (char*)frame->data;
+        char *data = (char*)frame.data;
         
         for(int i=0; i<numpackets; i++){
 			
@@ -103,20 +104,30 @@ namespace robosub{
 				packetdata[networkVideo_packetHeadSize + j*networkVideo_pixelSize + 1] = firstbyte (pixel);
 			}
 			
-			udps->send(networkVideo_packetSize, packetdata);
+			udps.send(networkVideo_packetSize, packetdata);
         }
     }
-    
-    char *networkVideo_recvFrameData = 0;
-    Mat *networkVideo_recvFrame = 0;
     
     //int lastFrameId = 0;
     //int framePacketCount[256];
     //const int framePacketMin = 100;
+    
+    bool NetworkVideoFrameReceiver::isInitialized(){
+		return initialized;
+    }
+	
+	bool frameIdMoreRecent(int curr, int next){
+		return (next-curr)%networkVideo_numFrameIds > (curr-next)%networkVideo_numFrameIds;
+	}
+	
+	bool frameIdMoreRecentOrEqual(int curr, int next){
+		return (next-curr)%networkVideo_numFrameIds >= (curr-next)%networkVideo_numFrameIds;
+	}
 	
 	//reads all available frame data from the UDPR and puts it into the frame, returning by reference the number of packets read
-    Mat *RecvFrame(UDPR *udpr, int& packetsReceived){
-		packetsReceived = 0;
+	//returns the frame, if you specify 0 for the frame it will be assigned to a newly created Mat whenever the first packet is received
+    int NetworkVideoFrameReceiver::updateReceiveFrame(){
+		int packetsReceived = 0;
 		
     	while(true){
 			char packetdata[networkVideo_packetSize];
@@ -135,41 +146,91 @@ namespace robosub{
 			}
 			
 			int frameid =     twobytes(packetdata+0);
-			int rows =        twobytes(packetdata+2);
-			int cols =        twobytes(packetdata+4);
+			int rrows =       twobytes(packetdata+2);
+			int rcols =       twobytes(packetdata+4);
 			int packetindex = twobytes(packetdata+6);
 			
-			int len = rows*cols;
+			int len = rrows*rcols;
 			int datalen = len*3;
 			
 			int pixelloc = packetindex*networkVideo_packetDataPixels;
 			
+			packetsPerFrame = (int)ceil(((float)(len*networkVideo_pixelSize))/((float)networkVideo_packetDataSize));
+		
+			int currentFrameIdx = frameid%NetworkVideo_MostRecentFrameCount;
+			
+			/*
 			if(networkVideo_recvFrame==0 || rows!=networkVideo_recvFrame->rows || cols!=networkVideo_recvFrame->cols){
 				networkVideo_recvFrameData = (char*)malloc(rows*cols*3);
 				networkVideo_recvFrame = new Mat(rows,cols,CV_8UC3,networkVideo_recvFrameData);
+			}*/
+			
+			if(initialized && (rrows!=rows || rcols!=cols)){
+				cout<<"RecvFrame: Frame received had wrong rows or cols for the given Mat";
+				uninitialize();
+			}
+			
+			if(!initialized){
+				for(int i=0; i<NetworkVideo_MostRecentFrameCount; i++){
+					char* newframedata = (char*)malloc(rrows*rcols*3);
+					bufferFrames[i] = new Mat(rrows, rcols, CV_8UC3, newframedata);
+					bufferFramesReceivedPacket[i] = new bool[packetsPerFrame];
+					bufferFramesMostRecentFrameId[i] = new int[packetsPerFrame];
+				}
+				rows = rrows;
+				cols = rcols;
+				initialized = true;
+				
+				cout<<"Creating new frame of size "<<cols<<"x"<<rows<<endl;
+			}
+			char* recvFrameData = (char*)bufferFrames[currentFrameIdx]->data;
+			
+			if(frameIdMoreRecent(mostRecentFrameId, frameid)){
+				mostRecentFrameId = frameid;
+			}
+			
+			if(frameIdMoreRecentOrEqual(bufferFramesMostRecentFrameId[currentFrameIdx][packetindex], frameid)){
+				bufferFramesMostRecentFrameId[currentFrameIdx][packetindex] = frameid;
+				
+				if(frameIdMoreRecent(bufferFramesTotalFrameId[currentFrameIdx], frameid)){
+					bufferFramesTotalFrameId[currentFrameIdx] = frameid;
+					bufferFramesGoodPacketCount[currentFrameIdx] = 0;
+				}
+				if(frameid==bufferFramesTotalFrameId[currentFrameIdx]){
+					bufferFramesGoodPacketCount[currentFrameIdx]++;
+				}
 			}
 			
 			for(int i=0; i<networkVideo_packetDataPixels; i++){
-				int dataloc = pixellocToIndex(rows, cols, pixelloc + i)*3;
+				int dataloc = pixellocToIndex(rrows, rcols, pixelloc + i)*3;
 				
 				if(dataloc<datalen && dataloc>=0){
 					int pixel = twobytes(packetdata + networkVideo_packetHeadSize + i*networkVideo_pixelSize);
 					
-					networkVideo_recvFrameData[dataloc + 0] = (pixel>>8)&0b11111000;
-					networkVideo_recvFrameData[dataloc + 1] = (pixel>>3)&0b11111000;
-					networkVideo_recvFrameData[dataloc + 2] = (pixel<<2)&0b11111000;
+					recvFrameData[dataloc + 0] = (pixel>>8)&0b11111000;
+					recvFrameData[dataloc + 1] = (pixel>>3)&0b11111000;
+					recvFrameData[dataloc + 2] = (pixel<<2)&0b11111000;
 				}
 			}
 			
 			packetsReceived++;
     	}
     	
-    	return networkVideo_recvFrame;
+    	return packetsReceived;
     }
     
-    //reads all available frame data from the UDPR and puts it into the frame
-    Mat *RecvFrame(UDPR *udpr){
-		int packetsReceived = 0;
-		RecvFrame(udpr, packetsReceived);
+    Mat* NetworkVideoFrameReceiver::getBestFrame(){
+		//return bufferFrames[0];
+		
+		int maxgood = 0;
+		int maxgoodidx = 0;
+		for(int i=0; i<NetworkVideo_MostRecentFrameCount; i++){
+			if(bufferFramesGoodPacketCount[i]>=maxgood){
+				maxgoodidx = i;
+				maxgood = bufferFramesGoodPacketCount[i];
+			}
+		}
+		
+		return bufferFrames[maxgoodidx];
     }
 }

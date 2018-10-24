@@ -83,11 +83,11 @@ int main(int argc, char** argv){
     UDPR udpr;
     if(mode == MODE_SEND)cout<<"initSend err "<<udps.initSend(port,addr)<<endl;
     else cout<<"initRecv err "<<udpr.initRecv(port, receiveTimeoutMicroseconds)<<endl;
-
+	
     Mat frame1;
     
     if(mode==MODE_RECEIVE){
-		//cvtestInit();
+		cvtestInit();
     }
 
     //load calibration data - run AFTER resolution set
@@ -105,10 +105,10 @@ int main(int argc, char** argv){
 
             //ImageTransform::flip(frame1, ImageTransform::FlipAxis::HORIZONTAL);
 			
-			ImageTransform::scale(frame1, 0.5);
+			//ImageTransform::scale(frame1, 0.5);
 			//frame1 = frame1.clone();
 			
-            SendFrame(&udps,&frame1);
+            SendFrame(udps, frame1);
 
             if (showDisplay) {
                 Drawing::text(frame1,
@@ -117,9 +117,9 @@ int main(int argc, char** argv){
                 );
 
                 imshow("Sending Frame", frame1);
-                
-                waitKey(100);
             }
+            
+            waitKey(100);
         }
     } else {
 
@@ -133,27 +133,30 @@ int main(int argc, char** argv){
         int packetsPerSecond;
         int bitsPerSecond;
         int packetSize = 8*512;
-
+		
+        NetworkVideoFrameReceiver* framerecv = new NetworkVideoFrameReceiver(udpr);
+        
         while(running){
 			
-			int packetsLastFrame = 0;
-            Mat* frame2 = RecvFrame(&udpr, packetsLastFrame);
+			int packetsLastFrame = framerecv->updateReceiveFrame();
             
             //cout<<"received "<<packetsLastFrame<<" packets"<<endl;
             
-            if(frame2 == 0) {
+            if(!framerecv->isInitialized()) {
 				cout<<"No frame data received yet."<<endl;
 				robosub::Time::waitMillis(500);
             } else {
 				//cout<<"draw frame"<<endl;
 				
-                //cvtestDisplay(*frame2);
+				Mat* frame2 = framerecv->getBestFrame();
+				
+				Mat frame3 = frame2->clone();
 
-				frame3 = frame2->clone();
+                cvtestDisplay(frame3);
 
                 fps.frame();
                 
-                packetsPerFrameAvg.insertData((float)packetsLastFrame);
+                packetsPerFrameAvg.insertData(packetsLastFrame);
 				packetsPerFrame = (int)packetsPerFrameAvg.getAverage();
                 framesPerSecond = fps.fps();
                 packetsPerSecond = packetsPerFrame*framesPerSecond;
@@ -182,6 +185,8 @@ int main(int argc, char** argv){
             }
 
         }
+        
+        delete(framerecv);
 	}
 
 	return 0;
