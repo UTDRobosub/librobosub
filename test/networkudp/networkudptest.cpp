@@ -41,7 +41,7 @@ int main(){
 
     if(mode==0){
 	    UDPR a;
-        e=a.initRecv(port);
+        e=a.initRecv(port, 10000);
         cout<<"initRecv err: "<<e<<"\n";
 		while(true){
 
@@ -73,7 +73,7 @@ int main(){
 		}
 	}else if(mode==2){
         UDP a;
-        e=a.init(port,port2,addr);
+        e=a.init(port,port2,addr, 10000);
         cout<<"init err: "<<e<<"\n";
 
         while(true){

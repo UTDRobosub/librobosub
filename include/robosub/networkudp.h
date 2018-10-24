@@ -49,10 +49,10 @@ namespace robosub {
         EXPORT UDPR();
         EXPORT ~UDPR();
 
-		EXPORT int initRecv(int, int);
+		EXPORT int initRecv(int port, int timeoutMicroseconds);
 		EXPORT int stopRecv();
-		EXPORT int recv(int,int&,char*);
-		EXPORT int recvStr(string&);
+		EXPORT int recv(int maxLength, int& receivedLength, char* buffer);
+		EXPORT int recvStr(string& output);
 	};
 
 	//class for sending over UDP
@@ -68,10 +68,10 @@ namespace robosub {
 	    EXPORT UDPS();
 	    EXPORT ~UDPS();
 
-		EXPORT int initSend(int,string);
+		EXPORT int initSend(int port, string address);
 		EXPORT int stopSend();
-		EXPORT int send(int,char*);
-		EXPORT int sendStr(string);
+		EXPORT int send(int length,char* data);
+		EXPORT int sendStr(string source);
 	};
 
 	//wrapper class for bidirectional communication
