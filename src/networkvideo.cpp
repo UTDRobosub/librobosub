@@ -177,6 +177,8 @@ namespace robosub{
 					bufferFramesReceivedPacket[i] = new bool[packetsPerFrame];
 					bufferFramesMostRecentFrameId[i] = new int[packetsPerFrame];
 				}
+				char* newframedata = (char*)malloc(rrows*rcols*3);
+				bufferFrameLatest = new Mat(rrows, rcols, CV_8UC3, newframedata);
 				rows = rrows;
 				cols = rcols;
 				initialized = true;
@@ -184,6 +186,7 @@ namespace robosub{
 				cout<<"Creating new frame of size "<<cols<<"x"<<rows<<endl;
 			}
 			char* recvFrameData = (char*)bufferFrames[currentFrameIdx]->data;
+			char* lastFrameData = (char*)bufferFrameLatest->data;
 			
 			if(frameIdMoreRecent(mostRecentFrameId, frameid)){
 				mostRecentFrameId = frameid;
@@ -210,6 +213,10 @@ namespace robosub{
 					recvFrameData[dataloc + 0] = (pixel>>8)&0b11111000;
 					recvFrameData[dataloc + 1] = (pixel>>3)&0b11111000;
 					recvFrameData[dataloc + 2] = (pixel<<2)&0b11111000;
+					
+					lastFrameData[dataloc + 0] = (pixel>>8)&0b11111000;
+					lastFrameData[dataloc + 1] = (pixel>>3)&0b11111000;
+					lastFrameData[dataloc + 2] = (pixel<<2)&0b11111000;
 				}
 			}
 			
@@ -220,8 +227,6 @@ namespace robosub{
     }
     
     Mat* NetworkVideoFrameReceiver::getBestFrame(){
-		//return bufferFrames[0];
-		
 		int maxgood = 0;
 		int maxgoodidx = 0;
 		for(int i=0; i<NetworkVideo_MostRecentFrameCount; i++){
@@ -232,5 +237,9 @@ namespace robosub{
 		}
 		
 		return bufferFrames[maxgoodidx];
+    }
+    
+    Mat* NetworkVideoFrameReceiver::getLatestFrame(){
+		return bufferFrameLatest;
     }
 }

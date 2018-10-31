@@ -33,9 +33,12 @@ namespace robosub
 
 	class ImageFilter
 	{
+		public:
 		///Equalize image histogram, maximizing contrast of the image
 		///This method does not maximize visual contrast - use equalizeHistogramCLAHE instead.
 		EXPORT static void equalizeHistogram(Mat& image);
+		
+		EXPORT static int getBlurCoefficient(Mat& image);
 	};
 
 	class Drawing

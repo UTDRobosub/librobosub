@@ -7,10 +7,11 @@
 #include <opencv2/opencv.hpp>
 
 namespace robosub{
-	const int NetworkVideo_MostRecentFrameCount = 1;
+	const int NetworkVideo_MostRecentFrameCount = 4;
 	
 	class NetworkVideoFrameReceiver{
 		Mat* bufferFrames[NetworkVideo_MostRecentFrameCount];
+		Mat* bufferFrameLatest;
 		
 		bool* bufferFramesReceivedPacket[NetworkVideo_MostRecentFrameCount];
 		int* bufferFramesMostRecentFrameId[NetworkVideo_MostRecentFrameCount];
@@ -33,6 +34,7 @@ namespace robosub{
 				bufferFramesGoodPacketCount[i] = 0;
 				bufferFramesTotalFrameId[i] = 0;
 			}
+			bufferFrameLatest = 0;
 			rows = 0;
 			cols = 0;
 			packetsPerFrame = 0;
@@ -51,9 +53,11 @@ namespace robosub{
 				delete(bufferFramesReceivedPacket[i]);
 				delete(bufferFramesMostRecentFrameId[i]);
 			}
+			delete(bufferFrameLatest);
 		}
 		bool isInitialized();
 		Mat* getBestFrame();
+		Mat* getLatestFrame();
 		int updateReceiveFrame();
 	};
 	

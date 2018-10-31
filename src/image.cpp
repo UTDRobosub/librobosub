@@ -141,4 +141,16 @@ namespace robosub {
 	{
 		equalizeHist(image, image);
 	}
+	
+	int ImageFilter::getBlurCoefficient(Mat& image){
+		assert(image.channels()==1);
+		
+		Mat laplace;
+		Laplacian(image, laplace, CV_8U, 3, 1, 0, BORDER_DEFAULT);
+		
+		Scalar mean, stddev;
+		meanStdDev(laplace, mean, stddev, Mat());
+		
+		return (int)(stddev[0]*stddev[0]);
+	}
 }

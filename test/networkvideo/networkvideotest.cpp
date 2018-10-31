@@ -87,7 +87,7 @@ int main(int argc, char** argv){
     Mat frame1;
     
     if(mode==MODE_RECEIVE){
-		cvtestInit();
+		//cvtestInit();
     }
 
     //load calibration data - run AFTER resolution set
@@ -124,7 +124,7 @@ int main(int argc, char** argv){
     } else {
 
 		FPS fps = FPS();
-        Mat frame3;
+        Mat bestframedraw;
         
         MovingAverage packetsPerFrameAvg(100); //moving average of 100 values
         
@@ -136,6 +136,8 @@ int main(int argc, char** argv){
 		
         NetworkVideoFrameReceiver* framerecv = new NetworkVideoFrameReceiver(udpr);
         
+        cout<<"Waiting for frame data..."<<endl;
+        
         while(running){
 			
 			int packetsLastFrame = framerecv->updateReceiveFrame();
@@ -143,16 +145,19 @@ int main(int argc, char** argv){
             //cout<<"received "<<packetsLastFrame<<" packets"<<endl;
             
             if(!framerecv->isInitialized()) {
-				cout<<"No frame data received yet."<<endl;
 				robosub::Time::waitMillis(500);
             } else {
 				//cout<<"draw frame"<<endl;
 				
-				Mat* frame2 = framerecv->getBestFrame();
+				Mat* bestframe = framerecv->getBestFrame();
 				
-				Mat frame3 = frame2->clone();
+				Mat bestframegray;
+				cvtColor(*bestframe, bestframegray, CV_BGR2GRAY);
+				int blur = ImageFilter::getBlurCoefficient(bestframegray);
+				
+				Mat bestframedraw = bestframe->clone();
 
-                cvtestDisplay(frame3);
+                //cvtestDisplay(frame3);
 
                 fps.frame();
                 
@@ -162,24 +167,32 @@ int main(int argc, char** argv){
                 packetsPerSecond = packetsPerFrame*framesPerSecond;
                 bitsPerSecond = packetsPerSecond*packetSize;
                 
-				Drawing::text(frame3,
+				Drawing::text(bestframedraw,
 					String(Util::toStringWithPrecision(framesPerSecond)) + String(" fps"),
 					Point(16,64), Scalar(255,255,255), Drawing::Anchor::BOTTOM_LEFT, 0.5
 				);
-				Drawing::text(frame3,
+				Drawing::text(bestframedraw,
 					String(Util::toStringWithPrecision(packetsPerFrame) + String(" packets/frame")),
 					Point(16,48), Scalar(255,255,255), Drawing::Anchor::BOTTOM_LEFT, 0.5
 				);
-				Drawing::text(frame3,
+				Drawing::text(bestframedraw,
 					String(Util::toStringWithPrecision(packetsPerSecond) + String(" packets/sec")),
 					Point(16,32), Scalar(255,255,255), Drawing::Anchor::BOTTOM_LEFT, 0.5
 				);
-				Drawing::text(frame3,
+				Drawing::text(bestframedraw,
 					String(Util::toStringWithPrecision(((float)bitsPerSecond)/1024.0f/1024.0f) + String(" Mbits/sec")),
 					Point(16,16), Scalar(255, 255, 255), Drawing::Anchor::BOTTOM_LEFT, 0.5
 				);
+				Drawing::text(bestframedraw,
+					String("Blur = ") + String(Util::toStringWithPrecision((float)blur)),
+					Point(16,80), Scalar(255,255,255), Drawing::Anchor::BOTTOM_LEFT, 0.5
+				);
 				
-				imshow("Receiving Frame", frame3);
+				if(blur<5000)
+					imshow("Best Frame", bestframedraw);
+				
+				Mat* latestframe = framerecv->getLatestFrame();
+				imshow("Latest Frame", *latestframe);
 				
 				waitKey(10);
             }
