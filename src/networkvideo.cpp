@@ -5,7 +5,7 @@
 namespace robosub{
 	const int networkVideo_numFrameIds = 0x10000;
 	const int networkVideo_pixelSize = 2;
-	const int networkVideo_packetSize = 8000;
+	const int networkVideo_packetSize = 1000;
 	const int networkVideo_packetHeadSize = 8;
 	const int networkVideo_packetDataSize = networkVideo_packetSize-networkVideo_packetHeadSize;
 	const int networkVideo_packetDataPixels = (int)floor(((float)networkVideo_packetDataSize)/((float)networkVideo_pixelSize));
