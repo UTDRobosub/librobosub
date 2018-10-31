@@ -4,8 +4,9 @@
 
 namespace robosub {
 
-    const int maxlen=1024;
-    const int maxlen2=1024;
+	//split packets if less than this length
+    const int maxlen=100000;
+    const int maxlen2=100000;
 
 	//set-up receiving on the specified port
 	//since it binds to the port, only one instance can receive on the same port on any device

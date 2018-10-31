@@ -7,7 +7,7 @@
 #include <opencv2/opencv.hpp>
 
 namespace robosub{
-	const int NetworkVideo_MostRecentFrameCount = 4;
+	const int NetworkVideo_MostRecentFrameCount = 3;
 	
 	class NetworkVideoFrameReceiver{
 		Mat* bufferFrames[NetworkVideo_MostRecentFrameCount];

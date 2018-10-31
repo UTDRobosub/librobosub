@@ -77,7 +77,7 @@ int main(int argc, char** argv){
         screenRes = Util::getDesktopResolution();
     }
     
-    int receiveTimeoutMicroseconds = 1000;
+    int receiveTimeoutMicroseconds = 50000;
     
     UDPS udps;
     UDPR udpr;
