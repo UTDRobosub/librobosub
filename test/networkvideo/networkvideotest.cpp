@@ -76,16 +76,16 @@ int main(int argc, char** argv){
     } else {
         screenRes = Util::getDesktopResolution();
     }
-    
+
     int receiveTimeoutMicroseconds = 50000;
-    
+
     UDPS udps;
     UDPR udpr;
     if(mode == MODE_SEND)cout<<"initSend err "<<udps.initSend(port,addr)<<endl;
     else cout<<"initRecv err "<<udpr.initRecv(port, receiveTimeoutMicroseconds)<<endl;
-	
+
     Mat frame1;
-    
+
     if(mode==MODE_RECEIVE){
 		//cvtestInit();
     }
@@ -98,16 +98,16 @@ int main(int argc, char** argv){
         while(running){
 
             cam->retrieveFrameBGR(frame1);
-            
-            //frame1 = frame1.clone(); //make it continuous
+
+            // frame1 = frame1.clone(); //make it continuous
 			//frame1 = Camera::undistort(frame1, calibrationData);
 			//ImageTransform::rotate(frame1, 90);
 
             //ImageTransform::flip(frame1, ImageTransform::FlipAxis::HORIZONTAL);
-			
+
 			//ImageTransform::scale(frame1, 0.5);
 			//frame1 = frame1.clone();
-			
+
             SendFrame(udps, frame1);
 
             if (showDisplay) {
@@ -118,87 +118,99 @@ int main(int argc, char** argv){
 
                 imshow("Sending Frame", frame1);
             }
-            
-            waitKey(100);
+
+            waitKey(1); //should be just larger than the processing time of a blank frame without receive code
         }
     } else {
 
 		FPS fps = FPS();
         Mat bestframedraw;
-        
+
         MovingAverage packetsPerFrameAvg(100); //moving average of 100 values
-        
+
+        MovingAverage latencyPerFrame(100);
+
         int packetsPerFrame;
         int framesPerSecond;
         int packetsPerSecond;
         int bitsPerSecond;
         int packetSize = 8*512;
-		
+
+		Stopwatch frameDelay = Stopwatch();
+
         NetworkVideoFrameReceiver* framerecv = new NetworkVideoFrameReceiver(udpr);
-        
+
         cout<<"Waiting for frame data..."<<endl;
-        
+
         while(running){
-			
+
+            frameDelay.reset();
+
 			int packetsLastFrame = framerecv->updateReceiveFrame();
-            
+
             //cout<<"received "<<packetsLastFrame<<" packets"<<endl;
-            
+
             if(!framerecv->isInitialized()) {
 				robosub::Time::waitMillis(500);
-            } else {
-				//cout<<"draw frame"<<endl;
-				
-				Mat* bestframe = framerecv->getBestFrame();
-				
-				Mat bestframegray;
-				cvtColor(*bestframe, bestframegray, CV_BGR2GRAY);
-				int blur = ImageFilter::getBlurCoefficient(bestframegray);
-				
-				Mat bestframedraw = bestframe->clone();
-
-                //cvtestDisplay(frame3);
-
-                fps.frame();
-                
-                packetsPerFrameAvg.insertData(packetsLastFrame);
-				packetsPerFrame = (int)packetsPerFrameAvg.getAverage();
-                framesPerSecond = fps.fps();
-                packetsPerSecond = packetsPerFrame*framesPerSecond;
-                bitsPerSecond = packetsPerSecond*packetSize;
-                
-				Drawing::text(bestframedraw,
-					String(Util::toStringWithPrecision(framesPerSecond)) + String(" fps"),
-					Point(16,64), Scalar(255,255,255), Drawing::Anchor::BOTTOM_LEFT, 0.5
-				);
-				Drawing::text(bestframedraw,
-					String(Util::toStringWithPrecision(packetsPerFrame) + String(" packets/frame")),
-					Point(16,48), Scalar(255,255,255), Drawing::Anchor::BOTTOM_LEFT, 0.5
-				);
-				Drawing::text(bestframedraw,
-					String(Util::toStringWithPrecision(packetsPerSecond) + String(" packets/sec")),
-					Point(16,32), Scalar(255,255,255), Drawing::Anchor::BOTTOM_LEFT, 0.5
-				);
-				Drawing::text(bestframedraw,
-					String(Util::toStringWithPrecision(((float)bitsPerSecond)/1024.0f/1024.0f) + String(" Mbits/sec")),
-					Point(16,16), Scalar(255, 255, 255), Drawing::Anchor::BOTTOM_LEFT, 0.5
-				);
-				Drawing::text(bestframedraw,
-					String("Blur = ") + String(Util::toStringWithPrecision((float)blur)),
-					Point(16,80), Scalar(255,255,255), Drawing::Anchor::BOTTOM_LEFT, 0.5
-				);
-				
-				if(blur<5000)
-					imshow("Best Frame", bestframedraw);
-				
-				Mat* latestframe = framerecv->getLatestFrame();
-				imshow("Latest Frame", *latestframe);
-				
-				waitKey(10);
+				continue;
             }
 
+            //cout<<"draw frame"<<endl;
+
+            Mat* bestframe = framerecv->getBestFrame();
+
+            Mat bestframegray;
+
+            cvtColor(*bestframe, bestframegray, CV_BGR2GRAY);
+            int blur = ImageFilter::getBlurCoefficient(bestframegray);
+
+            Mat bestframedraw = bestframe->clone();
+
+            //cvtestDisplay(frame3);
+
+            fps.frame();
+
+            packetsPerFrameAvg.insertData(packetsLastFrame);
+            packetsPerFrame = (int)packetsPerFrameAvg.getAverage();
+            framesPerSecond = fps.fps();
+            packetsPerSecond = packetsPerFrame*framesPerSecond;
+            bitsPerSecond = packetsPerSecond*packetSize;
+
+            Drawing::text(bestframedraw,
+                String(Util::toStringWithPrecision(framesPerSecond)) + String(" fps"),
+                Point(16,64), Scalar(255,255,255), Drawing::Anchor::BOTTOM_LEFT, 0.5
+            );
+            Drawing::text(bestframedraw,
+                String(Util::toStringWithPrecision(packetsPerFrame) + String(" packets/frame")),
+                Point(16,48), Scalar(255,255,255), Drawing::Anchor::BOTTOM_LEFT, 0.5
+            );
+            Drawing::text(bestframedraw,
+                String(Util::toStringWithPrecision(packetsPerSecond) + String(" packets/sec")),
+                Point(16,32), Scalar(255,255,255), Drawing::Anchor::BOTTOM_LEFT, 0.5
+            );
+            Drawing::text(bestframedraw,
+                String(Util::toStringWithPrecision(((float)bitsPerSecond)/1024.0f/1024.0f) + String(" Mbits/sec")),
+                Point(16,16), Scalar(255, 255, 255), Drawing::Anchor::BOTTOM_LEFT, 0.5
+            );
+            Drawing::text(bestframedraw,
+                String("Blur = ") + String(Util::toStringWithPrecision((float)blur)),
+                Point(16,80), Scalar(255,255,255), Drawing::Anchor::BOTTOM_LEFT, 0.5
+            );
+
+            if(blur<5000)
+                imshow("Best Frame", bestframedraw);
+
+            Mat latestframe = *(framerecv->getLatestFrame());
+
+            ImageTransform::scale(latestframe, 2.0);
+
+            imshow("Latest Frame", latestframe);
+
+            waitKey(1);
+
+            cout << frameDelay.elapsed() << " ms to process frame" << endl;
         }
-        
+
         delete(framerecv);
 	}
 
