@@ -128,8 +128,10 @@ namespace robosub{
 	//returns the frame, if you specify 0 for the frame it will be assigned to a newly created Mat whenever the first packet is received
     int NetworkVideoFrameReceiver::updateReceiveFrame(){
 		int packetsReceived = 0;
-		int maxPacketsPerFrame = (rows*cols*3)/networkVideo_packetSize;
-
+		//int maxPacketsPerFrame = (rows*cols*2)/networkVideo_packetSize;
+		
+		int firstFrameReceived = 0;
+		
     	while(true){
 			char packetdata[networkVideo_packetSize];
 
@@ -140,7 +142,7 @@ namespace robosub{
 				return 0;
 			}
 
-			if(recvlen==0 || packetsReceived > maxPacketsPerFrame){
+			if(recvlen==0){// || packetsReceived > maxPacketsPerFrame){
 				break;
 			}else if(recvlen != networkVideo_packetSize){
 				cout<<"RecvFrame: Invalid packet; Incorrect length = "<<recvlen<<endl;
@@ -155,11 +157,17 @@ namespace robosub{
 			int datalen = len*3;
 
 			int pixelloc = packetindex*networkVideo_packetDataPixels;
+			
+			if(firstFrameReceived==0){
+				firstFrameReceived = frameid;
+			}
+			
+			if(frameid>firstFrameReceived)break;
 
 			packetsPerFrame = (int)ceil(((float)(len*networkVideo_pixelSize))/((float)networkVideo_packetDataSize));
 
 			int currentFrameIdx = frameid%NetworkVideo_MostRecentFrameCount;
-
+			
 			/*
 			if(networkVideo_recvFrame==0 || rows!=networkVideo_recvFrame->rows || cols!=networkVideo_recvFrame->cols){
 				networkVideo_recvFrameData = (char*)malloc(rows*cols*3);
@@ -211,9 +219,11 @@ namespace robosub{
 				if(dataloc<datalen && dataloc>=0){
 					int pixel = twobytes(packetdata + networkVideo_packetHeadSize + i*networkVideo_pixelSize);
 
+					/*
 					recvFrameData[dataloc + 0] = (pixel>>8)&0b11111000;
 					recvFrameData[dataloc + 1] = (pixel>>3)&0b11111000;
 					recvFrameData[dataloc + 2] = (pixel<<2)&0b11111000;
+					*/
 
 					lastFrameData[dataloc + 0] = (pixel>>8)&0b11111000;
 					lastFrameData[dataloc + 1] = (pixel>>3)&0b11111000;
@@ -228,6 +238,7 @@ namespace robosub{
     }
 
     Mat* NetworkVideoFrameReceiver::getBestFrame(){
+		/*
 		int maxgood = 0;
 		int maxgoodidx = 0;
 		for(int i=0; i<NetworkVideo_MostRecentFrameCount; i++){
@@ -238,6 +249,9 @@ namespace robosub{
 		}
 
 		return bufferFrames[maxgoodidx];
+		*/
+		
+		return bufferFrameLatest;
     }
 
     Mat* NetworkVideoFrameReceiver::getLatestFrame(){
