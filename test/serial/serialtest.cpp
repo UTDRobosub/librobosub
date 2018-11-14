@@ -35,7 +35,7 @@ int main(){
 			cout<<value<<endl;
 			cout<<(int)senddata[0]<<" "<<(int)senddata[1]<<endl;
 			
-			serial1.writeEncodeLen(senddata, 2);
+			serial1.writeEncodeLen((char*)senddata, 2);
 		}
 		
 		while(true){
