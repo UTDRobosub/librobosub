@@ -10,6 +10,10 @@
 #include <termios.h>
 
 namespace robosub {
+	const int Serial_MaxBufferLen = 65536;
+	
+	struct SerialReceiverState;
+	
 	class Serial{
 		string filename;
 		
@@ -20,8 +24,15 @@ namespace robosub {
 		
 		char *readbuf;
 		int readbuflen;
-		const int maxreadbuflen = 8192;
+		const int maxreadbuflen = Serial_MaxBufferLen;
 		
+		int currentSequenceNumber;
+		char* sendbuf;
+		int sendbuflen;
+		
+		SerialReceiverState* receiverstate;
+		
+		void writeLen(char*, int);
 		void readEntireBuffer();
 		
 		public:
@@ -31,19 +42,10 @@ namespace robosub {
 		bool isConnected();
 		
 		void flushBuffer();
-		void flushUpToButNotIncludingFlag(char, char);
 		
-		int readLen(char*, int);
-		int readToChar(char*, int, char);
-		int readToFlag(char*, int, char, char);
-		string readStr();
+		int receiveAllMessages();
 		
-		void writeLen(char*, int);
-		void writeStr(string);
-		
-		int readDecodeLen(char*, int);
-		string readDecodeStr();
-		void writeEncodeLen(char*, int);
-		void writeEncodeStr(string);
+		void transmitMessageFast(char* message, int length);
+		void transmitMessageReliable(char* message, int length);
 	};
 }
