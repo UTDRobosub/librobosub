@@ -1,6 +1,7 @@
 
 #include <robosub/serial.h>
 #include <robosub/util.h>
+#include <robosub/timeutil.h>
 
 using namespace std;
 using namespace robosub;
@@ -13,11 +14,19 @@ void printBits(char c){
 	cout<<" "<<(int)c<<" \'"<<(char)c<<"\'"<<endl;
 }
 
+void receiveMessage(char* message, int length, bool needsresponse, char** response, int* responselength){
+	cout<<"Received: \"";
+	for(int i=0; i<length; i++){
+		cout<<(message[i]);
+	}
+	cout<<"\""<<endl;
+}
+
 int main(){
 	string port = Util::execCLI("ls /dev | grep tty[AU]");
 	cout<<"using serial port /dev/"<<port<<endl;
-	Serial serial1 = Serial("/dev/" + port.substr(0,port.length()-1), 115200);
-	
+	Serial serial1 = Serial("/dev/" + port.substr(0,port.length()-1), 115200, receiveMessage);
+
 	char decoded[1024];
 	
 	while(serial1.isConnected()){
@@ -30,39 +39,18 @@ int main(){
 			unsigned char senddata[3];
 			senddata[0] = (unsigned char)((value&0x00FF) >> 0);
 			senddata[1] = (unsigned char)((value&0xFF00) >> 8);
-			senddata[2] = (unsigned char)(0               );
+			senddata[2] = (unsigned char)(0                  );
 			
 			cout<<value<<endl;
 			cout<<(int)senddata[0]<<" "<<(int)senddata[1]<<endl;
-			
-			serial1.writeEncodeLen((char*)senddata, 2);
+
+			serial1.transmitMessageReliable((char*)senddata, 2);
 		}
-		
-		while(true){
-			string readstr = serial1.readDecodeStr();
-			
-			if(readstr.length()!=0){
-				cout<<readstr<<endl;
-			}else{
-				break;
-			}
-		}
+
+		serial1.receiveAllMessages();
+
+		robosub::Time::waitMillis(1);
 	}
-	
-	/*
-	while(serial1.isConnected()){
-		//cout<<serial1.readDecodeLen(decoded, 1024)<<endl;
-		
-		//int data = decoded[0] | decoded[1]<<8;
-		
-		//cout<<data<<endl;
-		
-		string readstr = serial1.readDecodeStr();
-		
-		if(readstr.length()!=0){
-			cout<<readstr<<endl;
-		}
-	}*/
-	
+
 	return 0;
 }

@@ -9,10 +9,10 @@
 #include <unistd.h>
 #include <termios.h>
 
+struct Serial_State;
+
 namespace robosub {
 	const int Serial_MaxBufferLen = 65536;
-	
-	struct SerialReceiverState;
 	
 	class Serial{
 		string filename;
@@ -30,21 +30,27 @@ namespace robosub {
 		char* sendbuf;
 		int sendbuflen;
 		
-		SerialReceiverState* receiverstate;
+		Serial_State* state;
 		
-		void writeLen(char*, int);
+		void (*receiveMessageCallback)(char* message, int length, bool needsrepsonse, char** response, int* responsepength);
+		
+		void writeLen(char* buffer, int length);
 		void readEntireBuffer();
 		
 		public:
-		Serial(string, int);
+		Serial(string fn, int baud, void (*receiveMessageCallback)(char* message, int length, bool needsrepsonse, char** response, int* responsepength));
 		~Serial();
 		
-		bool isConnected();
+		void onReceiveMessage(char* message, int length, bool needsrepsonse, char** response, int* responselength);
 		
 		void flushBuffer();
 		
-		int receiveAllMessages();
+		void appendChar(char data);
+		void transmitBuffer();
 		
+		bool isConnected();
+		
+		int receiveAllMessages();
 		void transmitMessageFast(char* message, int length);
 		void transmitMessageReliable(char* message, int length);
 	};
