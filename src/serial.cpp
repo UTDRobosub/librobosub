@@ -2,7 +2,7 @@
 #include "robosub/serial.h"
 #include "robosub/timeutil.h"
 
-#include "robosub-serial.c"
+#include "robosub-serial.h"
 
 namespace robosub {
 	
@@ -38,7 +38,7 @@ namespace robosub {
 	/////////////////////////////////////////////////////////////////////////////
 	//Serial class private
 	
-	Serial::Serial(string fn, int baud, void (*receiveMessageCallback)(char* message, int length, bool needsrepsonse, char** response, int* responsepength)){
+	Serial::Serial(string fn, int baud, void (*_receiveMessageCallback)(char* message, int length, bool needsrepsonse, char** response, int* responsepength)){
 		connected = false;
 		
 		filename = fn;
@@ -125,6 +125,8 @@ namespace robosub {
 		sendbuflen = 0;
 		
 		state = Serial_NewState(this, serialOnReceiveMessage, serialSendChar, serialDelayMs, serialPollReceive);
+
+		receiveMessageCallback = _receiveMessageCallback;
 	}
 	
 	Serial::~Serial(){
@@ -142,7 +144,7 @@ namespace robosub {
 		
 		readbuflen += read(file, readbuf+readbuflen, maxreadbuflen-readbuflen);
 		
-		if(readbuflen==maxreadbuflen){
+		if(readbuflen>=maxreadbuflen){
 			cout<<"Serial port \'"<<filename<<"\' read buffer full"<<endl;
 		}
 	}
@@ -200,6 +202,8 @@ namespace robosub {
 		for(int dataidx=0; dataidx<readbuflen; dataidx++){
 			Serial_ReceiveChar(state, readbuf[dataidx]);
 		}
+
+		flushBuffer();
 	}
 	
 	void Serial::transmitMessageFast(char* message, int length){

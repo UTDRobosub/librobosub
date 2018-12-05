@@ -6,20 +6,14 @@
 using namespace std;
 using namespace robosub;
 
-void printBits(char c){
-	for(int j=7; j>=0; j--){
-		bool bit = (c & (0b1<<j)) != 0;
-		cout<<bit?'1':'0';
-	}
-	cout<<" "<<(int)c<<" \'"<<(char)c<<"\'"<<endl;
-}
-
 void receiveMessage(char* message, int length, bool needsresponse, char** response, int* responselength){
-	cout<<"Received: \"";
+	/*cout<<"Received: \"";
 	for(int i=0; i<length; i++){
 		cout<<(message[i]);
 	}
-	cout<<"\""<<endl;
+    cout<<"\""<<endl;*/
+
+	cout<<"number = "<<(int)((unsigned char)message[0])<<endl;
 }
 
 int main(){
@@ -31,9 +25,11 @@ int main(){
 	
 	while(serial1.isConnected()){
 		string valuestr;
-		cin>>valuestr;
+		//cin>>valuestr;
 		
-		int value = atoi(valuestr.c_str());
+		//int value = atoi(valuestr.c_str());
+
+		int value = 0;
 		if(value!=0){
 			
 			unsigned char senddata[3];
