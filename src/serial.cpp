@@ -38,8 +38,10 @@ namespace robosub {
 	/////////////////////////////////////////////////////////////////////////////
 	//Serial class private
 	
-	Serial::Serial(string fn, int baud, void (*_receiveMessageCallback)(char* message, int length, bool needsrepsonse, char** response, int* responsepength)){
+	Serial::Serial(string fn, int baud, void (*_receiveMessageCallback)(char* message, int length, bool needsrepsonse, char** response, int* responsepength), bool useprotocol){
 		connected = false;
+
+		useprotocol = useprotocol;
 		
 		filename = fn;
 		readbuflen = 0;
@@ -124,7 +126,7 @@ namespace robosub {
 		sendbuf = new char[Serial_MaxMessageLength*2+4];
 		sendbuflen = 0;
 		
-		state = Serial_NewState(this, serialOnReceiveMessage, serialSendChar, serialDelayMs, serialPollReceive);
+		state = Serial_NewState(this, useprotocol, serialOnReceiveMessage, serialSendChar, serialDelayMs, serialPollReceive);
 
 		receiveMessageCallback = _receiveMessageCallback;
 	}

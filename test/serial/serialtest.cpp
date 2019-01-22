@@ -13,13 +13,14 @@ void receiveMessage(char* message, int length, bool needsresponse, char** respon
 	}
     cout<<"\""<<endl;*/
 
-	cout<<"number = "<<(int)((unsigned char)message[0])<<endl;
+	message[length] = 0;
+	cout<<message<<endl;
 }
 
 int main(){
 	string port = Util::execCLI("ls /dev | grep tty[AU]");
 	cout<<"using serial port /dev/"<<port<<endl;
-	Serial serial1 = Serial("/dev/" + port.substr(0,port.length()-1), 115200, receiveMessage);
+	Serial serial1 = Serial("/dev/" + port.substr(0,port.length()-1), 115200, receiveMessage, false);
 
 	char decoded[1024];
 	

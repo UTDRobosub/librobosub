@@ -31,6 +31,7 @@ namespace robosub {
 		int sendbuflen;
 		
 		Serial_State* state;
+		bool useprotocol;
 		
 		void (*receiveMessageCallback)(char* message, int length, bool needsrepsonse, char** response, int* responsepength);
 		
@@ -38,7 +39,7 @@ namespace robosub {
 		void readEntireBuffer();
 		
 		public:
-		Serial(string fn, int baud, void (*receiveMessageCallback)(char* message, int length, bool needsrepsonse, char** response, int* responsepength));
+		Serial(string fn, int baud, void (*receiveMessageCallback)(char* message, int length, bool needsrepsonse, char** response, int* responsepength), bool useprotocol);
 		~Serial();
 		
 		void onReceiveMessage(char* message, int length, bool needsrepsonse, char** response, int* responselength);

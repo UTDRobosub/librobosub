@@ -55,7 +55,9 @@ const char Serial_Flags_IncludesAckData   = 0b00010000;
 
 struct Serial_State{
 	void* instance;
-	
+
+	bool useprotocol;
+
 	void (*onReceiveMessage)(void* instance, char* message, int length, bool needsresponse, char** response, int* responsepength);
 	void (*sendChar)(void* instance, char data, bool terminate);
 	void (*delay)(void* instance, int milliseconds);
@@ -82,6 +84,7 @@ struct Serial_State{
 
 Serial_State* Serial_NewState(
 	void* instanceP,
+	bool useprotocol,
 	void (*onReceiveMessageF)(void* instance, char* message, int length, bool needsresponse, char** response, int* responsepength),
 	void (*sendCharF)(void* instance, char data, bool terminate),
 	void (*delayF)(void* instance, int milliseconds),
@@ -90,6 +93,8 @@ Serial_State* Serial_NewState(
 	Serial_State* state = new Serial_State();
 	
 	state->instance = instanceP;
+
+	state->useprotocol = useprotocol;
 	
 	state->onReceiveMessage = onReceiveMessageF;
 	state->sendChar = sendCharF;
@@ -117,7 +122,7 @@ Serial_State* Serial_NewState(
 }
 
 void Serial_DeleteState(Serial_State* state){
-	free(state->currentMessageData);
+	//free(state->currentMessageData);
 	delete(state);
 }
 
@@ -130,6 +135,15 @@ void Serial_SendCharEscaped(Serial_State *state, char data, bool isfinal){
 	else if(data==']' ){ Serial_SendChar(state, '\\', false  ); Serial_SendChar(state, ')', isfinal); }
 	else if(data=='\\'){ Serial_SendChar(state, '\\', false  ); Serial_SendChar(state, '/', isfinal); }
 	else               { Serial_SendChar(state, data, isfinal);                                }
+}
+
+void Serial_SendMessageNoProtocol(Serial_State* state, char* buffer, int length){
+	for(int i=0; i<length; i++){
+		char data = buffer[i];
+		bool isend = i==length-1;
+
+		Serial_SendChar(state, data, isend);
+	}
 }
 
 void Serial_SendMessageComplex(Serial_State* state, char* buffer, int length, unsigned char sequenceNumber, bool includesack, bool needsack, bool needsackdata, bool includesackdata, char** response, int* responselength){
@@ -198,7 +212,11 @@ void Serial_SendMessageComplex(Serial_State* state, char* buffer, int length, un
 	}
 }
 
-void Serial_OnReceiveMessage(Serial_State* state){
+void Serial_OnReceiveMessageNoProtocol(Serial_State* state){
+	state->onReceiveMessage(state->instance, state->currentMessageData, state->currentMessageDataLength, false, 0, 0);
+}
+
+void Serial_OnReceiveMessageProtocol(Serial_State* state){
 	bool needsack        = (state->currentMessageFlags & Serial_Flags_NeedsAck       ) != 0;
 	bool needsackdata    = (state->currentMessageFlags & Serial_Flags_NeedsAckData   ) != 0;
 	bool includesackdata = (state->currentMessageFlags & Serial_Flags_IncludesAckData) != 0;
@@ -228,7 +246,29 @@ void Serial_OnReceiveMessage(Serial_State* state){
 	}
 }
 
-void Serial_ReceiveChar(Serial_State* state, char rawdata){
+void Serial_ReceiveCharNoProtocol(Serial_State* state, char rawdata){
+	if(rawdata=='['){
+		state->state = Serial_State_InMessageData;
+		state->currentMessageFlags = 0;
+		state->currentMessageSN = 0;
+		state->currentMessageComputedCRC = 0;
+
+		state->currentMessageDataLength = 0;
+	}else if(state->state==Serial_State_InMessageData && rawdata!=']'){
+		if(state->currentMessageDataLength<Serial_MaxMessageLength){
+			state->currentMessageData[state->currentMessageDataLength] = rawdata;
+			state->currentMessageDataLength++;
+		}else{
+			state->state = Serial_State_Outside;
+		}
+	}else if(state->state==Serial_State_InMessageData){
+		Serial_OnReceiveMessageNoProtocol(state);
+
+		state->state = Serial_State_Outside;
+	}
+}
+
+void Serial_ReceiveCharProtocol(Serial_State* state, char rawdata){
 	char escdata = rawdata;
 	
 	if(rawdata=='\\'){
@@ -281,7 +321,7 @@ void Serial_ReceiveChar(Serial_State* state, char rawdata){
 			state->currentMessageCRC = escdata;
 			
 			if(state->currentMessageCRC==state->currentMessageComputedCRC || state->currentMessageFlags&Serial_Flags_NoCRCCheck){ //if CRC passes
-				Serial_OnReceiveMessage(state);
+				Serial_OnReceiveMessageProtocol(state);
 			}
 			
 			state->state = Serial_State_Outside;
@@ -289,16 +329,33 @@ void Serial_ReceiveChar(Serial_State* state, char rawdata){
 	}
 }
 
+void Serial_ReceiveChar(Serial_State *state, char rawdata){
+	if(state->useprotocol){
+		Serial_ReceiveCharProtocol(state, rawdata);
+	}else{
+		Serial_ReceiveCharNoProtocol(state, rawdata);
+	}
+}
+
 void Serial_SendMessage(Serial_State* state, char* buffer, int length, bool needsack){
 	state->lastUsedSN = (state->lastUsedSN+1)%256;
 	char sequencenumber = state->lastUsedSN;
-	
-	Serial_SendMessageComplex(state, buffer, length, sequencenumber, false, needsack, false, false, 0, 0);
+
+	if(state->useprotocol) {
+		Serial_SendMessageComplex(state, buffer, length, sequencenumber, false, needsack, false, false, 0, 0);
+	}else{
+		Serial_SendMessageNoProtocol(state, buffer, length);
+	}
 }
 
 void Serial_SendMessageNeedsResponse(Serial_State* state, char* buffer, int length, bool needsack, char** response, int* responselength){
 	state->lastUsedSN = (state->lastUsedSN+1)%256;
 	char sequencenumber = state->lastUsedSN;
-	
-	Serial_SendMessageComplex(state, buffer, length, sequencenumber, false, false, true, false, response, responselength);
+
+	if(state->useprotocol) {
+		Serial_SendMessageComplex(state, buffer, length, sequencenumber, false, false, true, false, response,
+								  responselength);
+	}else{
+		Serial_SendMessageNoProtocol(state, buffer, length);
+	}
 }
