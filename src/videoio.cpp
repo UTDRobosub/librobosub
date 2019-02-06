@@ -52,16 +52,23 @@ namespace robosub {
 		return cap->grab();
 	}
 
-	bool Camera::retrieveFrameBGR(Mat& img)
+	bool Camera::getGrabbedFrame(Mat& img)
 	{
-	    #ifdef WINDOWS
-            if (!cap->retrieve(img)) return false;
-        #else
-            if (!cap->grab()) return false;
-			if (!cap->retrieve(img)) return false;
-        #endif
+		if (!cap->retrieve(img)) return false;
 		updateRetrieveTime();
 		return true;
+	}
+
+	bool Camera::retrieveFrameBGR(Mat& img)
+	{
+#ifdef WINDOWS
+        if (!cap->retrieve(img)) return false;
+#else
+        if (!cap->grab()) return false;
+        if (!cap->retrieve(img)) return false;
+#endif
+        updateRetrieveTime();
+        return true;
 	}
 
 	bool Camera::retrieveFrameGrey(Mat& img)

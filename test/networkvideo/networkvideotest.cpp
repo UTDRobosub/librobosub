@@ -3,8 +3,6 @@
 #include <signal.h>
 #include <opencv2/ximgproc.hpp>
 
-#include "cvtest.cpp"
-
 using namespace std;
 using namespace robosub;
 
@@ -157,14 +155,14 @@ int main(int argc, char** argv){
 
             //cout<<"draw frame"<<endl;
 
-            Mat* bestframe = framerecv->getBestFrame();
-
-            Mat bestframegray;
-
-            cvtColor(*bestframe, bestframegray, CV_BGR2GRAY);
-            int blur = ImageFilter::getBlurCoefficient(bestframegray);
-
-            Mat bestframedraw = bestframe->clone();
+//            Mat* bestframe = framerecv->getBestFrame();
+//
+//            Mat bestframegray;
+//
+//            cvtColor(*bestframe, bestframegray, cv::COLOR_BGR2GRAY);
+//            int blur = ImageFilter::getBlurCoefficient(bestframegray);
+//
+//            Mat bestframedraw = bestframe->clone();
 
             //cvtestDisplay(frame3);
 
@@ -192,13 +190,13 @@ int main(int argc, char** argv){
                 String(Util::toStringWithPrecision(((float)bitsPerSecond)/1024.0f/1024.0f) + String(" Mbits/sec")),
                 Point(16,16), Scalar(255, 255, 255), Drawing::Anchor::BOTTOM_LEFT, 0.5
             );
-            Drawing::text(bestframedraw,
-                String("Blur = ") + String(Util::toStringWithPrecision((float)blur)),
-                Point(16,80), Scalar(255,255,255), Drawing::Anchor::BOTTOM_LEFT, 0.5
-            );
+//            Drawing::text(bestframedraw,
+//                String("Blur = ") + String(Util::toStringWithPrecision((float)blur)),
+//                Point(16,80), Scalar(255,255,255), Drawing::Anchor::BOTTOM_LEFT, 0.5
+//            );
 
-            if(blur<5000)
-                imshow("Best Frame", bestframedraw);
+//            if(blur<5000)
+//                imshow("Best Frame", bestframedraw);
 
             Mat latestframe = *(framerecv->getLatestFrame());
 

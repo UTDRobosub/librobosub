@@ -200,6 +200,11 @@ namespace robosub {
 	    inet_pton(AF_INET, ssaddr.c_str(), &saddr.sin_addr.s_addr);
 	    saddr.sin_port=htons(port);
 
+		int rb=1024*1024;
+		if(setsockopt(ssock, SOL_SOCKET, SO_SNDBUF, (const char*)&rb, sizeof(rb)) < 0){
+			return NETWORKUDP_GETERROR;
+		}
+
 	    initsend=1;
 	    return 0;
 	}

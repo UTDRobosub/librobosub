@@ -60,6 +60,8 @@ namespace robosub
 		///Grab and store a frame without decoding it.
 		///When using multiple cameras, call this on all cameras before retrieving frames.
 		EXPORT bool grabFrame();
+		///Retrieve a grabbed frame
+		EXPORT bool getGrabbedFrame(Mat& img);
 		///Retrieve and decode the current frame (RGBA)
 		EXPORT bool retrieveFrameBGR(Mat& img);
 		///Retrieve and decode the current frame (greyscale)
