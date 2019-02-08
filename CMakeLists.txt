@@ -56,6 +56,10 @@ install(TARGETS ${LIBRARY_NAME} DESTINATION lib EXPORT ${LIBRARY_NAME}-config)
 install(EXPORT ${LIBRARY_NAME}-config DESTINATION lib/${LIBRARY_NAME})
 
 # Tests
+add_executable(test-networktcp test/networktcp/networktcptest.cpp)
+target_link_libraries(test-networktcp ${LIBRARY_NAME})
+target_compile_features(test-networktcp PRIVATE cxx_range_for)
+
 add_executable(test-networkudp test/networkudp/networkudptest.cpp)
 target_link_libraries(test-networkudp ${LIBRARY_NAME})
 target_compile_features(test-networkudp PRIVATE cxx_range_for)

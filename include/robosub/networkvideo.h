@@ -48,12 +48,14 @@ namespace robosub{
 			udpr = &iudpr;
 		}
 		~NetworkVideoFrameReceiver(){
-			for(int i=0; i<NetworkVideo_MostRecentFrameCount; i++){
-				delete(bufferFrames[i]);
-				delete(bufferFramesReceivedPacket[i]);
-				delete(bufferFramesMostRecentFrameId[i]);
+			if(initialized){
+				for(int i=0; i<NetworkVideo_MostRecentFrameCount; i++){
+					delete(bufferFrames[i]);
+					delete(bufferFramesReceivedPacket[i]);
+					delete(bufferFramesMostRecentFrameId[i]);
+				}
+				delete(bufferFrameLatest);
 			}
-			delete(bufferFrameLatest);
 		}
 		bool isInitialized();
 		Mat* getBestFrame();
@@ -61,5 +63,5 @@ namespace robosub{
 		int updateReceiveFrame();
 	};
 	
-    void SendFrame(UDPS&, Mat&);
+	void SendFrame(UDPS&, Mat&);
 }
