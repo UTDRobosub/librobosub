@@ -68,6 +68,10 @@ add_executable(test-networkvideo test/networkvideo/networkvideotest.cpp)
 target_link_libraries(test-networkvideo ${LIBRARY_NAME})
 target_compile_features(test-networkvideo PRIVATE cxx_range_for)
 
+add_executable(test-networkvideotcp test/networkvideotcp/networkvideotcptest.cpp)
+target_link_libraries(test-networkvideotcp ${LIBRARY_NAME})
+target_compile_features(test-networkvideotcp PRIVATE cxx_range_for)
+
 add_executable(test-video test/video/videotest.cpp)
 target_link_libraries(test-video ${LIBRARY_NAME})
 target_compile_features(test-video PRIVATE cxx_range_for)
