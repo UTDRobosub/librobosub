@@ -36,6 +36,14 @@ namespace robosub {
         return _data[key];
     }
 
+    bool isNull() {
+
+    }
+
+    bool hasKey(const string key) {
+
+    }
+
     DataBucket& DataBucket::operator= (const DataBucket& other) {
         _data = other._data;
         return *this;
