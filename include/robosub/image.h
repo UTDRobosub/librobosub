@@ -39,6 +39,10 @@ namespace robosub
 		EXPORT static void equalizeHistogram(Mat& image);
 		
 		EXPORT static int getBlurCoefficient(Mat& image);
+
+		EXPORT static void downsample(Mat& image, double scale);
+
+		EXPORT static void upsample(Mat& image, double scale);
 	};
 
 	class Drawing

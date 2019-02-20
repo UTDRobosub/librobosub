@@ -46,6 +46,8 @@ namespace robosub {
 		///returns
 		EXPORT static vector<Match> regex(string pattern, string test);
 
+		EXPORT static double euclideanDistance(double x1, double y1, double x2, double y2);
+
 		///return number to certain decimal precision
 		template <typename T>
 		inline static String toStringWithPrecision(const T value, const int n = 4) {

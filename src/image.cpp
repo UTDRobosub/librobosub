@@ -153,4 +153,14 @@ namespace robosub {
 		
 		return (int)(stddev[0]*stddev[0]);
 	}
+
+	void ImageFilter::downsample(Mat &image, double scale) {
+		pyrDown(image, image,
+			Size((double) image.cols / scale, (double) image.rows / scale));
+	}
+
+	void ImageFilter::upsample(Mat &image, double scale) {
+		pyrUp(image, image,
+				Size((double) image.cols * scale, (double) image.rows * scale));
+	}
 }
