@@ -239,10 +239,51 @@ namespace robosub {
             return (side1 + side2) / 2;
         }
     };
+    
 
     typedef Rectangle_<int> Rectangle;
     typedef Rectangle_<int> Rectangle2i;
     typedef Rectangle_<float> Rectangle2f;
     typedef Rectangle_<double> Rectangle2d;
 
+    template<class T>
+    class Triangle_ : Contour_<T> {
+    public:
+        inline Triangle_(Mat &data) : Contour_<T>(data) {
+
+        }
+
+        Triangle_(vector<Point_<T>> &points) : Contour_<T>(points) {}
+
+        double height() {
+            vector<Point_<T>> points = Contour_<T>::getPoints();
+
+            double side1 = Util::euclideanDistance(points.at(0).x, points.at(0).y, points.at(1).x, points.at(1).y);
+            double side2 = Util::euclideanDistance(points.at(1).x, points.at(1).y, points.at(2).x, points.at(2).y);
+            double side3 = Util::euclideanDistance(points.at(2).x, points.at(2).y, points.at(0).x, points.at(0).y);
+            double hypotenuse = max(max(side1, side2), side3);
+
+            double height = 2* this->area()/hypotenuse;
+
+            return height;
+        }
+
+        double width() {
+            vector<Point_<T>> points = Contour_<T>::getPoints();
+            double side1 = Util::euclideanDistance(points.at(0).x, points.at(0).y, points.at(1).x, points.at(1).y);
+            double side2 = Util::euclideanDistance(points.at(1).x, points.at(1).y, points.at(2).x, points.at(2).y);
+            double side3 = Util::euclideanDistance(points.at(2).x, points.at(2).y, points.at(0).x, points.at(0).y);
+            double hypotenuse = max(max(side1, side2), side3);
+
+            return hypotenuse;
+        }
+    };
+
+    typedef Triangle_<int> Triangle;
+    typedef Triangle_<int> Triangle2i;
+    typedef Triangle_<float> Triangle2f;
+    typedef Triangle_<double> Triangle2d;
+
 }
+
+

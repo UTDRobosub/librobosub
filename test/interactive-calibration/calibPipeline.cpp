@@ -7,6 +7,7 @@
 #include <opencv2/highgui.hpp>
 
 #include <stdexcept>
+#include <opencv2/imgproc.hpp>
 
 using namespace calib;
 
@@ -67,6 +68,10 @@ PipelineExitStatus CalibPipeline::start(std::vector<cv::Ptr<FrameProcessor> > pr
         frame.copyTo(processedFrame);
         for (std::vector<cv::Ptr<FrameProcessor> >::iterator it = processors.begin(); it != processors.end(); ++it)
             processedFrame = (*it)->processFrame(processedFrame);
+
+        cv::Size frameSize = frame.size();
+        cv::resize(processedFrame, processedFrame, cv::Size(frameSize.width * 2, frameSize.height * 2));
+
         cv::imshow(mainWindowName, processedFrame);
         char key = (char)cv::waitKey(CAP_DELAY);
 

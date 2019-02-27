@@ -208,7 +208,7 @@ void CalibProcessor::showCaptureMessage(const cv::Mat& frame, const std::string 
     cv::bitwise_not(frame, frame);
     cv::putText(frame, message, textOrigin, 1, textSize, cv::Scalar(0,0,255), 2, cv::LINE_AA);
     cv::imshow(mainWindowName, frame);
-    cv::waitKey(300);
+    cv::waitKey(2000);
 }
 
 bool CalibProcessor::checkLastFrame()

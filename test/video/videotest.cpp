@@ -101,24 +101,32 @@ int main(int argc, char **argv) {
 
 
 //            if (!c.isClosed()) continue;
-            if (c.area() > MIN_AREA && c.area() < MAX_AREA) cout << c.area() << endl;
-            else continue;
+//            if (c.area() > MIN_AREA && c.area() < MAX_AREA) cout << c.area() << endl;
+//            else continue;
 
             if (approx.size() >= 5) {
                 circles.push_back(approx);
             } else if (approx.size() == 4) {
                 //TODO figure out how to calculate width/height ratio
-                Rectangle r = Rectangle(contours[i]);
+                Rectangle r = Rectangle(approx);
                 double dimensionRatio = r.height() / r.width();
                 if (dimensionRatio > 1) dimensionRatio = 1 / dimensionRatio;
 
-                double ratioThreshold = .7;
+                cout << r.height() << " " << r.width() << endl;
+                double ratioThreshold = .5;
                 if (dimensionRatio < ratioThreshold)
                     rectangles.push_back(approx);
                 else
                     squares.push_back(approx);
             } else if (approx.size() == 3) {
-                triangles.push_back(approx);
+                Triangle t = Triangle(approx);
+                double dimensionRatio = t.height() / t.width();
+
+                double ratioThreshold = .5;
+                if (dimensionRatio < ratioThreshold)
+                    rectangles.push_back(approx);
+                else
+                    triangles.push_back(approx);
             } else {
                 rectangles.push_back(approx);
             }
@@ -149,3 +157,4 @@ int main(int argc, char **argv) {
     }
     return 0;
 }
+
