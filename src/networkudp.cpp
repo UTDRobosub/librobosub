@@ -196,14 +196,6 @@ namespace robosub {
 		}
 		
 		memset((char*)&saddr, 0, sizeof(saddr));
-<<<<<<< HEAD
-		saddr.sin_family=AF_INET;
-		inet_pton(AF_INET, ssaddr.c_str(), &saddr.sin_addr.s_addr);
-		saddr.sin_port=htons(port);
-		
-		initsend=1;
-		return 0;
-=======
 	    saddr.sin_family=AF_INET;
 	    inet_pton(AF_INET, ssaddr.c_str(), &saddr.sin_addr.s_addr);
 	    saddr.sin_port=htons(port);
@@ -215,7 +207,6 @@ namespace robosub {
 
 	    initsend=1;
 	    return 0;
->>>>>>> 663e9ed2d753f25acc51623b3f05070808f3a1e3
 	}
 	
 	//closes the sending socket
