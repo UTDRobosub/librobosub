@@ -48,7 +48,7 @@ int main(int argc, char** argv){
 		"{vr rows        |720      | image buffer rows (send only)  }"
 		"{c cam camera   |0        | camera id (send only) }"
 	;
-
+	
 	CommandLineParser parser(argc, argv, keys);
 	parser.about("Network Video Transfer Test");
 	
@@ -160,76 +160,77 @@ int main(int argc, char** argv){
 		NetworkTcpClient client;
 		
 		cout<<"Connecting to server."<<endl;
-		client.connectToServer((char*)addr.c_str(), port);
-		
-		cout<<"Connected."<<endl;
-		
-		char* framedata = nullptr;
-		
-		char* headerdata = (char*)malloc(16);
-		
-		int waitingOnRestOfFrame = 0;
-		int framedatalen;
-		
-		while(running){
+		if(int err = client.connectToServer((char*)addr.c_str(), port)){
+			cout<<"Connection error "<<strerror(err)<<endl;
+		}else{
+			cout<<"Connected."<<endl;
 			
-			if(waitingOnRestOfFrame==0){
-				int headerlen = client.receiveBuffer(headerdata, 16);
+			char* framedata = nullptr;
+			
+			char* headerdata = (char*)malloc(16);
+			
+			int waitingOnRestOfFrame = 0;
+			int framedatalen;
+			
+			while(running){
 				
-				if(headerlen==16){
-					int ver1 = *(int*)(headerdata+ 0);
-					cols = *(int*)(headerdata+ 4);
-					rows = *(int*)(headerdata+ 8);
-					int none = *(int*)(headerdata+12);
+				if(waitingOnRestOfFrame==0){
+					int headerlen = client.receiveBuffer(headerdata, 16);
 					
-					fps.frame();
-					
-					framesPerSecond = fps.fps();
-					bitsPerSecond = framesPerSecond*(framedatalen+16)*8;
-					
-					cout<<cols<<" "<<rows<<endl;
-					
-					if(ver1==VERIFICATION_CODE){
+					if(headerlen==16){
+						int ver1 = *(int*)(headerdata+ 0);
+						cols = *(int*)(headerdata+ 4);
+						rows = *(int*)(headerdata+ 8);
+						int none = *(int*)(headerdata+12);
 						
-						framedatalen = rows*cols*3;
+						fps.frame();
 						
-						if(framedata!=nullptr){
-							free(framedata);
-						}
+						framesPerSecond = fps.fps();
+						bitsPerSecond = framesPerSecond*(framedatalen+16)*8;
 						
-						framedata = (char*)malloc(framedatalen);
+						cout<<cols<<" "<<rows<<endl;
 						
-						int recvdatalen = client.receiveBuffer(framedata, framedatalen);
-						
-						if(recvdatalen>=0){
-							waitingOnRestOfFrame = framedatalen-recvdatalen;
-							cout<<"waiting on "<<waitingOnRestOfFrame<<endl;
+						if(ver1==VERIFICATION_CODE){
 							
-							if(waitingOnRestOfFrame==0){
-								drawFrame(rows, cols, framedata, framesPerSecond, bitsPerSecond);
+							framedatalen = rows*cols*3;
+							
+							if(framedata!=nullptr){
+								free(framedata);
+							}
+							
+							framedata = (char*)malloc(framedatalen);
+							
+							int recvdatalen = client.receiveBuffer(framedata, framedatalen);
+							
+							if(recvdatalen>=0){
+								waitingOnRestOfFrame = framedatalen-recvdatalen;
+								cout<<"waiting on "<<waitingOnRestOfFrame<<endl;
+								
+								if(waitingOnRestOfFrame==0){
+									drawFrame(rows, cols, framedata, framesPerSecond, bitsPerSecond);
+								}
 							}
 						}
 					}
-				}
-			}else{
-				int recvdatalen = client.receiveBuffer(framedata+(framedatalen-waitingOnRestOfFrame), waitingOnRestOfFrame);
-				
-				if(recvdatalen>=0){
-					waitingOnRestOfFrame = waitingOnRestOfFrame-recvdatalen;
-						
-					cout<<"waiting on "<<waitingOnRestOfFrame<<endl;
-					
-					if(waitingOnRestOfFrame==0){
-						drawFrame(rows, cols, framedata, framesPerSecond, bitsPerSecond);
-					}
 				}else{
-					cout<<errno<<endl;
+					int recvdatalen = client.receiveBuffer(framedata+(framedatalen-waitingOnRestOfFrame), waitingOnRestOfFrame);
+					
+					if(recvdatalen>=0){
+						waitingOnRestOfFrame = waitingOnRestOfFrame-recvdatalen;
+							
+						cout<<"waiting on "<<waitingOnRestOfFrame<<endl;
+						
+						if(waitingOnRestOfFrame==0){
+							drawFrame(rows, cols, framedata, framesPerSecond, bitsPerSecond);
+						}
+					}else{
+						cout<<errno<<endl;
+					}
 				}
+				
+				waitKey(1);
 			}
-			
-			waitKey(1);
 		}
-		
 	}
 	
 	return 0;
