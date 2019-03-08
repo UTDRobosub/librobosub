@@ -2,8 +2,13 @@
 #include "opencv2/opencv.hpp"
 #include "opencv2/imgproc.hpp"
 #include "opencv2/highgui.hpp"
+
+#ifdef HAVE_OPENCV_CUDAIMGPROC
+
 #include "opencv2/cudafilters.hpp"
 #include "opencv2/cudaimgproc.hpp"
+
+#endif
 
 #include <robosub/robosub.h>
 
@@ -12,6 +17,7 @@ using namespace robosub;
 
 int main (int argc, char* argv[])
 {
+#ifdef HAVE_OPENCV_CUDAIMGPROC
     try
     {
         cout << cv::getBuildInformation() << endl;
@@ -79,4 +85,8 @@ int main (int argc, char* argv[])
         std::cout << "Error: " << ex.what() << std::endl;
     }
     return 0;
+#endif
+    cout << cv::getBuildInformation() << endl;
+    cout << "OpenCV not built with CUDA support." << endl;
+    return 1;
 }
