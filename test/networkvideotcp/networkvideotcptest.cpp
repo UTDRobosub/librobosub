@@ -17,6 +17,25 @@ void catchSignal(int signal) {
 const int MODE_RECEIVE = 0;
 const int MODE_SEND = 1;
 
+const int VERIFICATION_CODE = 1234567890;
+
+void drawFrame(int rows, int cols, char* framedata, int framesPerSecond, int bitsPerSecond){
+	int framedatalen = rows*cols*3;
+	
+	Mat bestframedraw(rows, cols, CV_8UC3, framedata);
+	
+	Drawing::text(bestframedraw,
+		String(Util::toStringWithPrecision(framesPerSecond)) + String(" fps"),
+		Point(16,64), Scalar(255,255,255), Drawing::Anchor::BOTTOM_LEFT, 0.5
+	);
+	Drawing::text(bestframedraw,
+		String(Util::toStringWithPrecision(((float)bitsPerSecond)/1024.0f/1024.0f) + String(" Mbits/sec")),
+		Point(16,16), Scalar(255, 255, 255), Drawing::Anchor::BOTTOM_LEFT, 0.5
+	);
+	
+	imshow("Latest Frame", bestframedraw);
+}
+
 int main(int argc, char** argv){
 	
 	const String keys =
@@ -88,8 +107,7 @@ int main(int argc, char** argv){
 	//load calibration data - run AFTER resolution set
 	Camera::CalibrationData calibrationData = *Camera::loadCalibrationDataFromXML("../config/fisheye180_cameracalib_fisheye.xml", frameSize);
 	
-	int framelen = 3*rows*cols;
-	int datalen = 16 + framelen;
+	int datalen = rows*cols*3 + 16;
 	//4 bytes for cols
 	//4 bytes for rows
 	//framelen bytes for image data
@@ -113,11 +131,11 @@ int main(int argc, char** argv){
 			
 			cam->retrieveFrameBGR(frame1);
 			
-			*(int*)(senddata+ 0) = 1234567890;
+			*(int*)(senddata+ 0) = VERIFICATION_CODE;
 			*(int*)(senddata+ 4) = cols;
 			*(int*)(senddata+ 8) = rows;
 			*(int*)(senddata+12) = 0;
-			memcpy(senddata+16, frame1.data, framelen);
+			memcpy(senddata+16, frame1.data, rows*cols*3);
 			
 			server.sendBuffer(senddata, datalen);
 			
@@ -130,12 +148,11 @@ int main(int argc, char** argv){
 				imshow("Sending Frame", frame1);
 			}
 			
-			waitKey(50);
+			waitKey(1);
 		}
 	} else {
 		
 		FPS fps = FPS();
-		Mat latestframe;
 		
 		int framesPerSecond;
 		int bitsPerSecond;
@@ -147,37 +164,67 @@ int main(int argc, char** argv){
 		
 		cout<<"Connected."<<endl;
 		
+		char* framedata = nullptr;
+		
+		char* headerdata = (char*)malloc(16);
+		
+		int waitingOnRestOfFrame = 0;
+		int framedatalen;
+		
 		while(running){
-			char* recvdata = (char*)malloc(datalen);
 			
-			client.receiveBuffer(recvdata, datalen);
-			
-			int ver1 = *(int*)(recvdata+ 0);
-			int cols = *(int*)(recvdata+ 4);
-			int rows = *(int*)(recvdata+ 8);
-			int ver2 = *(int*)(recvdata+12);
-			
-			//cout<<cols<<", "<<rows<<endl;
-			
-			if(ver1==1234567890){
+			if(waitingOnRestOfFrame==0){
+				int headerlen = client.receiveBuffer(headerdata, 16);
 				
-				Mat bestframedraw(rows, cols, CV_8UC3, recvdata+16);
+				if(headerlen==16){
+					int ver1 = *(int*)(headerdata+ 0);
+					cols = *(int*)(headerdata+ 4);
+					rows = *(int*)(headerdata+ 8);
+					int none = *(int*)(headerdata+12);
+					
+					fps.frame();
+					
+					framesPerSecond = fps.fps();
+					bitsPerSecond = framesPerSecond*(framedatalen+16)*8;
+					
+					cout<<cols<<" "<<rows<<endl;
+					
+					if(ver1==VERIFICATION_CODE){
+						
+						framedatalen = rows*cols*3;
+						
+						if(framedata!=nullptr){
+							free(framedata);
+						}
+						
+						framedata = (char*)malloc(framedatalen);
+						
+						int recvdatalen = client.receiveBuffer(framedata, framedatalen);
+						
+						if(recvdatalen>=0){
+							waitingOnRestOfFrame = framedatalen-recvdatalen;
+							cout<<"waiting on "<<waitingOnRestOfFrame<<endl;
+							
+							if(waitingOnRestOfFrame==0){
+								drawFrame(rows, cols, framedata, framesPerSecond, bitsPerSecond);
+							}
+						}
+					}
+				}
+			}else{
+				int recvdatalen = client.receiveBuffer(framedata+(framedatalen-waitingOnRestOfFrame), waitingOnRestOfFrame);
 				
-				fps.frame();
-				
-				framesPerSecond = fps.fps();
-				bitsPerSecond = framesPerSecond*framelen*8;
-				
-				Drawing::text(bestframedraw,
-					String(Util::toStringWithPrecision(framesPerSecond)) + String(" fps"),
-					Point(16,64), Scalar(255,255,255), Drawing::Anchor::BOTTOM_LEFT, 0.5
-				);
-				Drawing::text(bestframedraw,
-					String(Util::toStringWithPrecision(((float)bitsPerSecond)/1024.0f/1024.0f) + String(" Mbits/sec")),
-					Point(16,16), Scalar(255, 255, 255), Drawing::Anchor::BOTTOM_LEFT, 0.5
-				);
-				
-				imshow("Latest Frame", bestframedraw);
+				if(recvdatalen>=0){
+					waitingOnRestOfFrame = waitingOnRestOfFrame-recvdatalen;
+						
+					cout<<"waiting on "<<waitingOnRestOfFrame<<endl;
+					
+					if(waitingOnRestOfFrame==0){
+						drawFrame(rows, cols, framedata, framesPerSecond, bitsPerSecond);
+					}
+				}else{
+					cout<<errno<<endl;
+				}
 			}
 			
 			waitKey(1);
