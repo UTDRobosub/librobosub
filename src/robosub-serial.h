@@ -1,5 +1,6 @@
 
 //Universal Serial library, usable on Arduino and in C++
+//version 2
 
 const unsigned char Serial_CRC8Table[256] ={
 	0x00, 0x25, 0x4A, 0x6F, 0x94, 0xB1, 0xDE, 0xFB,

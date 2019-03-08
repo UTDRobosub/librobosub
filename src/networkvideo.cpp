@@ -161,7 +161,7 @@ namespace robosub{
 			if(firstFrameReceived==0){
 				firstFrameReceived = frameid;
 			}
-
+			
 			if(frameid>firstFrameReceived)break;
 			
 			packetsPerFrame = (int)ceil(((float)(len*networkVideo_pixelSize))/((float)networkVideo_packetDataSize));
@@ -193,9 +193,6 @@ namespace robosub{
 				initialized = true;
 				
 				cout<<"Creating new frame of size "<<cols<<"x"<<rows<<endl;
-			} else {
-				char* newframedata = (char*)malloc(rrows*rcols*3);
-				bufferFrameLatest = new Mat(rrows, rcols, CV_8UC3, newframedata);
 			}
 			char* recvFrameData = (char*)bufferFrames[currentFrameIdx]->data;
 			char* lastFrameData = (char*)bufferFrameLatest->data;
