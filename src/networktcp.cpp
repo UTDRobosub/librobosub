@@ -100,6 +100,8 @@ namespace robosub{
 		}
 		
 		connected = true;
+
+		return 0;
 	}
 	
 	int NetworkTcpClient::disconnectFromServer(){

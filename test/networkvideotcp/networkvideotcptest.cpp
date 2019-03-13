@@ -160,9 +160,10 @@ int main(int argc, char** argv){
 		NetworkTcpClient client;
 		
 		cout<<"Connecting to server."<<endl;
-		if(int err = client.connectToServer((char*)addr.c_str(), port)){
-			cout<<"Connection error "<<strerror(err)<<endl;
-		}else{
+        int err = client.connectToServer((char*)addr.c_str(), port);
+		if (err) {
+			cout<<"Connection error "<< strerror(err)<<endl;
+		} else {
 			cout<<"Connected."<<endl;
 			
 			char* framedata = nullptr;
