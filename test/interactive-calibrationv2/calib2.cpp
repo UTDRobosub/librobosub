@@ -31,7 +31,8 @@ void prepareChArucoDictionary(const CaptureParameters& capParams) {
                                                     capParams.charucoSquareLength, capParams.charucoMarkerSize, mArucoDictionary);
 }
 
-bool detectAndParseChAruco(const cv::Mat &frame, std::vector<cv::Point3f> &currentObjectPoints, std::vector<cv::Point2f> &currentImagePoints)
+bool detectAndParseChAruco(const cv::Mat &frame, std::vector<cv::Point3f> &currentObjectPoints, std::vector<cv::Point2f> &currentImagePoints,
+                           cv::Mat &currentCharucoCorners, cv::Mat &currentCharucoIds)
 {
     cv::Ptr<cv::aruco::Board> board = mCharucoBoard.staticCast<cv::aruco::Board>();
 
@@ -39,7 +40,6 @@ bool detectAndParseChAruco(const cv::Mat &frame, std::vector<cv::Point3f> &curre
     std::vector<int> ids;
     cv::aruco::detectMarkers(frame, mArucoDictionary, corners, ids, cv::aruco::DetectorParameters::create(), rejected);
     cv::aruco::refineDetectedMarkers(frame, board, corners, ids, rejected);
-    cv::Mat currentCharucoCorners, currentCharucoIds;
     if(ids.size() > 0) {
         cv::aruco::interpolateCornersCharuco(corners, ids, frame, mCharucoBoard, currentCharucoCorners,
                                              currentCharucoIds);
@@ -65,24 +65,54 @@ template<typename _Tp> static cv::Mat toMat(const vector<vector<_Tp> > vecIn, co
 }
 
 void recalibrate(const Ptr<CalibrationData>& calibData, Model model) {
-    vector<Mat> rvec, tvec;
-    TermCriteria termCriteria = cv::TermCriteria( cv::TermCriteria::EPS+cv::TermCriteria::COUNT, 1000, 1e-6);
+    TermCriteria termCriteria = cv::TermCriteria(cv::TermCriteria::EPS+cv::TermCriteria::COUNT, 100, 1e-4);
+
+    cv::aruco::calibrateCameraCharuco(calibData->allCharucoCorners, calibData->allCharucoIds,
+                                      mCharucoBoard, calibData->frameSize,
+                                      calibData->cameraMatrix, calibData->distCoeffs,
+                                      cv::noArray(), cv::noArray(), cv::noArray(), cv::noArray(),
+                                      cv::noArray(), 0, termCriteria);
+
     switch(model) {
         case PINHOLE:
-            calibData->totalAvgErr = cv::calibrateCamera(calibData->objectPoints, calibData->imagePoints, calibData->frameSize,
-                                                         calibData->cameraMatrix, calibData->distCoeffs, rvec, tvec, 0, termCriteria);
-            break;
-        case FISHEYE:
-            calibData->totalAvgErr = cv::fisheye::calibrate(calibData->objectPoints, calibData->imagePoints, calibData->frameSize,
-                                                            calibData->cameraMatrix, calibData->distCoeffs, rvec, tvec, cv::fisheye::CALIB_RECOMPUTE_EXTRINSIC, termCriteria);
-            break;
-        case OMNI:
-            calibData->totalAvgErr = cv::omnidir::calibrate(toMat<Point3f>(calibData->objectPoints, CV_32FC3), toMat<Point2f>(calibData->imagePoints, CV_32FC2),
-                                                            calibData->frameSize,
-                                                            calibData->cameraMatrix, calibData->omniXi, calibData->distCoeffs, rvec, tvec,
-                                                            0, termCriteria);
-            break;
+            cv::Mat P = cv::getOptimalNewCameraMatrix(calibData->cameraMatrix, calibData->distCoeffs,
+                                                      calibData->frameSize, 0.0, calibData->frameSize);
+            cv::initUndistortRectifyMap(calibData->cameraMatrix, calibData->distCoeffs, cv::noArray(), P,
+                                        calibData->frameSize, CV_16SC2, calibData->undistMap1, calibData->undistMap2);
+//        case FISHEYE:
+
     }
+
+//    if (mCalibType == Pinhole) {
+//
+//    } else if (mCalibType == Fisheye) {
+//        cv::Mat P;
+//        cv::fisheye::estimateNewCameraMatrixForUndistortRectify(mCalibData->cameraMatrix, mCalibData->distCoeffs,
+//                                                                mCalibData->imageSize,cv::noArray(), P);
+//        cv::fisheye::initUndistortRectifyMap(mCalibData->cameraMatrix, mCalibData->distCoeffs, cv::noArray(),
+//                                             P, mCalibData->imageSize, CV_16SC2, mCalibData->undistMap1, mCalibData->undistMap2);
+//    } else if (mCalibType == Omni) {
+//        cv::omnidir::initUndistortRectifyMap(mCalibData->cameraMatrix, mCalibData->distCoeffs, mCalibData->omniXi,
+//                                             cv::noArray(), cv::getOptimalNewCameraMatrix(mCalibData->cameraMatrix, mCalibData->distCoeffs, mCalibData->imageSize, 0.0, mCalibData->imageSize), mCalibData->imageSize, CV_16SC2, mCalibData->undistMap1, mCalibData->undistMap2,
+//                                             cv::omnidir::RECTIFY_STEREOGRAPHIC);
+//    }
+
+//    switch(model) {
+//        case PINHOLE:
+//            calibData->totalAvgErr = cv::calibrateCamera(calibData->objectPoints, calibData->imagePoints, calibData->frameSize,
+//                                                         calibData->cameraMatrix, calibData->distCoeffs, rvec, tvec, 0, termCriteria);
+//            break;
+//        case FISHEYE:
+//            calibData->totalAvgErr = cv::fisheye::calibrate(calibData->objectPoints, calibData->imagePoints, calibData->frameSize,
+//                                                            calibData->cameraMatrix, calibData->distCoeffs, rvec, tvec, cv::fisheye::CALIB_RECOMPUTE_EXTRINSIC, termCriteria);
+//            break;
+//        case OMNI:
+//            calibData->totalAvgErr = cv::omnidir::calibrate(toMat<Point3f>(calibData->objectPoints, CV_32FC3), toMat<Point2f>(calibData->imagePoints, CV_32FC2),
+//                                                            calibData->frameSize,
+//                                                            calibData->cameraMatrix, calibData->omniXi, calibData->distCoeffs, rvec, tvec,
+//                                                            0, termCriteria);
+//            break;
+//    }
 
 
     cout << calibData->cameraMatrix << endl;
@@ -185,7 +215,9 @@ int main(int argc, char** argv) {
         //search for charuco board
         vector<Point3f> currentObjectPoints;
         vector<Point2f> currentImagePoints;
-        bool boardDetected = detectAndParseChAruco(frame, currentObjectPoints, currentImagePoints);
+        cv::Mat currentCharucoCorners, currentCharucoIds;
+        bool boardDetected = detectAndParseChAruco(frame, currentObjectPoints, currentImagePoints,
+                                                   currentCharucoCorners, currentCharucoIds);
 
         //display uncalibrated image
         if (flip) ImageTransform::flip(frame, ImageTransform::FlipAxis::HORIZONTAL);
@@ -202,12 +234,16 @@ int main(int argc, char** argv) {
 
             calibData->objectPoints.push_back(currentObjectPoints);
             calibData->imagePoints.push_back(currentImagePoints);
+            calibData->allCharucoCorners.push_back(currentCharucoCorners);
+            calibData->allCharucoIds.push_back(currentCharucoIds);
             recalibrate(calibData, capParams.calibModel);
 
         //remove frame
         } else if ((key == 'z') && (!calibData->objectPoints.empty())) {
             calibData->objectPoints.pop_back();
             calibData->imagePoints.pop_back();
+            calibData->allCharucoCorners.pop_back();
+            calibData->allCharucoIds.pop_back();
             recalibrate(calibData, capParams.calibModel);
         //save data
         } else if ((key == 's') && (!calibData->objectPoints.empty())) {
@@ -223,15 +259,18 @@ int main(int argc, char** argv) {
 
             switch(capParams.calibModel) {
                 case PINHOLE:
-                    cv::undistort(frame, undistorted, calibData->cameraMatrix, calibData->distCoeffs, calibData->cameraMatrix);
+                    cv::remap(frame, undistorted, calibData->undistMap1, calibData->undistMap2, cv::INTER_LINEAR);
                     break;
-                case FISHEYE:
-                    cv::fisheye::undistortImage(frame, undistorted, calibData->cameraMatrix, calibData->distCoeffs, calibData->cameraMatrix);
-                    break;
-                case OMNI:
-                    cv::omnidir::undistortImage(frame, undistorted, calibData->cameraMatrix, calibData-> distCoeffs, calibData->omniXi,
-                                                cv::omnidir::RECTIFY_PERSPECTIVE, calibData->cameraMatrix);
-                    break;
+//                case PINHOLE:
+//                    cv::undistort(frame, undistorted, calibData->cameraMatrix, calibData->distCoeffs, calibData->cameraMatrix);
+//                    break;
+//                case FISHEYE:
+//                    cv::fisheye::undistortImage(frame, undistorted, calibData->cameraMatrix, calibData->distCoeffs, calibData->cameraMatrix);
+//                    break;
+//                case OMNI:
+//                    cv::omnidir::undistortImage(frame, undistorted, calibData->cameraMatrix, calibData-> distCoeffs, calibData->omniXi,
+//                                                cv::omnidir::RECTIFY_PERSPECTIVE, calibData->cameraMatrix);
+//                    break;
             }
 
             imshow("Calibrated Image", undistorted);

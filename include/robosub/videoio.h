@@ -55,7 +55,7 @@ namespace robosub
 		///Camera destructor
 		EXPORT ~Camera();
 
-		///Check if the camera
+		///Check if the camera is open
 		EXPORT bool isOpen();
 		///Grab and store a frame without decoding it.
 		///When using multiple cameras, call this on all cameras before retrieving frames.

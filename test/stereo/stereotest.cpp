@@ -17,8 +17,8 @@ int main(int argc, char** argv)
 	//catch signal
 	signal(SIGINT, catchSignal);
 
-	Camera cam0 = Camera(0);
-	Camera cam1 = Camera(1);
+	Camera cam0 = Camera(1 + CAP_ANY);
+	Camera cam1 = Camera(0 + CAP_ANY);
 
 	if (!cam0.isOpen()){
         cout<<"Camera 0 failed to open"<<endl;
@@ -29,13 +29,13 @@ int main(int argc, char** argv)
         return -1;
 	}
 
+	cout << cam0.setFrameSize(cv::Size(320, 240)) << endl;
 	cam1.setFrameSize(cam0.getFrameSize());
 
 	//calibration data for both cameras is currently the same
-	Camera::CalibrationData calibrationData = *Camera::loadCalibrationDataFromXML("../config/seawit_cameracalib.xml", cam0.getFrameSize());
-
+	Camera::CalibrationData calibrationData = *Camera::loadCalibrationDataFromXML("../config/stereo-right-640px.xml", cam0.getFrameSize());
 	Mat _frame0, _frame1, left, right, left_disp, right_disp, filtered_disp;
-	//cout << cam0.setFrameSizeToMaximum() << endl;
+
 	left.create(cam0.getFrameSize(), CV_8U);
 	right.create(cam1.getFrameSize(), CV_8U);
 
@@ -53,18 +53,20 @@ int main(int argc, char** argv)
 	conf_map = Scalar(255);
 
 	Rect ROI;
-	//create
+
+	//create matchers
 	Ptr<StereoSGBM> left_matcher = StereoSGBM::create(0, max_disp, wsize);
 	left_matcher->setBlockSize(wsize);
 	left_matcher->setP1(24 * wsize*wsize);
 	left_matcher->setP2(96 * wsize*wsize);
 	left_matcher->setPreFilterCap(12);
 	left_matcher->setMode(StereoSGBM::MODE_SGBM_3WAY);
+	Ptr<StereoMatcher> right_matcher = ximgproc::createRightMatcher(left_matcher);
+
 	//create disparity filter
 	Ptr<cv::ximgproc::DisparityWLSFilter> wls_filter = ximgproc::createDisparityWLSFilter(left_matcher);
 	wls_filter->setLambda(wls_lambda);
 	wls_filter->setSigmaColor(wls_sigma);
-	Ptr<StereoMatcher> right_matcher = ximgproc::createRightMatcher(left_matcher);
 
 	while (running)
 	{
@@ -80,19 +82,6 @@ int main(int argc, char** argv)
 		cvtColor(_frame0, left, COLOR_BGR2GRAY, CV_8U);
 		cvtColor(_frame1, right, COLOR_BGR2GRAY, CV_8U);
 
-		// resize(left, left, Size(), 0.5, 0.5);
-		// resize(right, right, Size(), 0.5, 0.5);
-
-		//ImageTransform::flip(left, ImageTransform::FlipAxis::HORIZONTAL);
-		//ImageTransform::flip(right, ImageTransform::FlipAxis::HORIZONTAL);
-
-		//Prepare matchers
-		/*Ptr<StereoBM> left_matcher = StereoBM::create(max_disp, wsize);
-		wls_filter = ximgproc::createDisparityWLSFilter(left_matcher);
-		Ptr<StereoMatcher> right_matcher = ximgproc::createRightMatcher(left_matcher);*/
-		//cvtColor(left, left, COLOR_BGR2GRAY);
-		//cvtColor(right, right, COLOR_BGR2GRAY);
-
 		//Compute matches
 		left_matcher->compute(left, right, left_disp);
 		right_matcher->compute(right, left, right_disp);
@@ -101,12 +90,13 @@ int main(int argc, char** argv)
 		wls_filter->filter(left_disp, left, filtered_disp, right_disp);
 		conf_map = wls_filter->getConfidenceMap();
 
-		//Resize
-		//resize(left, left, Size(), 2.0, 2.0);
-		//resize(right, right, Size(), 2.0, 2.0);
-		//resize(filtered_disp, filtered_disp, Size(), 4.0, 4.0);
+		//get visualization
+		ximgproc::getDisparityVis(filtered_disp, filtered_disp, 4.0);
 
-		ximgproc::getDisparityVis(filtered_disp, filtered_disp, 1.0);
+        //Resize
+        resize(left, left, Size(), 4.0, 4.0);
+        resize(right, right, Size(), 4.0, 4.0);
+        resize(filtered_disp, filtered_disp, Size(), 4.0, 4.0);
 
 		imshow("Filtered Disparity", filtered_disp);
 		imshow("Confidence Map", conf_map);
