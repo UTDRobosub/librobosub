@@ -2,6 +2,7 @@
 <opencv_storage>
 <calibrationDate>"Tue 26 Feb 2019 08:56:31 PM CST"</calibrationDate>
 <framesCount>14</framesCount>
+<calibrationModel>pinhole</calibrationModel>
 <cameraResolution>
   640 480</cameraResolution>
 <cameraMatrix type_id="opencv-matrix">
@@ -18,14 +19,14 @@
   <data>
     0. 3.7067905514240920e+01 1.2355024489948169e+01
     1.6697248228043463e+01</data></cameraMatrix_std_dev>
-<dist_coeffs type_id="opencv-matrix">
+<distortionMatrix type_id="opencv-matrix">
   <rows>1</rows>
   <cols>5</cols>
   <dt>d</dt>
   <data>
     -4.0339256662119644e-01 2.2045831988320985e-01
     9.9545599713117047e-03 6.1872660705332549e-03
-    -1.1147922129001954e-01</data></dist_coeffs>
+    -1.1147922129001954e-01</data></distortionMatrix>
 <dist_coeffs_std_dev type_id="opencv-matrix">
   <rows>5</rows>
   <cols>1</cols>
