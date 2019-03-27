@@ -683,12 +683,12 @@ void writeFrames(const unsigned int frameCount)
 void startThreads()
 {
 	//Get frame count
-	const unsigned int frameCount = inputAnalyze.get(CV_CAP_PROP_FRAME_COUNT);
+	const unsigned int frameCount = inputAnalyze.get(cv::CAP_PROP_FRAME_COUNT);
 	cout << "Starting analysis of " << frameCount << " frames..." << endl;
 
 	//Reset input buffer positions
-	inputAnalyze.set(CV_CAP_PROP_POS_FRAMES, 0);	//reset buffer position
-	inputStabilize.set(CV_CAP_PROP_POS_FRAMES, 1);  //reset buffer position
+	inputAnalyze.set(cv::CAP_PROP_POS_FRAMES, 0);	//reset buffer position
+	inputStabilize.set(cv::CAP_PROP_POS_FRAMES, 1);  //reset buffer position
 	frameAnalyzing = 1;								//we skip the first frame
 	frameStabilizing = 1;							//we write the first frame without stabilizing
 	framesAnalyzed = 0;
@@ -753,7 +753,7 @@ void startThreads()
 				//Check how many threads we are using once in a while
 				if ((frameAnalyzing % MAXTHREADS * 5) <= MAXTHREADS * 3)
 				{
-					curMaxThread = max(curMaxThread, t);
+					curMaxThread = max(curMaxThread, (unsigned int)t);
 				}
 				if ((frameAnalyzing % MAXTHREADS * 5) == MAXTHREADS * 3)
 				{
@@ -847,11 +847,11 @@ int main(int argc, char** argv)
 	assert(inputStabilize.isOpened());
 
 	//Prepare video stream
-	videoFps = inputAnalyze.get(CV_CAP_PROP_FPS);
-	cv::Size videoSize = cv::Size(inputAnalyze.get(CV_CAP_PROP_FRAME_WIDTH),
-		inputAnalyze.get(CV_CAP_PROP_FRAME_HEIGHT));
-    output = cv::VideoWriter(argv[argc-1],
-	cmdOptionExists(argv, argv+argc, "-c") ? -1 : CV_FOURCC('D', 'I', 'V', 'X'), videoFps, videoSize);
+	videoFps = inputAnalyze.get(cv::CAP_PROP_FPS);
+	cv::Size videoSize = cv::Size(inputAnalyze.get(cv::CAP_PROP_FRAME_WIDTH),
+		inputAnalyze.get(cv::CAP_PROP_FRAME_HEIGHT));
+    output = cv::VideoWriter(argv[argc-1], -1, videoFps, videoSize);
+//	cmdOptionExists(argv, argv+argc, "-c") ? -1 : cv::FOUR('D', 'I', 'V', 'X'), videoFps, videoSize);
 	assert(output.isOpened());
 
 	if (argc >= 4 && sizeof(argv[argc - 3]) / sizeof(char) > 3)
