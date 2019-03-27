@@ -19,14 +19,14 @@
   <data>
     0. 3.9753962815636534e+01 2.1271456143473621e+01
     1.7392145887640289e+01</data></cameraMatrix_std_dev>
-<dist_coeffs type_id="opencv-matrix">
+<distortionMatrix type_id="opencv-matrix">
   <rows>1</rows>
   <cols>5</cols>
   <dt>d</dt>
   <data>
     -1.0473352861903237e-01 -1.2930916252271554e+00
     -7.3623939605724732e-03 -7.4816606218841824e-03
-    4.4752206316887371e+00</data></dist_coeffs>
+    4.4752206316887371e+00</data></distortionMatrix>
 <dist_coeffs_std_dev type_id="opencv-matrix">
   <rows>5</rows>
   <cols>1</cols>

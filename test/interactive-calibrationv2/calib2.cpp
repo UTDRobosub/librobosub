@@ -252,6 +252,9 @@ int main(int argc, char** argv) {
             } else {
                 cout << "Saved camera parameters!" << endl;
             }
+        } else if (key == 'q') {
+            cout << "Bye" << endl;
+            break;
         }
 
         //remap

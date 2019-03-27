@@ -70,7 +70,7 @@ PipelineExitStatus CalibPipeline::start(std::vector<cv::Ptr<FrameProcessor> > pr
             processedFrame = (*it)->processFrame(processedFrame);
 
         cv::Size frameSize = frame.size();
-        cv::resize(processedFrame, processedFrame, cv::Size(frameSize.width * 2, frameSize.height * 2));
+//        cv::resize(processedFrame, processedFrame, cv::Size(frameSize.width * 2, frameSize.height * 2));
 
         cv::imshow(mainWindowName, processedFrame);
         char key = (char)cv::waitKey(CAP_DELAY);

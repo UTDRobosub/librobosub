@@ -6,9 +6,11 @@ using namespace std;
 using namespace robosub;
 
 bool running = true;
-double EPSILON_APPROX_TOLERANCE_FACTOR = 0.035;
+double EPSILON_APPROX_TOLERANCE_FACTOR = 0.0425;
 double MIN_AREA = 100;
 double MAX_AREA = 4500;
+double SQUARE_RATIO_THRESHOLD = .72;
+double TRIANGLE_RATIO_THRESHOLD = .22;
 int EROSION_SIZE = 1;
 
 void makeTrackbar(char *name, int length) {
@@ -35,14 +37,18 @@ int main(int argc, char **argv) {
 //    makeTrackbar("Min Area", 10000);
 //    makeTrackbar("Max Area", 10000);
 //    makeTrackbar("Erosion Size", 20);
+//    makeTrackbar("SQUARE_RATIO_THRESHOLD", 100);
+//    makeTrackbar("TRIANGLE_RATIO_THRESHOLD", 100);
+//    makeTrackbar("EPSILON_APPROX_TOLERANCE_FACTOR", 10000);
 
     Camera cam = Camera(0);
-//    auto calibrationData = *cam.loadCalibrationDataFromXML("../config/seawit_cameracalib.xml",
-//                                                           cam.getFrameSize());
+//    cam.setFrameSize(Size(1280, 720));
+    auto calibrationData = *cam.loadCalibrationDataFromXML("../config/seawit_cameracalib.xml",
+                                                           cam.getFrameSize());
 
     if (!cam.isOpen()) return -1;
 
-    Mat input, output, processed_img;
+    Mat input, output, processed_img, contour_mask;
     Scalar mu, sigma;
 
     while (running) {
@@ -51,11 +57,14 @@ int main(int argc, char **argv) {
 //        MIN_AREA = (double)getTrackbar("Min Area");
 //        MAX_AREA = (double)getTrackbar("Max Area");
 //        EROSION_SIZE = getTrackbar("Erosion Size");
+//        SQUARE_RATIO_THRESHOLD = getTrackbar("SQUARE_RATIO_THRESHOLD")/100.0;
+//        TRIANGLE_RATIO_THRESHOLD = getTrackbar("TRIANGLE_RATIO_THRESHOLD")/100.0;
+//        EPSILON_APPROX_TOLERANCE_FACTOR = getTrackbar("EPSILON_APPROX_TOLERANCE_FACTOR")/10000.0;
 
 
         cam.retrieveFrameBGR(input);
         //undistort
-//        input = cam.undistort(input, calibrationData);
+        input = cam.undistort(input, calibrationData);
 
         cvtColor(input, processed_img, cv::COLOR_BGR2GRAY);
         cvtColor(processed_img, output, cv::COLOR_GRAY2RGB);
@@ -92,10 +101,12 @@ int main(int argc, char **argv) {
         vector<vector<Point>> squares;
         vector<vector<Point>> circles;
 
-        findContours(processed_img, contours, hierarchy, RETR_TREE, CHAIN_APPROX_TC89_KCOS);
+        bool got_contour_mask = false;
+
+        findContours(processed_img, contours, hierarchy, RETR_EXTERNAL, CHAIN_APPROX_TC89_L1);
         for (unsigned int i = 0; i < contours.size(); i++) {
             vector<Point> approx;
-            if (hierarchy[i][3] < 0) continue;  //has parent, inner (hole) contour of a closed edge (looks good)
+//            if (hierarchy[i][3] < 0) continue;  //has parent, inner (hole) contour of a closed edge (looks good)
             Contour c = Contour(contours[i]);
             approxPolyDP(contours[i], approx, EPSILON_APPROX_TOLERANCE_FACTOR * c.arcLength(true), true);
 
@@ -104,17 +115,18 @@ int main(int argc, char **argv) {
 //            if (c.area() > MIN_AREA && c.area() < MAX_AREA) cout << c.area() << endl;
 //            else continue;
 
+            // TODO: fix this function. Notes on the error in the function
+            //cout << c.averageColor(processed_img) << endl;
+
+
             if (approx.size() >= 5) {
                 circles.push_back(approx);
             } else if (approx.size() == 4) {
-                //TODO figure out how to calculate width/height ratio
                 Rectangle r = Rectangle(approx);
                 double dimensionRatio = r.height() / r.width();
                 if (dimensionRatio > 1) dimensionRatio = 1 / dimensionRatio;
 
-                cout << r.height() << " " << r.width() << endl;
-                double ratioThreshold = .5;
-                if (dimensionRatio < ratioThreshold)
+                if (dimensionRatio < SQUARE_RATIO_THRESHOLD)
                     rectangles.push_back(approx);
                 else
                     squares.push_back(approx);
@@ -122,8 +134,7 @@ int main(int argc, char **argv) {
                 Triangle t = Triangle(approx);
                 double dimensionRatio = t.height() / t.width();
 
-                double ratioThreshold = .5;
-                if (dimensionRatio < ratioThreshold)
+                if (dimensionRatio < TRIANGLE_RATIO_THRESHOLD)
                     rectangles.push_back(approx);
                 else
                     triangles.push_back(approx);
@@ -135,7 +146,7 @@ int main(int argc, char **argv) {
         drawContours(output, triangles, -1, Scalar(213, 0, 249), 4, 8); //magenta
         drawContours(output, rectangles, -1, Scalar(0, 176, 255), 4, 8); //blue
         drawContours(output, squares, -1, Scalar(255, 255, 0), 4, 8); //yellow
-        drawContours(output, circles, -1, Scalar(0, 230, 118), 4, 8); //green
+        drawContours(output, circles, -1, Scalar(100, 230, 0), 4, 8); //teal
 
         //Run canny detection with +- 1 std dev of random values
 //        threshold1 = mu.val[0] - 0.66 * sigma.val[0];
@@ -152,6 +163,8 @@ int main(int argc, char **argv) {
 
         imshow("Input", processed_img);
         imshow("Output", output);
+        if (got_contour_mask)
+            imshow("Contour Mask", contour_mask);
         if (waitKey(1) >= 0) break;
         cout << "frame " << std::setprecision(4) << " @ " << cam.getFrameRate() << " fps" << endl;
     }

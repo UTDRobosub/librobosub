@@ -20,7 +20,7 @@ namespace robosub {
 
         virtual double height() = 0;
 
-        virtual Mat getMask(Mat &img) = 0;
+        virtual Mat getMask(Size size) = 0;
 
         inline Point2d topLeft() {
             return Point2d(left(), top());
@@ -30,9 +30,7 @@ namespace robosub {
             return Point2d(right(), bottom());
         }
 
-        inline Scalar averageColor(Mat img) {
-            return mean(img, getMask(img));
-        }
+
     };
 
     template<class T>
@@ -40,6 +38,7 @@ namespace robosub {
 
     private:
         Mat data;
+        vector<Point_<T>> _points;
         Size_<T> _boundingBox = Size_<T>();
         Point_<T> _topLeft = Point_<T>();
 
@@ -86,6 +85,7 @@ namespace robosub {
 
         Contour_(vector<Point_<T>> &points) {
             data = Mat(points.size(), 2, CV_32S, points.data());
+            this->_points = points;
         }
 
         int points() {
@@ -104,7 +104,7 @@ namespace robosub {
             //C_{\mathrm x} = \frac{1}{6A}\sum_{i=0}^{n-1}(x_i+x_{i+1})(x_i\ y_{i+1} - x_{i+1}\ y_i)
             //C_{\mathrm y} = \frac{1}{6A}\sum_{i=0}^{n-1}(y_i+y_{i+1})(x_i\ y_{i+1} - x_{i+1}\ y_i)
 
-            if (points() < 2)
+            if (_points() < 2)
                 return center();
 
             double xSum = 0.0;
@@ -200,12 +200,18 @@ namespace robosub {
             return array;
         }
 
-        Mat getMask(Mat &img) {
+        Mat getMask(Size size) {
             //returns binary mask (0 or 1)
-            assert(img.channels() == 1);
-            Mat mask = Mat::zeros(Size(img.cols, img.rows), CV_8U);
-            drawContours(mask, data, -1, (1), 1);
+            Mat mask = Mat::zeros(size, CV_8U);
+            /* TODO: fix this call. It doesn't work for some reason. It might be due to improper declaration of _points
+             * we thought it was the declaration of data so we started storing _points and fed that in instead
+             */
+            drawContours(mask, _points, -1, 255, cv::FILLED);
             return mask;
+        }
+
+        inline Scalar averageColor(Mat &img) {
+            return mean(img, getMask(Size(img.cols, img.rows)));
         }
     };
 
@@ -239,7 +245,7 @@ namespace robosub {
             return (side1 + side2) / 2;
         }
     };
-    
+
 
     typedef Rectangle_<int> Rectangle;
     typedef Rectangle_<int> Rectangle2i;
@@ -263,7 +269,7 @@ namespace robosub {
             double side3 = Util::euclideanDistance(points.at(2).x, points.at(2).y, points.at(0).x, points.at(0).y);
             double hypotenuse = max(max(side1, side2), side3);
 
-            double height = 2* this->area()/hypotenuse;
+            double height = 2 * this->area() / hypotenuse;
 
             return height;
         }

@@ -9590,7 +9590,7 @@ class json_pointer
             }
 
             // assign value to reference pointed to by JSON pointer; Note that if
-            // the JSON pointer is "" (i.e., points to the whole value), function
+            // the JSON pointer is "" (i.e., _points to the whole value), function
             // get_and_create returns a reference to result itself. An assignment
             // will then create a primitive value.
             json_pointer(element.first).get_and_create(result) = element.second;
