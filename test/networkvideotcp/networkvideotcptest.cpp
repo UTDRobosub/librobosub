@@ -19,17 +19,17 @@ const int MODE_SEND = 1;
 
 const int VERIFICATION_CODE = 1234567890;
 
-void drawFrame(int rows, int cols, char* framedata, int framesPerSecond, int bitsPerSecond){
+void drawFrame(int rows, int cols, char* framedata, float framesPerSecond, float bitsPerSecond){
 	int framedatalen = rows*cols*3;
 	
 	Mat bestframedraw(rows, cols, CV_8UC3, framedata);
 	
 	Drawing::text(bestframedraw,
 		String(Util::toStringWithPrecision(framesPerSecond)) + String(" fps"),
-		Point(16,64), Scalar(255,255,255), Drawing::Anchor::BOTTOM_LEFT, 0.5
+		Point(16,48), Scalar(255,255,255), Drawing::Anchor::BOTTOM_LEFT, 0.5
 	);
 	Drawing::text(bestframedraw,
-		String(Util::toStringWithPrecision(((float)bitsPerSecond)/1024.0f/1024.0f) + String(" Mbits/sec")),
+		String(Util::toStringWithPrecision((bitsPerSecond)/1024.0f/1024.0f) + String(" Mbps")),
 		Point(16,16), Scalar(255, 255, 255), Drawing::Anchor::BOTTOM_LEFT, 0.5
 	);
 	
@@ -126,7 +126,9 @@ int main(int argc, char** argv){
 		server.acceptClient();
 		
 		cout<<"Connected."<<endl;
-		
+
+		float uploadBitsPerSecond = 0;
+
 		while(running){
 			
 			cam->retrieveFrameBGR(frame1);
@@ -138,11 +140,17 @@ int main(int argc, char** argv){
 			memcpy(senddata+16, frame1.data, rows*cols*3);
 			
 			server.sendBuffer(senddata, datalen);
+
+			uploadBitsPerSecond = cam->getFrameRate()*((float)((rows*cols*3+16)*8));
 			
 			if (showDisplay) {
 				Drawing::text(frame1,
-					String(Util::toStringWithPrecision(cam->getFrameRate())) + String(" FPS"),
-					Point(16, 16), Scalar(255, 255, 255), Drawing::Anchor::BOTTOM_LEFT, 0.5
+					String(Util::toStringWithPrecision(cam->getFrameRate())) + String(" fps"),
+					Point(16, 48), Scalar(255, 255, 255), Drawing::Anchor::BOTTOM_LEFT, 0.5
+				);
+				Drawing::text(frame1,
+				 	String(Util::toStringWithPrecision(uploadBitsPerSecond/1024.0/1024.0)) + String(" Mbps"),
+				 	Point(16, 16), Scalar(255, 255, 255), Drawing::Anchor::BOTTOM_LEFT, 0.5
 				);
 				
 				imshow("Sending Frame", frame1);
@@ -154,15 +162,15 @@ int main(int argc, char** argv){
 		
 		FPS fps = FPS();
 		
-		int framesPerSecond;
-		int bitsPerSecond;
+		float framesPerSecond;
+		float bitsPerSecond;
 		
 		NetworkTcpClient client;
 		
 		cout<<"Connecting to server."<<endl;
         int err = client.connectToServer((char*)addr.c_str(), port);
 		if (err) {
-			cout<<"Connection error "<< strerror(err)<<endl;
+			cout<<"Connection Error " << err << ": " << strerror(err) << endl;
 		} else {
 			cout<<"Connected."<<endl;
 			
@@ -171,7 +179,7 @@ int main(int argc, char** argv){
 			char* headerdata = (char*)malloc(16);
 			
 			int waitingOnRestOfFrame = 0;
-			int framedatalen;
+			int framedatalen = 0;
 			
 			while(running){
 				
@@ -183,16 +191,16 @@ int main(int argc, char** argv){
 						cols = *(int*)(headerdata+ 4);
 						rows = *(int*)(headerdata+ 8);
 						int none = *(int*)(headerdata+12);
-						
-						fps.frame();
-						
-						framesPerSecond = fps.fps();
-						bitsPerSecond = framesPerSecond*(framedatalen+16)*8;
-						
+
 						cout<<cols<<" "<<rows<<endl;
 						
 						if(ver1==VERIFICATION_CODE){
-							
+
+							fps.frame();
+
+							framesPerSecond = (float)fps.fps();
+							bitsPerSecond = (float)(framesPerSecond*(framedatalen+16)*8);
+
 							framedatalen = rows*cols*3;
 							
 							if(framedata!=nullptr){
