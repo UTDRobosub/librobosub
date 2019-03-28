@@ -132,3 +132,8 @@ add_executable(test-stereorect test/stereorect/stereorect.cpp)
 target_link_libraries(test-stereorect ${LIBRARY_NAME})
 target_include_directories(test-stereorect PRIVATE ${Boost_INCLUDE_DIR})
 target_compile_features(test-stereorect PRIVATE cxx_range_for)
+
+add_executable(test-videostab test/videostab/videostab.cpp)
+target_link_libraries(test-videostab ${LIBRARY_NAME})
+target_include_directories(test-videostab PRIVATE ${Boost_INCLUDE_DIR})
+target_compile_features(test-videostab PRIVATE cxx_range_for)
