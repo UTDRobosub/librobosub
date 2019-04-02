@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<opencv_storage>
+<calibrationDate>"Tue 02 Apr 2019 06:20:43 PM CDT"</calibrationDate>
+<calibrationModel>pinhole</calibrationModel>
+<framesCount>55</framesCount>
+<cameraResolution>
+  1280 720</cameraResolution>
+<cameraMatrix type_id="opencv-matrix">
+  <rows>3</rows>
+  <cols>3</cols>
+  <dt>d</dt>
+  <data>
+    1.4969041042275734e+04 0. 6.8141878794244064e+02 0.
+    1.6081315981339279e+04 4.5796331638545053e+02 0. 0. 1.</data></cameraMatrix>
+<distortionMatrix type_id="opencv-matrix">
+  <rows>1</rows>
+  <cols>5</cols>
+  <dt>d</dt>
+  <data>
+    -1.5400912540426850e+02 1.8304585445460711e+04
+    -1.0064356837502000e+00 -3.4202472842273707e-01
+    2.1825717908914761e+04</data></distortionMatrix>
+<avgReprojectionError>0.</avgReprojectionError>
+</opencv_storage>
