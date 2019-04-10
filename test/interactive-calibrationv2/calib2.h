@@ -20,10 +20,18 @@ using namespace robosub;
 cv::Ptr<cv::aruco::Dictionary> mArucoDictionary;
 cv::Ptr<cv::aruco::CharucoBoard> mCharucoBoard;
 
+const Size boardSize = Size(9, 6);
+const double squareSize = 23.0; //mm
+
 enum Model {
     PINHOLE,
     FISHEYE,
     OMNI
+};
+
+enum BoardType {
+    CHECKERBOARD,
+    CHARUCO
 };
 
 struct CalibrationData
@@ -64,6 +72,7 @@ struct CameraParameters
 struct CaptureParameters
 {
     Model calibModel;
+    BoardType boardType;
     cv::Size boardSize;
     int charucoDictName;
     float charucoSquareLength, charucoMarkerSize;

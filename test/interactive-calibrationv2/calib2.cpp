@@ -3,7 +3,9 @@
 static bool loadCaptureParams(CommandLineParser& parser, CaptureParameters& capParams) {
     //model type
     String m = parser.get<String>("m");
+    String b = parser.get<String>("b");
     Model model;
+    BoardType boardType;
     if (m == "pinhole") model = Model::PINHOLE;
     else if (m == "fisheye") model = Model::FISHEYE;
     else if (m == "omni") {
@@ -13,8 +15,17 @@ static bool loadCaptureParams(CommandLineParser& parser, CaptureParameters& capP
     }
     else return false;
 
-    capParams.outputFilename = parser.get<string>("f");
+    if (b == "checkerboard") boardType = BoardType::CHECKERBOARD;
+    if (b == "charuco") {
+        if (model != Model::PINHOLE) {
+            cout << "Charuco only supported with pinhole model." << endl;
+            return false;
+        }
+        boardType = BoardType::CHARUCO;
+    }
 
+    capParams.outputFilename = parser.get<string>("f");
+    capParams.boardType = boardType;
     capParams.calibModel = model;
     capParams.boardSize = cv::Size(8, 6);
     capParams.charucoDictName = 0;
@@ -31,9 +42,31 @@ void prepareChArucoDictionary(const CaptureParameters& capParams) {
                                                     capParams.charucoSquareLength, capParams.charucoMarkerSize, mArucoDictionary);
 }
 
+bool detectAndParseCheckerboard(const cv::Mat &frame, const cv::Mat &gray,
+        std::vector<cv::Point3f> &currentObjectPoints, std::vector<cv::Point2f> &currentImagePoints)
+{
+
+    bool patternFound = findChessboardCorners(frame, Size(9, 6), currentImagePoints,
+                                              CALIB_CB_ADAPTIVE_THRESH + CALIB_CB_NORMALIZE_IMAGE
+                                              + CALIB_CB_FAST_CHECK);
+    if (!patternFound) return false;
+
+    cornerSubPix(gray, currentImagePoints, Size(11, 11), Size(-1, -1),
+                 TermCriteria(cv::TermCriteria::EPS + cv::TermCriteria::MAX_ITER, 30, 0.1));
+    drawChessboardCorners(frame, boardSize, Mat(currentImagePoints), patternFound);
+    for( int i = 0; i < boardSize.height; ++i )
+    {
+        for( int j = 0; j < boardSize.width; ++j )
+            currentObjectPoints.push_back(Point3f(j*squareSize, i*squareSize, 0));
+    }
+
+    return true;
+}
+
 bool detectAndParseChAruco(const cv::Mat &frame, std::vector<cv::Point3f> &currentObjectPoints, std::vector<cv::Point2f> &currentImagePoints,
                            cv::Mat &currentCharucoCorners, cv::Mat &currentCharucoIds)
 {
+
     cv::Ptr<cv::aruco::Board> board = mCharucoBoard.staticCast<cv::aruco::Board>();
 
     std::vector<std::vector<cv::Point2f>> corners, rejected;
@@ -65,21 +98,34 @@ template<typename _Tp> static cv::Mat toMat(const vector<vector<_Tp> > vecIn, co
 }
 
 void recalibrate(const Ptr<CalibrationData>& calibData, Model model) {
-    TermCriteria termCriteria = cv::TermCriteria(cv::TermCriteria::EPS+cv::TermCriteria::COUNT, 100, 1e-4);
+    TermCriteria termCriteria = cv::TermCriteria(cv::TermCriteria::EPS+cv::TermCriteria::COUNT, 30, 0.1);
 
-    cv::aruco::calibrateCameraCharuco(calibData->allCharucoCorners, calibData->allCharucoIds,
-                                      mCharucoBoard, calibData->frameSize,
-                                      calibData->cameraMatrix, calibData->distCoeffs,
-                                      cv::noArray(), cv::noArray(), cv::noArray(), cv::noArray(),
-                                      cv::noArray(), 0, termCriteria);
+    cv::Mat P;
 
     switch(model) {
         case PINHOLE:
-            cv::Mat P = cv::getOptimalNewCameraMatrix(calibData->cameraMatrix, calibData->distCoeffs,
+            cv::aruco::calibrateCameraCharuco(calibData->allCharucoCorners, calibData->allCharucoIds,
+                                              mCharucoBoard, calibData->frameSize,
+                                              calibData->cameraMatrix, calibData->distCoeffs,
+                                              cv::noArray(), cv::noArray(), cv::noArray(), cv::noArray(),
+                                              cv::noArray(), 0, termCriteria);
+
+            P = cv::getOptimalNewCameraMatrix(calibData->cameraMatrix, calibData->distCoeffs,
                                                       calibData->frameSize, 0.0, calibData->frameSize);
             cv::initUndistortRectifyMap(calibData->cameraMatrix, calibData->distCoeffs, cv::noArray(), P,
                                         calibData->frameSize, CV_16SC2, calibData->undistMap1, calibData->undistMap2);
-//        case FISHEYE:
+            break;
+        case FISHEYE:
+            cv::fisheye::calibrate(calibData->objectPoints, calibData->imagePoints, calibData->frameSize,
+                    calibData->cameraMatrix, calibData->distCoeffs, cv::noArray(), cv::noArray());
+
+            cv::Mat R;
+            cv::Rodrigues(cv::Vec3d(0, 0, 0), R);
+            cv::fisheye::estimateNewCameraMatrixForUndistortRectify(calibData->cameraMatrix, calibData->distCoeffs,
+                    calibData->frameSize, R, P);
+            cv::fisheye::initUndistortRectifyMap(calibData->cameraMatrix, calibData->distCoeffs, R, P, calibData->frameSize,
+                                                 CV_16SC2, calibData->undistMap1, calibData->undistMap2);
+            break;
 
     }
 
@@ -161,7 +207,8 @@ int main(int argc, char** argv) {
             "{vc cols        |1280               | image columns }"
             "{vr rows        |720                | image rows }"
             "{c cam camera   |0                  | camera id }"
-            "{m model        |pinhole            | use calibration model: 'pinhole' (default), 'fisheye', 'omni' }"
+            "{m model        |fisheye            | use calibration model: 'pinhole' (default), 'fisheye', 'omni' }"
+            "{b board        |checkerboard       | use board type: 'checkerboard', 'charuco' }"
             "{f filename     |cameraParams.xml   | save camera parameters to file }"
             "{flip           |false              | flip input frames vertically }";
     CommandLineParser parser(argc, argv, keys);
@@ -216,8 +263,17 @@ int main(int argc, char** argv) {
         vector<Point3f> currentObjectPoints;
         vector<Point2f> currentImagePoints;
         cv::Mat currentCharucoCorners, currentCharucoIds;
-        bool boardDetected = detectAndParseChAruco(frame, currentObjectPoints, currentImagePoints,
-                                                   currentCharucoCorners, currentCharucoIds);
+        bool boardDetected = false;
+
+        switch (capParams.boardType) {
+            case CHARUCO:
+                boardDetected = detectAndParseChAruco(frame, currentObjectPoints, currentImagePoints,
+                                      currentCharucoCorners, currentCharucoIds);
+                break;
+            case CHECKERBOARD:
+                boardDetected = detectAndParseCheckerboard(frame, gray, currentObjectPoints, currentImagePoints);
+                break;
+        }
 
         //display uncalibrated image
         if (flip) ImageTransform::flip(frame, ImageTransform::FlipAxis::HORIZONTAL);
@@ -234,16 +290,20 @@ int main(int argc, char** argv) {
 
             calibData->objectPoints.push_back(currentObjectPoints);
             calibData->imagePoints.push_back(currentImagePoints);
-            calibData->allCharucoCorners.push_back(currentCharucoCorners);
-            calibData->allCharucoIds.push_back(currentCharucoIds);
+            if (capParams.boardType == BoardType::CHARUCO) {
+                calibData->allCharucoCorners.push_back(currentCharucoCorners);
+                calibData->allCharucoIds.push_back(currentCharucoIds);
+            }
             recalibrate(calibData, capParams.calibModel);
 
         //remove frame
         } else if ((key == 'z') && (!calibData->objectPoints.empty())) {
             calibData->objectPoints.pop_back();
             calibData->imagePoints.pop_back();
-            calibData->allCharucoCorners.pop_back();
-            calibData->allCharucoIds.pop_back();
+            if (capParams.boardType == BoardType::CHARUCO) {
+                calibData->allCharucoCorners.pop_back();
+                calibData->allCharucoIds.pop_back();
+            }
             recalibrate(calibData, capParams.calibModel);
         //save data
         } else if ((key == 's') && (!calibData->objectPoints.empty())) {
@@ -259,23 +319,7 @@ int main(int argc, char** argv) {
 
         //remap
         if (!calibData->objectPoints.empty()) {
-
-            switch(capParams.calibModel) {
-                case PINHOLE:
-                    cv::remap(frame, undistorted, calibData->undistMap1, calibData->undistMap2, cv::INTER_LINEAR);
-                    break;
-//                case PINHOLE:
-//                    cv::undistort(frame, undistorted, calibData->cameraMatrix, calibData->distCoeffs, calibData->cameraMatrix);
-//                    break;
-//                case FISHEYE:
-//                    cv::fisheye::undistortImage(frame, undistorted, calibData->cameraMatrix, calibData->distCoeffs, calibData->cameraMatrix);
-//                    break;
-//                case OMNI:
-//                    cv::omnidir::undistortImage(frame, undistorted, calibData->cameraMatrix, calibData-> distCoeffs, calibData->omniXi,
-//                                                cv::omnidir::RECTIFY_PERSPECTIVE, calibData->cameraMatrix);
-//                    break;
-            }
-
+            cv::remap(frame, undistorted, calibData->undistMap1, calibData->undistMap2, cv::INTER_LINEAR);
             imshow("Calibrated Image", undistorted);
         }
     }

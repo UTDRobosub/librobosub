@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <opencv_storage>
-<calibrationDate>"Tue 02 Apr 2019 06:20:43 PM CDT"</calibrationDate>
-<calibrationModel>pinhole</calibrationModel>
-<framesCount>55</framesCount>
+<calibrationDate>"Tue 02 Apr 2019 09:46:31 PM CDT"</calibrationDate>
+<calibrationModel>fisheye</calibrationModel>
+<framesCount>95</framesCount>
 <cameraResolution>
   1280 720</cameraResolution>
 <cameraMatrix type_id="opencv-matrix">
@@ -10,15 +10,14 @@
   <cols>3</cols>
   <dt>d</dt>
   <data>
-    1.4969041042275734e+04 0. 6.8141878794244064e+02 0.
-    1.6081315981339279e+04 4.5796331638545053e+02 0. 0. 1.</data></cameraMatrix>
+    5.1638627377102364e+02 5.1565642435271828e+00 6.3839552141602485e+02
+    0. 5.1862446454620635e+02 3.6028843510157810e+02 0. 0. 1.</data></cameraMatrix>
 <distortionMatrix type_id="opencv-matrix">
-  <rows>1</rows>
-  <cols>5</cols>
+  <rows>4</rows>
+  <cols>1</cols>
   <dt>d</dt>
   <data>
-    -1.5400912540426850e+02 1.8304585445460711e+04
-    -1.0064356837502000e+00 -3.4202472842273707e-01
-    2.1825717908914761e+04</data></distortionMatrix>
+    -2.8986299457461900e-01 9.5212265779691685e-01
+    -3.1580072352763722e-01 -1.4169137537348789e-01</data></distortionMatrix>
 <avgReprojectionError>0.</avgReprojectionError>
 </opencv_storage>
