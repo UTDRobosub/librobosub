@@ -21,11 +21,22 @@ int main (int argc, char* argv[])
 #ifdef HAVE_OPENCV_CUDAIMGPROC
     try
     {
+
+        if (cuda::getCudaEnabledDeviceCount() < 1)
+            throw runtime_error("No CUDA devices found");
+
+        //use last device
+        cuda::setDevice(cuda::getCudaEnabledDeviceCount() - 1);
+
+        cout << "CUDA Device: " << cuda::getDevice() << " (count: " << cuda::getCudaEnabledDeviceCount() << ")" << endl;
+        cout << "CUDA Device Supports Compute 5.0: " << cuda::deviceSupports(cuda::FEATURE_SET_COMPUTE_50) << endl;
+
+
         cv::Mat matLeft, matRight, disparityLeft, disparityRight, disparityFiltered;
         cuda::GpuMat gpuMatLeft, gpuMatRight, gpuMatDisparityLeft, gpuMatDisparityRight;
 
-        Camera camLeft = Camera(3);
-        Camera camRight = Camera(2);
+        Camera camLeft = Camera(2);
+        Camera camRight = Camera(1);
 
         cout << camLeft.setFrameSize(cv::Size(320, 240)) << endl;
         Size frameSize = camLeft.getFrameSize();
@@ -93,15 +104,6 @@ int main (int argc, char* argv[])
 //        stereoFilter->setLambda(8000.0);
 //        stereoFilter->setSigmaColor(1.5);
         //auto stereoFilter = cuda::createDisparityBilateralFilter(); //TODO parameters
-
-        if (cuda::getCudaEnabledDeviceCount() < 1)
-            throw runtime_error("No CUDA devices found");
-
-        //use last device
-        cuda::setDevice(cuda::getCudaEnabledDeviceCount() - 1);
-
-        cout << "CUDA Device: " << cuda::getDevice() << " (count: " << cuda::getCudaEnabledDeviceCount() << ")" << endl;
-        cout << "CUDA Device Supports Compute 5.0: " << cuda::deviceSupports(cuda::FEATURE_SET_COMPUTE_50) << endl;
 
         while(true) {
             if (!camLeft.isOpen())

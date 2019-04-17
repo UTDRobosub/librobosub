@@ -59,11 +59,11 @@ namespace robosub
 
 		EXPORT static void transparentImage(Mat* src, Mat* overlay, const Point& location);
 
-		EXPORT static void rectangle(Mat& img, Point one, Point two, Scalar& borderColor, Scalar fillColor = Scalar(), int thickness = 1, int lineType = LINE_8);
+		EXPORT static void rectangle(Mat& img, Point one, Point two, Scalar borderColor, Scalar fillColor = Scalar(), int thickness = 1, int lineType = LINE_8);
 
-		EXPORT static void rectangle(Mat& img, Rect rectangle, Scalar& borderColor, Scalar fillColor = Scalar(), int thickness = 1, int lineType = LINE_8);
+		EXPORT static void rectangle(Mat& img, Rect rectangle, Scalar borderColor, Scalar fillColor = Scalar(), int thickness = 1, int lineType = LINE_8);
 
-		EXPORT static void contours(Mat& img, vector<Contour>& contours, Scalar& borderColor, Scalar fillColor = Scalar(), int thickness = 1, int lineType = LINE_8);
+		EXPORT static void contours(Mat& img, vector<Contour>& contours, Scalar borderColor, Scalar fillColor = Scalar(), int thickness = 1, int lineType = LINE_8);
 
 		EXPORT static void text(Mat& img, String text, Point origin, Scalar color = Scalar(255, 255, 255, 255), Anchor anchor = TOP_LEFT, double scale = 1.0, int thickness = 2);
 	};

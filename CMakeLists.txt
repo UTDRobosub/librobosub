@@ -12,7 +12,7 @@ ELSE()
 ENDIF()
 
 project(librobosub CXX)
-find_package(OpenCV 4.0.1 REQUIRED)
+find_package(OpenCV 4.1.0 REQUIRED)
 find_package (Threads)
 set(Boost_USE_STATIC_LIBS OFF)
 set(Boost_USE_MULTITHREADED ON)

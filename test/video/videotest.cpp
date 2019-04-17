@@ -7,16 +7,15 @@ using namespace robosub;
 bool running = true;
 
 double EPSILON_APPROX_TOLERANCE_FACTOR = 0.0425;
-double MIN_AREA = 100;
-double MAX_AREA = 4500;
+double MIN_AREA = 450;
+double MAX_AREA = 8220;
 double SQUARE_RATIO_THRESHOLD = .72;
 double TRIANGLE_RATIO_THRESHOLD = .22;
 int EROSION_SIZE = 1;
 
 // TODO: Tune these parameters. Current values are okayish
-double IMAGE_BLACK_THRESHOLD = 500;
-double CONTOUR_BLACK_THRESHOLD = 1640;
-int CONTOUR_SIZE_THRESHOLD = 1260;
+double IMAGE_BLACK_THRESHOLD = 38;
+double CONTOUR_BLACK_THRESHOLD = 101.5;
 
 void makeTrackbar(char *name, int length) {
     int *v = new int(1);
@@ -39,19 +38,18 @@ int main(int argc, char **argv) {
     namedWindow("Output");
 
     //create trackbars
-//    makeTrackbar("Min Area", 10000);
-//    makeTrackbar("Max Area", 10000);
+//    makeTrackbar("MIN_AREA", 10000);
+//    makeTrackbar("MAX_AREA", 10000);
 //    makeTrackbar("EROSION_SIZE", 20);
 //    makeTrackbar("SQUARE_RATIO_THRESHOLD", 100);
 //    makeTrackbar("TRIANGLE_RATIO_THRESHOLD", 100);
 //    makeTrackbar("EPSILON_APPROX_TOLERANCE_FACTOR", 10000);
-    makeTrackbar("IMAGE_BLACK_THRESHOLD", 10000);
-    makeTrackbar("CONTOUR_BLACK_THRESHOLD", 10000);
-    makeTrackbar("CONTOUR_SIZE_THRESHOLD", 10000);
+//    makeTrackbar("IMAGE_BLACK_THRESHOLD", 10000);
+//    makeTrackbar("CONTOUR_BLACK_THRESHOLD", 10000);
 
-    Camera cam = Camera(0);
+    Camera cam = Camera(1);
 //    cam.setFrameSize(Size(1280, 720));
-    auto calibrationData = *cam.loadCalibrationDataFromXML("../config/seawit_cameracalib.xml",
+    auto calibrationData = *cam.loadCalibrationDataFromXML("../config/fisheye_cameracalib.xml",
                                                            cam.getFrameSize());
 
     if (!cam.isOpen()) return -1;
@@ -63,15 +61,14 @@ int main(int argc, char **argv) {
     while (running) {
 
         //update trackbars
-//        MIN_AREA = (double)getTrackbar("Min Area");
-//        MAX_AREA = (double)getTrackbar("Max Area");
+//        MIN_AREA = (double)getTrackbar("MIN_AREA");
+//        MAX_AREA = (double)getTrackbar("MAX_AREA");
 //        EROSION_SIZE = getTrackbar("EROSION_SIZE");
 //        SQUARE_RATIO_THRESHOLD = getTrackbar("SQUARE_RATIO_THRESHOLD")/100.0;
 //        TRIANGLE_RATIO_THRESHOLD = getTrackbar("TRIANGLE_RATIO_THRESHOLD")/100.0;
 //        EPSILON_APPROX_TOLERANCE_FACTOR = getTrackbar("EPSILON_APPROX_TOLERANCE_FACTOR")/10000.0;
-        IMAGE_BLACK_THRESHOLD = getTrackbar("IMAGE_BLACK_THRESHOLD")/10.0;
-        CONTOUR_BLACK_THRESHOLD = getTrackbar("CONTOUR_BLACK_THRESHOLD")/10.0;
-        CONTOUR_SIZE_THRESHOLD = getTrackbar("CONTOUR_SIZE_THRESHOLD");
+//        IMAGE_BLACK_THRESHOLD = getTrackbar("IMAGE_BLACK_THRESHOLD")/10.0;
+//        CONTOUR_BLACK_THRESHOLD = getTrackbar("CONTOUR_BLACK_THRESHOLD")/10.0;
 
 
         cam.retrieveFrameBGR(input);
@@ -136,7 +133,7 @@ int main(int argc, char **argv) {
                 continue;
 
             cout << c.area() << endl;
-            if (c.area() > CONTOUR_SIZE_THRESHOLD)
+            if (c.area() > MAX_AREA || c.area() < MIN_AREA)
                 continue;
 
             if (approx.size() >= 5) {
@@ -167,6 +164,17 @@ int main(int argc, char **argv) {
         drawContours(output, rectangles, -1, Scalar(0, 176, 255), 4, 8); //blue
         drawContours(output, squares, -1, Scalar(255, 255, 0), 4, 8); //yellow
         drawContours(output, circles, -1, Scalar(100, 230, 0), 4, 8); //teal
+
+        Drawing::text(output, to_string(circles.size()), Point(20, 50), Scalar(0, 0, 255), Drawing::TOP_LEFT, 2, 4);
+        Drawing::text(output, to_string(triangles.size()), Point(20, 100), Scalar(0, 0, 255), Drawing::TOP_LEFT, 2, 4);
+        Drawing::text(output, to_string(rectangles.size()), Point(20, 150), Scalar(0, 0, 255), Drawing::TOP_LEFT, 2, 4);
+        Drawing::text(output, to_string(squares.size()), Point(20, 200), Scalar(0, 0, 255), Drawing::TOP_LEFT, 2, 4);
+
+        vector<vector<Point>> tp = vector<vector<Point>>({{Point(80, 100), Point(120, 100), Point(100, 60)}});
+        circle(output, Point(100, 30), 20, Scalar(0, 0, 255), -1);
+        fillPoly(output, tp, Scalar(0, 0, 255));
+        Drawing::rectangle(output, Point(80, 130), Point(120, 135), Scalar(0, 0, 255), Scalar(0, 0, 255));
+        Drawing::rectangle(output, Point(80, 165), Point(120, 205), Scalar(0, 0, 255), Scalar(0, 0, 255));
 
         //Run canny detection with +- 1 std dev of random values
 //        threshold1 = mu.val[0] - 0.66 * sigma.val[0];

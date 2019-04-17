@@ -85,7 +85,7 @@ namespace robosub {
 		}
 	}
 
-	void Drawing::rectangle(Mat & img, Point one, Point two, Scalar & borderColor, Scalar fillColor, int thickness, int lineType)
+	void Drawing::rectangle(Mat & img, Point one, Point two, Scalar borderColor, Scalar fillColor, int thickness, int lineType)
 	{
 		int left = min(one.x, two.x);
 		int right = max(one.x, two.x);
@@ -97,7 +97,7 @@ namespace robosub {
 		rectangle(img, rect, borderColor, fillColor, thickness, lineType);
 	}
 
-	void Drawing::rectangle(Mat & img, Rect rectangle, Scalar & borderColor, Scalar fillColor, int thickness, int lineType)
+	void Drawing::rectangle(Mat & img, Rect rectangle, Scalar borderColor, Scalar fillColor, int thickness, int lineType)
 	{
 		vector<Point> points;
 		points.push_back(Point(rectangle.x, rectangle.y));
@@ -111,7 +111,7 @@ namespace robosub {
 		Drawing::contours(img, contours, borderColor, fillColor, thickness, lineType);
 	}
 
-	void Drawing::contours(Mat& img, vector<Contour>& contours, Scalar & borderColor, Scalar fillColor, int thickness, int lineType)
+	void Drawing::contours(Mat& img, vector<Contour>& contours, Scalar borderColor, Scalar fillColor, int thickness, int lineType)
 	{
 		vector<Mat> _contours;
 		for (Contour& contour : contours) {
