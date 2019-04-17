@@ -4,14 +4,19 @@
 
 using namespace std;
 using namespace robosub;
-
 bool running = true;
+
 double EPSILON_APPROX_TOLERANCE_FACTOR = 0.0425;
 double MIN_AREA = 100;
 double MAX_AREA = 4500;
 double SQUARE_RATIO_THRESHOLD = .72;
 double TRIANGLE_RATIO_THRESHOLD = .22;
 int EROSION_SIZE = 1;
+
+// TODO: Tune these parameters. Current values are okayish
+double IMAGE_BLACK_THRESHOLD = 500;
+double CONTOUR_BLACK_THRESHOLD = 1640;
+int CONTOUR_SIZE_THRESHOLD = 1260;
 
 void makeTrackbar(char *name, int length) {
     int *v = new int(1);
@@ -36,10 +41,13 @@ int main(int argc, char **argv) {
     //create trackbars
 //    makeTrackbar("Min Area", 10000);
 //    makeTrackbar("Max Area", 10000);
-//    makeTrackbar("Erosion Size", 20);
+//    makeTrackbar("EROSION_SIZE", 20);
 //    makeTrackbar("SQUARE_RATIO_THRESHOLD", 100);
 //    makeTrackbar("TRIANGLE_RATIO_THRESHOLD", 100);
 //    makeTrackbar("EPSILON_APPROX_TOLERANCE_FACTOR", 10000);
+    makeTrackbar("IMAGE_BLACK_THRESHOLD", 10000);
+    makeTrackbar("CONTOUR_BLACK_THRESHOLD", 10000);
+    makeTrackbar("CONTOUR_SIZE_THRESHOLD", 10000);
 
     Camera cam = Camera(0);
 //    cam.setFrameSize(Size(1280, 720));
@@ -50,16 +58,20 @@ int main(int argc, char **argv) {
 
     Mat input, output, processed_img, contour_mask;
     Scalar mu, sigma;
+    Ptr<CLAHE> clahe = createCLAHE(4, Size(16, 16));
 
     while (running) {
 
         //update trackbars
 //        MIN_AREA = (double)getTrackbar("Min Area");
 //        MAX_AREA = (double)getTrackbar("Max Area");
-//        EROSION_SIZE = getTrackbar("Erosion Size");
+//        EROSION_SIZE = getTrackbar("EROSION_SIZE");
 //        SQUARE_RATIO_THRESHOLD = getTrackbar("SQUARE_RATIO_THRESHOLD")/100.0;
 //        TRIANGLE_RATIO_THRESHOLD = getTrackbar("TRIANGLE_RATIO_THRESHOLD")/100.0;
 //        EPSILON_APPROX_TOLERANCE_FACTOR = getTrackbar("EPSILON_APPROX_TOLERANCE_FACTOR")/10000.0;
+        IMAGE_BLACK_THRESHOLD = getTrackbar("IMAGE_BLACK_THRESHOLD")/10.0;
+        CONTOUR_BLACK_THRESHOLD = getTrackbar("CONTOUR_BLACK_THRESHOLD")/10.0;
+        CONTOUR_SIZE_THRESHOLD = getTrackbar("CONTOUR_SIZE_THRESHOLD");
 
 
         cam.retrieveFrameBGR(input);
@@ -67,7 +79,9 @@ int main(int argc, char **argv) {
         input = cam.undistort(input, calibrationData);
 
         cvtColor(input, processed_img, cv::COLOR_BGR2GRAY);
-        cvtColor(processed_img, output, cv::COLOR_GRAY2RGB);
+//        clahe->apply(processed_img, output);
+        threshold(processed_img, output, IMAGE_BLACK_THRESHOLD, 255, 0);
+        cvtColor(output, output, cv::COLOR_GRAY2RGB);
 
         //Compute standard deviation for image
         meanStdDev(processed_img, mu, sigma);
@@ -104,6 +118,7 @@ int main(int argc, char **argv) {
         bool got_contour_mask = false;
 
         findContours(processed_img, contours, hierarchy, RETR_EXTERNAL, CHAIN_APPROX_TC89_L1);
+
         for (unsigned int i = 0; i < contours.size(); i++) {
             vector<Point> approx;
 //            if (hierarchy[i][3] < 0) continue;  //has parent, inner (hole) contour of a closed edge (looks good)
@@ -115,9 +130,14 @@ int main(int argc, char **argv) {
 //            if (c.area() > MIN_AREA && c.area() < MAX_AREA) cout << c.area() << endl;
 //            else continue;
 
-            // TODO: fix this function. Notes on the error in the function
-            //cout << c.averageColor(processed_img) << endl;
+            const Scalar &averageColor = c.averageColor(output);
 
+            if (averageColor[0] > CONTOUR_BLACK_THRESHOLD)
+                continue;
+
+            cout << c.area() << endl;
+            if (c.area() > CONTOUR_SIZE_THRESHOLD)
+                continue;
 
             if (approx.size() >= 5) {
                 circles.push_back(approx);

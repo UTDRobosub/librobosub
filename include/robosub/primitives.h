@@ -38,7 +38,6 @@ namespace robosub {
 
     private:
         Mat data;
-        vector<Point_<T>> _points;
         Size_<T> _boundingBox = Size_<T>();
         Point_<T> _topLeft = Point_<T>();
 
@@ -85,7 +84,6 @@ namespace robosub {
 
         Contour_(vector<Point_<T>> &points) {
             data = Mat(points.size(), 2, CV_32S, points.data());
-            this->_points = points;
         }
 
         int points() {
@@ -104,7 +102,7 @@ namespace robosub {
             //C_{\mathrm x} = \frac{1}{6A}\sum_{i=0}^{n-1}(x_i+x_{i+1})(x_i\ y_{i+1} - x_{i+1}\ y_i)
             //C_{\mathrm y} = \frac{1}{6A}\sum_{i=0}^{n-1}(y_i+y_{i+1})(x_i\ y_{i+1} - x_{i+1}\ y_i)
 
-            if (_points() < 2)
+            if (points() < 2)
                 return center();
 
             double xSum = 0.0;
@@ -203,10 +201,9 @@ namespace robosub {
         Mat getMask(Size size) {
             //returns binary mask (0 or 1)
             Mat mask = Mat::zeros(size, CV_8U);
-            /* TODO: fix this call. It doesn't work for some reason. It might be due to improper declaration of _points
-             * we thought it was the declaration of data so we started storing _points and fed that in instead
-             */
-            drawContours(mask, _points, -1, 255, cv::FILLED);
+            vector<Mat> allContours = vector<Mat>();
+            allContours.emplace_back(data);
+            drawContours(mask, allContours, 0, 255, cv::FILLED);
             return mask;
         }
 
