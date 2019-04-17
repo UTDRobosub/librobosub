@@ -47,6 +47,7 @@ namespace robosub{
 		if(listen(server, 3)<0){
 			return NETWORKTCP_GETERROR;
 		}
+
 		int addrlen = sizeof(addr);
 		if((client = accept(server, (struct sockaddr*)&addr, (socklen_t*)&addrlen))<0){
 			return NETWORKTCP_GETERROR;

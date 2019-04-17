@@ -29,6 +29,8 @@ namespace robosub {
 	Camera::Camera(string file)
 	{
 		cap = new VideoCapture(file);
+        cap->set(cv::CAP_PROP_FOURCC, cv::VideoWriter::fourcc('M', 'J', 'P', 'G')); //THIS MAKES IT WORK WITH > 1 CAMERA!!!!!
+
 		fps = new FPS();
 		frame = 0;
 		startTime = 0;

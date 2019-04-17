@@ -39,16 +39,18 @@ void drawFrame(int rows, int cols, char* framedata, float framesPerSecond, float
 int main(int argc, char** argv){
 	
 	const String keys =
-		"{help ?         |         | print this message     }"
-		"{@mode          |         | 'send' or 'receive'    }"
-		"{p port         |8001     | port to send/listen to }"
-		"{d no-display   |false    | disable visualization (send only, faster) }"
-		"{h host         |127.0.0.1| address to send to (send only) }"
-		"{vc cols        |1280     | image buffer columns (send only)  }"
-		"{vr rows        |720      | image buffer rows (send only)  }"
-		"{c cam camera   |0        | camera id (send only) }"
+		"{help ?         |            | print this message     }"
+		"{@mode          |            | 'send' or 'receive'    }"
+		"{p port         |8500        | port to send/listen to }"
+		"{d no-display   |false       | disable visualization (send only, faster) }"
+		"{h host         |127.0.0.1   | address to send to/receive from }"
+		"{vc cols        |1280        | image buffer columns (send only)  }"
+		"{vr rows        |720         | image buffer rows (send only)  }"
+		"{c cam camera   |/dev/video0 | camera id (send only) }"
 	;
-	
+
+//	cout << cv::getBuildInformation() << endl;
+
 	CommandLineParser parser(argc, argv, keys);
 	parser.about("Network Video Transfer Test");
 	
@@ -73,18 +75,11 @@ int main(int argc, char** argv){
 	int port = parser.get<int>("port");
 	String addr = parser.get<String>("host");
 	bool showDisplay = !parser.get<bool>("d");
-	//int cols = parser.get<int>("cols");
-	//int rows = parser.get<int>("rows");
-	const int camera = parser.get<int>("camera");
-	//Size frameSize = Size(parser.get<int>("vc"), parser.get<int>("vr"));
+	const string camera = parser.get<string>("camera");
+	Size frameSize = Size(parser.get<int>("cols"), parser.get<int>("rows"));
 	
 	//catch signal
 	signal(SIGINT, catchSignal);
-	
-	int cols = 1280;
-	int rows =  720;
-	
-	Size frameSize = Size(cols, rows);
 	
 	Size screenRes;
 	Camera *cam;
@@ -94,20 +89,20 @@ int main(int argc, char** argv){
 			cout<<"Camera failed to open."<<endl;
 			return -1;
 		}
-		//frameSize = cam->setFrameSize(frameSize);
-		frameSize = cam->getFrameSize();
+		frameSize = cam->setFrameSize(frameSize);
 		cout << frameSize << endl;
 	} else {
 		screenRes = Util::getDesktopResolution();
 	}
-	
-	cols = frameSize.width;
-	rows = frameSize.height;
+
+	//these can be overridden by the receiver
+	int cols = frameSize.width;
+	int rows = frameSize.height;
 	
 	//load calibration data - run AFTER resolution set
 	Camera::CalibrationData calibrationData = *Camera::loadCalibrationDataFromXML("../config/fisheye180_cameracalib_fisheye.xml", frameSize);
 	
-	int datalen = rows*cols*3 + 16;
+	const int datalen = rows*cols*3 + 16;
 	//4 bytes for cols
 	//4 bytes for rows
 	//framelen bytes for image data
@@ -138,10 +133,17 @@ int main(int argc, char** argv){
 			*(int*)(senddata+ 8) = rows;
 			*(int*)(senddata+12) = 0;
 			memcpy(senddata+16, frame1.data, rows*cols*3);
-			
-			server.sendBuffer(senddata, datalen);
 
-			uploadBitsPerSecond = cam->getFrameRate()*((float)((rows*cols*3+16)*8));
+			//test: break the frame into 100 segments and send one every 100 us (10 ms per frame)
+			int segmentsize = datalen/100;
+			int numsegments = datalen/segmentsize+1;
+			for(int i=0; i<numsegments; i++){
+			    server.sendBuffer(senddata+segmentsize*i, min(segmentsize, datalen-segmentsize*i));
+			    robosub::Time::waitMicros(100);
+			}
+			//server.sendBuffer(senddata, datalen);
+
+			uploadBitsPerSecond = ((float)cam->getFrameRate())*((float)((rows*cols*3+16)*8));
 			
 			if (showDisplay) {
 				Drawing::text(frame1,
@@ -192,7 +194,7 @@ int main(int argc, char** argv){
 						rows = *(int*)(headerdata+ 8);
 						int none = *(int*)(headerdata+12);
 
-						cout<<cols<<" "<<rows<<endl;
+						//cout<<cols<<" "<<rows<<endl;
 						
 						if(ver1==VERIFICATION_CODE){
 
@@ -213,7 +215,7 @@ int main(int argc, char** argv){
 							
 							if(recvdatalen>=0){
 								waitingOnRestOfFrame = framedatalen-recvdatalen;
-								cout<<"waiting on "<<waitingOnRestOfFrame<<endl;
+								//cout<<"waiting on "<<waitingOnRestOfFrame<<endl;
 								
 								if(waitingOnRestOfFrame==0){
 									drawFrame(rows, cols, framedata, framesPerSecond, bitsPerSecond);
@@ -221,13 +223,13 @@ int main(int argc, char** argv){
 							}
 						}
 					}
-				}else{
+				} else {
 					int recvdatalen = client.receiveBuffer(framedata+(framedatalen-waitingOnRestOfFrame), waitingOnRestOfFrame);
 					
 					if(recvdatalen>=0){
 						waitingOnRestOfFrame = waitingOnRestOfFrame-recvdatalen;
-							
-						cout<<"waiting on "<<waitingOnRestOfFrame<<endl;
+
+						//cout<<"waiting on "<<waitingOnRestOfFrame<<endl;
 						
 						if(waitingOnRestOfFrame==0){
 							drawFrame(rows, cols, framedata, framesPerSecond, bitsPerSecond);
