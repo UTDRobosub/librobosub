@@ -7,7 +7,7 @@ using namespace robosub;
 bool running = true;
 
 double EPSILON_APPROX_TOLERANCE_FACTOR = 0.0425;
-double MIN_AREA = 450;
+double MIN_AREA = 50;
 double MAX_AREA = 8220;
 double SQUARE_RATIO_THRESHOLD = .72;
 double TRIANGLE_RATIO_THRESHOLD = .22;
@@ -15,7 +15,7 @@ int EROSION_SIZE = 1;
 
 // TODO: Tune these parameters. Current values are okayish
 double IMAGE_BLACK_THRESHOLD = 38;
-double CONTOUR_BLACK_THRESHOLD = 101.5;
+double CONTOUR_BLACK_THRESHOLD = 150;
 
 void makeTrackbar(char *name, int length) {
     int *v = new int(1);
@@ -36,17 +36,34 @@ int avg(deque<int> q) {
     return sum / q.size();
 }
 
+int mode(deque<int> q) {
+    std::unordered_map<int, int> table;
+    for (int i: q)
+        table[i]++;
+
+    int mode = 0;
+    int mode_freq = 0;
+    for (auto itor = table.begin(); itor != table.end(); itor++) {
+        if (itor->second > mode_freq) {
+            mode = itor->first;
+            mode_freq = itor->second;
+        }
+    }
+
+    return mode;
+}
+
 int getAverageCount(deque<int> previousCounts, int nextCount, int lookBack) {
     if (previousCounts.size() == 0) {
         previousCounts.push_back(nextCount);
         return nextCount;
     } else if (previousCounts.size() < lookBack) {
         previousCounts.push_back(nextCount);
-        return  avg(previousCounts);
+        return mode(previousCounts);
     } else {
         previousCounts.push_back(nextCount);
         previousCounts.pop_front();
-        return avg(previousCounts);
+        return mode(previousCounts);
     }
 }
 
@@ -58,16 +75,26 @@ int main(int argc, char **argv) {
     namedWindow("Output");
 
     //create trackbars
-//    makeTrackbar("MIN_AREA", 10000);
-//    makeTrackbar("MAX_AREA", 10000);
-//    makeTrackbar("EROSION_SIZE", 20);
-//    makeTrackbar("SQUARE_RATIO_THRESHOLD", 100);
-//    makeTrackbar("TRIANGLE_RATIO_THRESHOLD", 100);
-//    makeTrackbar("EPSILON_APPROX_TOLERANCE_FACTOR", 10000);
-//    makeTrackbar("IMAGE_BLACK_THRESHOLD", 10000);
-//    makeTrackbar("CONTOUR_BLACK_THRESHOLD", 10000);
+    makeTrackbar("MIN_AREA", 10000);
+    makeTrackbar("MAX_AREA", 10000);
+    makeTrackbar("EROSION_SIZE", 20);
+    makeTrackbar("SQUARE_RATIO_THRESHOLD", 100);
+    makeTrackbar("TRIANGLE_RATIO_THRESHOLD", 100);
+    makeTrackbar("EPSILON_APPROX_TOLERANCE_FACTOR", 100);
+    makeTrackbar("IMAGE_BLACK_THRESHOLD", 10000);
+    makeTrackbar("CONTOUR_BLACK_THRESHOLD", 10000);
 
-    Camera cam = Camera(0);
+    setTrackbarPos("MIN_AREA", "Output", (int) MIN_AREA);
+    setTrackbarPos("MAX_AREA", "Output", (int) MAX_AREA);
+    setTrackbarPos("EROSION_SIZE", "Output", EROSION_SIZE);
+    setTrackbarPos("SQUARE_RATIO_THRESHOLD", "Output", (int) (SQUARE_RATIO_THRESHOLD * 100));
+    setTrackbarPos("TRIANGLE_RATIO_THRESHOLD", "Output", (int) (TRIANGLE_RATIO_THRESHOLD * 100));
+    setTrackbarPos("EPSILON_APPROX_TOLERANCE_FACTOR", "Output", (int) (EPSILON_APPROX_TOLERANCE_FACTOR * 1000));
+    setTrackbarPos("IMAGE_BLACK_THRESHOLD", "Output", (int) (IMAGE_BLACK_THRESHOLD * 10));
+    setTrackbarPos("CONTOUR_BLACK_THRESHOLD", "Output", (int) (CONTOUR_BLACK_THRESHOLD * 10));
+
+
+    Camera cam = Camera(1);
 //    cam.setFrameSize(Size(1280, 720));
     auto calibrationData = *cam.loadCalibrationDataFromXML("../config/fisheye_cameracalib.xml",
                                                            cam.getFrameSize());
@@ -86,14 +113,14 @@ int main(int argc, char **argv) {
     while (running) {
 
         //update trackbars
-//        MIN_AREA = (double)getTrackbar("MIN_AREA");
-//        MAX_AREA = (double)getTrackbar("MAX_AREA");
-//        EROSION_SIZE = getTrackbar("EROSION_SIZE");
-//        SQUARE_RATIO_THRESHOLD = getTrackbar("SQUARE_RATIO_THRESHOLD")/100.0;
-//        TRIANGLE_RATIO_THRESHOLD = getTrackbar("TRIANGLE_RATIO_THRESHOLD")/100.0;
-//        EPSILON_APPROX_TOLERANCE_FACTOR = getTrackbar("EPSILON_APPROX_TOLERANCE_FACTOR")/10000.0;
-//        IMAGE_BLACK_THRESHOLD = getTrackbar("IMAGE_BLACK_THRESHOLD")/10.0;
-//        CONTOUR_BLACK_THRESHOLD = getTrackbar("CONTOUR_BLACK_THRESHOLD")/10.0;
+        MIN_AREA = (double)getTrackbar("MIN_AREA");
+        MAX_AREA = (double)getTrackbar("MAX_AREA");
+        EROSION_SIZE = getTrackbar("EROSION_SIZE");
+        SQUARE_RATIO_THRESHOLD = getTrackbar("SQUARE_RATIO_THRESHOLD")/100.0;
+        TRIANGLE_RATIO_THRESHOLD = getTrackbar("TRIANGLE_RATIO_THRESHOLD")/100.0;
+        EPSILON_APPROX_TOLERANCE_FACTOR = getTrackbar("EPSILON_APPROX_TOLERANCE_FACTOR")/1000.0;
+        IMAGE_BLACK_THRESHOLD = getTrackbar("IMAGE_BLACK_THRESHOLD")/10.0;
+        CONTOUR_BLACK_THRESHOLD = getTrackbar("CONTOUR_BLACK_THRESHOLD")/10.0;
 
 
         cam.retrieveFrameBGR(input);
@@ -157,11 +184,11 @@ int main(int argc, char **argv) {
             if (averageColor[0] > CONTOUR_BLACK_THRESHOLD)
                 continue;
 
-            cout << c.area() << endl;
             if (c.area() > MAX_AREA || c.area() < MIN_AREA)
                 continue;
 
             if (approx.size() >= 5) {
+
                 circles.push_back(approx);
             } else if (approx.size() == 4) {
                 Rectangle r = Rectangle(approx);
@@ -190,10 +217,14 @@ int main(int argc, char **argv) {
         drawContours(output, squares, -1, Scalar(255, 255, 0), 4, 8); //yellow
         drawContours(output, circles, -1, Scalar(100, 230, 0), 4, 8); //teal
 
-        Drawing::text(output, to_string(getAverageCount(circleCounts, circles.size(), 5)), Point(20, 50), Scalar(0, 0, 255), Drawing::TOP_LEFT, 2, 4);
-        Drawing::text(output, to_string(getAverageCount(triangleCounts, triangles.size(), 5)), Point(20, 100), Scalar(0, 0, 255), Drawing::TOP_LEFT, 2, 4);
-        Drawing::text(output, to_string(getAverageCount(rectangleCounts, rectangles.size(), 5)), Point(20, 150), Scalar(0, 0, 255), Drawing::TOP_LEFT, 2, 4);
-        Drawing::text(output, to_string(getAverageCount(squareCounts, squares.size(), 5)), Point(20, 200), Scalar(0, 0, 255), Drawing::TOP_LEFT, 2, 4);
+        Drawing::text(output, to_string(getAverageCount(circleCounts, circles.size(), 30)), Point(20, 50),
+                      Scalar(0, 0, 255), Drawing::TOP_LEFT, 2, 4);
+        Drawing::text(output, to_string(getAverageCount(triangleCounts, triangles.size(), 30)), Point(20, 100),
+                      Scalar(0, 0, 255), Drawing::TOP_LEFT, 2, 4);
+        Drawing::text(output, to_string(getAverageCount(rectangleCounts, rectangles.size(), 30)), Point(20, 150),
+                      Scalar(0, 0, 255), Drawing::TOP_LEFT, 2, 4);
+        Drawing::text(output, to_string(getAverageCount(squareCounts, squares.size(), 30)), Point(20, 200),
+                      Scalar(0, 0, 255), Drawing::TOP_LEFT, 2, 4);
 
         vector<vector<Point>> tp = vector<vector<Point>>({{Point(80, 100), Point(120, 100), Point(100, 60)}});
         circle(output, Point(100, 30), 20, Scalar(0, 0, 255), -1);
@@ -211,8 +242,8 @@ int main(int argc, char **argv) {
                       String(Util::toStringWithPrecision(cam.getFrameRate())) + String(" FPS"),
                       Point(16, 16), Scalar(255, 255, 255), Drawing::Anchor::BOTTOM_LEFT, 0.5);
 
-        ImageTransform::scale(input, 0.5);
-        ImageTransform::scale(output, 0.5);
+        ImageTransform::scale(input, 2);
+        ImageTransform::scale(output, 2);
 
         imshow("Input", input);
         imshow("Output", output);
