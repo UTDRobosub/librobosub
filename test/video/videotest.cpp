@@ -30,6 +30,26 @@ void catchSignal(int signal) {
     running = false;
 }
 
+int avg(deque<int> q) {
+    int sum = 0;
+    for (int i: q) sum += i;
+    return sum / q.size();
+}
+
+int getAverageCount(deque<int> previousCounts, int nextCount, int lookBack) {
+    if (previousCounts.size() == 0) {
+        previousCounts.push_back(nextCount);
+        return nextCount;
+    } else if (previousCounts.size() < lookBack) {
+        previousCounts.push_back(nextCount);
+        return  avg(previousCounts);
+    } else {
+        previousCounts.push_back(nextCount);
+        previousCounts.pop_front();
+        return avg(previousCounts);
+    }
+}
+
 int main(int argc, char **argv) {
     //catch signal
     signal(SIGINT, catchSignal);
@@ -47,7 +67,7 @@ int main(int argc, char **argv) {
 //    makeTrackbar("IMAGE_BLACK_THRESHOLD", 10000);
 //    makeTrackbar("CONTOUR_BLACK_THRESHOLD", 10000);
 
-    Camera cam = Camera(1);
+    Camera cam = Camera(0);
 //    cam.setFrameSize(Size(1280, 720));
     auto calibrationData = *cam.loadCalibrationDataFromXML("../config/fisheye_cameracalib.xml",
                                                            cam.getFrameSize());
@@ -57,6 +77,11 @@ int main(int argc, char **argv) {
     Mat input, output, processed_img, contour_mask;
     Scalar mu, sigma;
     Ptr<CLAHE> clahe = createCLAHE(4, Size(16, 16));
+
+    deque<int> triangleCounts = deque<int>();
+    deque<int> squareCounts = deque<int>();
+    deque<int> rectangleCounts = deque<int>();
+    deque<int> circleCounts = deque<int>();
 
     while (running) {
 
@@ -165,10 +190,10 @@ int main(int argc, char **argv) {
         drawContours(output, squares, -1, Scalar(255, 255, 0), 4, 8); //yellow
         drawContours(output, circles, -1, Scalar(100, 230, 0), 4, 8); //teal
 
-        Drawing::text(output, to_string(circles.size()), Point(20, 50), Scalar(0, 0, 255), Drawing::TOP_LEFT, 2, 4);
-        Drawing::text(output, to_string(triangles.size()), Point(20, 100), Scalar(0, 0, 255), Drawing::TOP_LEFT, 2, 4);
-        Drawing::text(output, to_string(rectangles.size()), Point(20, 150), Scalar(0, 0, 255), Drawing::TOP_LEFT, 2, 4);
-        Drawing::text(output, to_string(squares.size()), Point(20, 200), Scalar(0, 0, 255), Drawing::TOP_LEFT, 2, 4);
+        Drawing::text(output, to_string(getAverageCount(circleCounts, circles.size(), 5)), Point(20, 50), Scalar(0, 0, 255), Drawing::TOP_LEFT, 2, 4);
+        Drawing::text(output, to_string(getAverageCount(triangleCounts, triangles.size(), 5)), Point(20, 100), Scalar(0, 0, 255), Drawing::TOP_LEFT, 2, 4);
+        Drawing::text(output, to_string(getAverageCount(rectangleCounts, rectangles.size(), 5)), Point(20, 150), Scalar(0, 0, 255), Drawing::TOP_LEFT, 2, 4);
+        Drawing::text(output, to_string(getAverageCount(squareCounts, squares.size(), 5)), Point(20, 200), Scalar(0, 0, 255), Drawing::TOP_LEFT, 2, 4);
 
         vector<vector<Point>> tp = vector<vector<Point>>({{Point(80, 100), Point(120, 100), Point(100, 60)}});
         circle(output, Point(100, 30), 20, Scalar(0, 0, 255), -1);
@@ -193,7 +218,10 @@ int main(int argc, char **argv) {
         imshow("Output", output);
         if (got_contour_mask)
             imshow("Contour Mask", contour_mask);
-        if (waitKey(1) >= 0) break;
+
+        if (waitKey(1) == 32)
+            waitKey(0);
+        else if (waitKey(1) >= 0) break;
         cout << "frame " << std::setprecision(4) << " @ " << cam.getFrameRate() << " fps" << endl;
     }
     return 0;

@@ -36,7 +36,7 @@ void drawFrame(int rows, int cols, char* framedata, float framesPerSecond, float
 	imshow("Latest Frame", bestframedraw);
 }
 
-int main(int argc, char** argv){
+int main(int argc, char** argv) {
 	
 	const String keys =
 		"{help ?         |            | print this message     }"
