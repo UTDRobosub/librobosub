@@ -1,5 +1,8 @@
 #include <opencv2/opencv.hpp>
 #include <robosub/robosub.h>
+
+
+#ifdef HAVE_CUDA
 #include "opencv2/imgproc.hpp"
 #include "opencv2/highgui.hpp"
 #include "opencv2/cudafilters.hpp"
@@ -68,3 +71,10 @@ int main() {
     }
 }
 
+#else
+
+int main() {
+    cout << "CUDA not compiled into OpenCV! You might want to do that." << endl;
+}
+
+#endif

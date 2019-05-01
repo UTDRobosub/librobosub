@@ -186,10 +186,10 @@ int main(int argc, char **argv) {
                       String(Util::toStringWithPrecision(cam.getFrameRate())) + String(" FPS"),
                       Point(16, 16), Scalar(255, 255, 255), Drawing::Anchor::BOTTOM_LEFT, 0.5);
 
-        ImageTransform::scale(processed_img, 2);
-        ImageTransform::scale(output, 2);
+        ImageTransform::scale(input, 0.5);
+        ImageTransform::scale(output, 0.5);
 
-        imshow("Input", processed_img);
+        imshow("Input", input);
         imshow("Output", output);
         if (got_contour_mask)
             imshow("Contour Mask", contour_mask);
