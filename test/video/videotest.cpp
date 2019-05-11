@@ -6,6 +6,7 @@ using namespace std;
 using namespace robosub;
 bool running = true;
 
+int CAMERA_INDEX = 1;
 double EPSILON_APPROX_TOLERANCE_FACTOR = 0.0425;
 double MIN_AREA = 50;
 double MAX_AREA = 8220;
@@ -94,7 +95,7 @@ int main(int argc, char **argv) {
     setTrackbarPos("CONTOUR_BLACK_THRESHOLD", "Output", (int) (CONTOUR_BLACK_THRESHOLD * 10));
 
 
-    Camera cam = Camera(1);
+    Camera cam = Camera(CAMERA_INDEX);
 //    cam.setFrameSize(Size(1280, 720));
     auto calibrationData = *cam.loadCalibrationDataFromXML("../config/fisheye_cameracalib.xml",
                                                            cam.getFrameSize());

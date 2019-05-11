@@ -38,10 +38,11 @@ namespace robosub {
 	/////////////////////////////////////////////////////////////////////////////
 	//Serial class private
 	
-	Serial::Serial(string fn, int baud, void (*_receiveMessageCallback)(char* message, int length, bool needsrepsonse, char** response, int* responsepength), bool useprotocol){
+	Serial::Serial(string fn, int baud, void (*_receiveMessageCallback)(char* message, int length, bool needsrepsonse, char** response, int* responsepength), bool useprotocol, bool debugprint){
 		connected = false;
 
 		useprotocol = useprotocol;
+		debugPrint = debugprint;
 		
 		filename = fn;
 		readbuflen = 0;
@@ -127,7 +128,7 @@ namespace robosub {
 		sendbuflen = 0;
 		
 		state = Serial_NewState(this, useprotocol, serialOnReceiveMessage, serialSendChar, serialDelayMs, serialPollReceive);
-
+		
 		receiveMessageCallback = _receiveMessageCallback;
 	}
 	
@@ -190,6 +191,8 @@ namespace robosub {
 	}
 	
 	void Serial::transmitBuffer(){
+		sendbuf[sendbuflen] = '\0';
+		if(debugPrint){ cout<<"serial send: \""<<sendbuf<<"\""; }
 		writeLen(sendbuf, sendbuflen);
 		sendbuflen = 0;
 	}
@@ -201,9 +204,15 @@ namespace robosub {
 	int Serial::receiveAllMessages(){
 		readEntireBuffer();
 		
+		if(debugPrint && readbuflen>0){ cout<<"serial receive buffer: \""; }
+		
 		for(int dataidx=0; dataidx<readbuflen; dataidx++){
 			Serial_ReceiveChar(state, readbuf[dataidx]);
+			
+			if(debugPrint){ cout<<readbuf[dataidx]; }
 		}
+		
+		if(debugPrint && readbuflen>0){ cout<<"\""<<endl; }
 
 		flushBuffer();
 	}
