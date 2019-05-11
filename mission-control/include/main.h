@@ -5,6 +5,7 @@
 #include <signal.h>
 #include <opencv2/opencv.hpp>
 #include <opencv2/ximgproc.hpp>
+#include <mutex>
 
 extern bool running;
 extern bool refresh;

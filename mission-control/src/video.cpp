@@ -4,29 +4,34 @@ using namespace std;
 using namespace robosub;
 
 const int VERIFICATION_CODE = 1234567890;
-String ADDR = "192.168.1.2";
-const int NUMFEEDS = 4;
-int PORT[4] = {8500, 8502, 8503, 8504};
+const String ADDR = "192.168.1.2";
+const int NUMFEEDS = 5;
+const int PORT[5] = {8500, 8501, 8502, 8503, 8504};
 const int TIMEOUT_LIMIT = 50;
+
+mutex drawLock;
+
+
 //void catchSignal(int signal) {
 //    running = false;
 //}
 
-void drawFrame(int rows, int cols, char *framedata, float framesPerSecond, float bitsPerSecond, int port) {
+void drawFrame(int rows, int cols, char* framedata, float framesPerSecond, float bitsPerSecond, int port) {
     int framedatalen = rows * cols * 3;
 
-    Mat bestframedraw(rows, cols, CV_8UC3, framedata);
+    Mat frame = Mat(rows, cols, CV_8UC3, framedata);
 
-    Drawing::text(bestframedraw,
+    Drawing::text(frame,
                   String(Util::toStringWithPrecision(framesPerSecond)) + String(" fps"),
                   Point(16, 48), Scalar(255, 255, 255), Drawing::Anchor::BOTTOM_LEFT, 0.5
     );
-    Drawing::text(bestframedraw,
+    Drawing::text(frame,
                   String(Util::toStringWithPrecision((bitsPerSecond) / 1024.0f / 1024.0f) + String(" Mbps")),
                   Point(16, 16), Scalar(255, 255, 255), Drawing::Anchor::BOTTOM_LEFT, 0.5
     );
 
-    imshow(String("Port ") + String(Util::toStringWithPrecision(port, 0)), bestframedraw);
+    imshow(String("Port ") + String(Util::toStringWithPrecision(port, 0)), frame);
+    waitKey(1);
 }
 void drawError(int rows, int cols, int port) {
     int framedatalen = rows * cols * 3;
@@ -38,10 +43,11 @@ void drawError(int rows, int cols, int port) {
                   Point(16, 72), Scalar(255, 255, 255), Drawing::Anchor::BOTTOM_LEFT, 2.0
     );
 
-    imshow(String("Port ") + String(Util::toStringWithPrecision(port, 0)), bestframedraw);
+    imshow((String("Port ") + String(Util::toStringWithPrecision(port, 0))), bestframedraw);
+    waitKey(1);
 }
 
-void cameraThread(int port){
+void cameraThread(int port, int index){
     int rows = 720;
     int cols = 1280;
     FPS fps = FPS();
@@ -52,13 +58,15 @@ void cameraThread(int port){
     while(running)
     {
         NetworkTcpClient client;
-
+        cout << port << endl;
         cout << "Connecting to server." << endl;
         int err = client.connectToServer((char *) ADDR.c_str(), port);
+        cout << err << endl;
         if (err) {
             cout << "Connection Error " << err << ": " << strerror(err) << endl;
+            drawLock.lock();
             drawError(rows, cols, port);
-            waitKey(1);
+            drawLock.unlock();
         } else {
             cout << "Connected." << endl;
 
@@ -74,6 +82,8 @@ void cameraThread(int port){
             while (running) {
                 if (waitingOnRestOfFrame == 0) {
                     int headerlen = client.receiveBuffer(headerdata, 16);
+
+                    if (headerlen < 0) break;
 
                     if (headerlen == 16) {
                         int ver1 = *(int *) (headerdata + 0);
@@ -105,7 +115,17 @@ void cameraThread(int port){
                                 cout<<"waiting on 2 "<<waitingOnRestOfFrame<<endl;
 
                                 if (waitingOnRestOfFrame == 0) {
+                                    drawLock.lock();
                                     drawFrame(rows, cols, framedata, framesPerSecond, bitsPerSecond, port);
+                                    drawLock.unlock();
+
+//                                    ROWS[index] = rows;
+//                                    COLS[index] = cols;
+//                                    FRAMEDATA[index] = framedata;
+//                                    FRAMESPERSECOND[index] = framesPerSecond;
+//                                    BITSPERSECOND[index] = bitsPerSecond;
+
+                                    cout << "DEbug" << endl;
                                 }
                             }
                         }
@@ -117,7 +137,7 @@ void cameraThread(int port){
                     if (recvdatalen >= 0) {
                         waitingOnRestOfFrame = waitingOnRestOfFrame - recvdatalen;
 
-                        cout<<"waiting on "<<waitingOnRestOfFrame<<endl;
+                        cout<<port << ": waiting on "<<waitingOnRestOfFrame<<endl;
 
                         if(previousDataRemaining == waitingOnRestOfFrame){
                             timeoutCounter++;
@@ -129,13 +149,17 @@ void cameraThread(int port){
                         }
                         previousDataRemaining = waitingOnRestOfFrame;
                         if (waitingOnRestOfFrame == 0) {
+//                            drawFrame(rows, cols, framedata, framesPerSecond, bitsPerSecond, port);
+
+                            drawLock.lock();
                             drawFrame(rows, cols, framedata, framesPerSecond, bitsPerSecond, port);
+                            drawLock.unlock();
                         }
 
                     }
                 }
 
-                waitKey(1);
+                robosub::Time::waitMillis(1);
             }
         }
     }
@@ -148,8 +172,24 @@ void video() {
     thread cameraThreads[NUMFEEDS];
 
     for (int i = 0; i < NUMFEEDS; i++) {
-        cameraThreads[i] = thread(cameraThread, PORT[i]);
+        cameraThreads[i] = thread(cameraThread, PORT[i], i);
     }
+ //   waitKey(5000);
+//    for(int i = 0; i < NUMFEEDS; i++)
+//    {
+//        frameDataLocks[i].lock();
+//        if(FRAMEDATA[i] != nullptr) {
+//            Mat frameData = Mat(ROWS[i], COLS[i], CV_8UC3, FRAMEDATA[i]);
+//            drawFrame(ROWS[i], COLS[i], frameData, FRAMESPERSECOND[i], BITSPERSECOND[i], PORT[i]);
+//            waitKey(1);
+//        }
+//        frameDataLocks[i].unlock();
+//
+//        if(i == NUMFEEDS-1)
+//        {
+//            i = -1;
+//        }
+//    }
 
     for(int i = 0; i < NUMFEEDS; i++) {
         cameraThreads[i].join();

@@ -29,15 +29,15 @@ int main(int argc, char* argv[]){
 	int videoPort;
 	videoPort = 8002;
 	
-//	thread controlThread(control);
+	thread controlThread(control);
 	thread videoThread(video);
-//	thread networkThread(network, &readoutData);
-//	thread readoutThread(readout, &readoutData);
+	thread networkThread(network, &readoutData);
+	thread readoutThread(readout, &readoutData);
 	
-//	controlThread.join();
+	controlThread.join();
 	videoThread.join();
-//	networkThread.join();
-//	readoutThread.join();
+	networkThread.join();
+	readoutThread.join();
 
 	return 0;
 }
