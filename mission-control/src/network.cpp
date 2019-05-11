@@ -112,8 +112,8 @@ void send(shared_ptr<typename T::Connection> connection,
 }
 
 void network(ReadoutData* readout) {
-	DataBucket current;
-	DataBucket toRobot;
+	DataBucket current = { };
+	DataBucket toRobot = { };
 	
 	DataBucket clientConnectionData;
 	ConnectionState clientConnectionState;
@@ -191,19 +191,21 @@ void network(ReadoutData* readout) {
 	while(true) {
 		current["index"] = (i++ / 1000) % 1000; //force refresh approx every second
 		current["robot_connected"] = clientConnected;
-		
+
 		try{
 			readout->rtt = current["robot_rtt"];
 			readout->cpu = current["robotCpu"];
 			readout->ram = current["robotRam"];
-			
-			readout->accel_x = current["imu"]["ax"];
-			readout->accel_y = current["imu"]["ay"];
-			readout->accel_z = current["imu"]["az"];
+
+			if (current["imu"].is_object()) {
+                readout->accel_x = current["imu"]["ax"];
+                readout->accel_y = current["imu"]["ay"];
+                readout->accel_z = current["imu"]["az"];
+			}
 			
 			readout->valid = true;
-		}catch(exception e){
-			cout<<"exception reading telemetry: "<< e.what() <<endl;
+		} catch(exception e) {
+			cout<<"exception setting telemetry: "<< e.what() <<endl;
 			readout->valid = false;
 		}
 		

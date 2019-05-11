@@ -9,10 +9,10 @@
 using namespace std;
 //using namespace robosub;
 
-const int NUMFEEDS = 4;
+const int NUMFEEDS = 1;
 const int PORT[5] = {8500, 8501, 8502, 8503, 8504};
-const String VIDEO_ADDR = "192.168.1.2";
-const char* NETWORK_HOST = "192.168.1.1:8081";
+const String VIDEO_ADDR = "192.168.1.1";
+const char* NETWORK_HOST = "192.168.1.2:8081";
 
 void control();
 void video();
@@ -35,12 +35,12 @@ int main(int argc, char* argv[]){
 	thread controlThread(control);
 	thread videoThread(video);
 	thread networkThread(network, &readoutData);
-//	thread readoutThread(readout, &readoutData);
+	thread readoutThread(readout, &readoutData);
 	
 	controlThread.join();
 	videoThread.join();
 	networkThread.join();
-//	readoutThread.join();
+	readoutThread.join();
 
 	return 0;
 }
