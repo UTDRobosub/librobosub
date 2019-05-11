@@ -91,6 +91,11 @@ namespace robosub{
 		memset(&addr, 0, sizeof(addr));
 		addr.sin_family = AF_INET;
 		addr.sin_port = htons(port);
+
+        struct timeval tv;
+        tv.tv_sec = 1;
+        tv.tv_usec = 0;
+        setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof tv);
 		
 		if(inet_pton(AF_INET, saddr, &addr.sin_addr)<=0){
 			return NETWORKTCP_GETERROR;

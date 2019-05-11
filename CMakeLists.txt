@@ -14,6 +14,7 @@ ENDIF()
 project(librobosub CXX)
 find_package(OpenCV 4.0.1 REQUIRED)
 find_package (Threads)
+find_package(SDL REQUIRED)
 set(Boost_USE_STATIC_LIBS OFF)
 set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_RUNTIME OFF)
@@ -54,6 +55,13 @@ target_compile_features(${LIBRARY_NAME} PUBLIC cxx_range_for)
 #set(ROBOSUB_INCLUDE_DIRS ${HEADERS})
 install(TARGETS ${LIBRARY_NAME} DESTINATION lib EXPORT ${LIBRARY_NAME}-config)
 install(EXPORT ${LIBRARY_NAME}-config DESTINATION lib/${LIBRARY_NAME})
+
+# Mission Control
+file(GLOB MISSIONCONTROL_SOURCES mission-control/src/*.cpp mission-control/lib/**/*)
+add_executable(mission-control ${MISSIONCONTROL_SOURCES})
+target_link_libraries(mission-control ${LIBRARY_NAME} ${SDL_LIBRARY})
+target_include_directories(mission-control PRIVATE ${Boost_INCLUDE_DIR} mission-control/include mission-control/lib)
+target_compile_features(mission-control PRIVATE cxx_range_for)
 
 # Tests
 add_executable(test-networktcp test/networktcp/networktcptest.cpp)
