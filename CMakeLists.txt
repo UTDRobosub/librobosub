@@ -46,8 +46,6 @@ install(TARGETS ${LIBRARY_NAME} DESTINATION lib/${PROJECT_NAME})
 install(FILES ${HEADERS} DESTINATION include/${PROJECT_NAME})
 install(FILES ${WS_HEADERS} DESTINATION include/${PROJECT_NAME}/ws)
 install(FILES ${JSON_HEADERS} DESTINATION include/${PROJECT_NAME}/json)
-# Install so find_package works
-#install(FILES ${LIBRARY_NAME}-config.cmake)
 # Enable C++11
 target_compile_features(${LIBRARY_NAME} PUBLIC cxx_range_for)
 
@@ -62,6 +60,30 @@ add_executable(mission-control ${MISSIONCONTROL_SOURCES})
 target_link_libraries(mission-control ${LIBRARY_NAME} ${SDL_LIBRARY})
 target_include_directories(mission-control PRIVATE ${Boost_INCLUDE_DIR} mission-control/include mission-control/lib)
 target_compile_features(mission-control PRIVATE cxx_range_for)
+
+# Onboard Control System
+file(GLOB ONBOARD_SOURCES onboard/src/*.cpp)
+add_executable(onboard-control ${ONBOARD_SOURCES})
+target_link_libraries(onboard-control ${LIBRARY_NAME})
+target_include_directories(onboard-control PRIVATE ${Boost_INCLUDE_DIR} onboard/include)
+target_compile_features(onboard-control PRIVATE cxx_range_for)
+
+# Applications
+file(GLOB CAMERACALIB_SOURCES test/interactive-calibration/*.cpp)
+add_executable(app-cameracalib ${CAMERACALIB_SOURCES})
+target_link_libraries(app-cameracalib ${LIBRARY_NAME})
+target_include_directories(app-cameracalib PRIVATE ${Boost_INCLUDE_DIR})
+target_compile_features(app-cameracalib PRIVATE cxx_range_for)
+
+add_executable(app-cameracalib2 test/interactive-calibrationv2/calib2.cpp)
+target_link_libraries(app-cameracalib2 ${LIBRARY_NAME})
+target_include_directories(app-cameracalib2 PRIVATE ${Boost_INCLUDE_DIR})
+target_compile_features(app-cameracalib2 PRIVATE cxx_range_for)
+
+add_executable(app-stereocalib test/interactive-stereocalib/app-stereocalib.cpp)
+target_link_libraries(app-stereocalib ${LIBRARY_NAME})
+target_include_directories(app-stereocalib PRIVATE ${Boost_INCLUDE_DIR})
+target_compile_features(app-stereocalib PRIVATE cxx_range_for)
 
 # Tests
 add_executable(test-networktcp test/networktcp/networktcptest.cpp)
@@ -119,22 +141,6 @@ target_compile_features(test-stereocalib PRIVATE cxx_range_for)
 #target_link_libraries(test-telemetryserial ${LIBRARY_NAME})
 #target_include_directories(test-telemetryserial PRIVATE ${Boost_INCLUDE_DIR})
 #target_compile_features(test-telemetryserial PRIVATE cxx_range_for)
-
-file(GLOB CAMERACALIB_SOURCES test/interactive-calibration/*.cpp)
-add_executable(app-cameracalib ${CAMERACALIB_SOURCES})
-target_link_libraries(app-cameracalib ${LIBRARY_NAME})
-target_include_directories(app-cameracalib PRIVATE ${Boost_INCLUDE_DIR})
-target_compile_features(app-cameracalib PRIVATE cxx_range_for)
-
-add_executable(app-cameracalib2 test/interactive-calibrationv2/calib2.cpp)
-target_link_libraries(app-cameracalib2 ${LIBRARY_NAME})
-target_include_directories(app-cameracalib2 PRIVATE ${Boost_INCLUDE_DIR})
-target_compile_features(app-cameracalib2 PRIVATE cxx_range_for)
-
-add_executable(app-stereocalib test/interactive-stereocalib/app-stereocalib.cpp)
-target_link_libraries(app-stereocalib ${LIBRARY_NAME})
-target_include_directories(app-stereocalib PRIVATE ${Boost_INCLUDE_DIR})
-target_compile_features(app-stereocalib PRIVATE cxx_range_for)
 
 add_executable(test-stereorect test/stereorect/stereorect.cpp)
 target_link_libraries(test-stereorect ${LIBRARY_NAME})
