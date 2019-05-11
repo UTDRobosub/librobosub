@@ -2,9 +2,10 @@
 #include <librobosub/robosub.h>
 #include "readout.h"
 #include "robotState.h"
-
+#include "main.h"
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wmissing-noreturn"
+const char* connectionAddr = NETWORK_HOST;
 
 using namespace robosub;
 using WsServer = robosub::ws::SocketServer<robosub::ws::WS>;
