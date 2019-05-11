@@ -4,12 +4,9 @@ using namespace std;
 using namespace robosub;
 
 const int VERIFICATION_CODE = 1234567890;
-const String ADDR = "192.168.1.2";
-const int NUMFEEDS = 5;
-const int PORT[5] = {8500, 8501, 8502, 8503, 8504};
-const int TIMEOUT_LIMIT = 50;
+const String ADDR = VIDEO_ADDR;
 
-mutex drawLock;
+const int TIMEOUT_LIMIT = 50;
 
 
 //void catchSignal(int signal) {

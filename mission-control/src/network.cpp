@@ -5,10 +5,6 @@
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wmissing-noreturn"
-const char* connectionAddr =
-	"192.168.1.1:8081"
-	//"0.0.0.0:8081"
-;
 
 using namespace robosub;
 using WsServer = robosub::ws::SocketServer<robosub::ws::WS>;
