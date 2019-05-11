@@ -101,6 +101,7 @@ struct MotorValues {
     short a1; //0 to 130 degrees
     short a2; //0 to 180 degrees
     short a3; //0 to 65 degrees
+    short a4; //? to ? degrees
 };
 
 void updateRobotControls(DataBucket& state){
@@ -114,6 +115,7 @@ void updateRobotControls(DataBucket& state){
 		motorvals.a1  = (short)state["motors"]["a1"]; 
 		motorvals.a2  = (short)state["motors"]["a2"]; 
 		motorvals.a3  = (short)state["motors"]["a3"]; 
+		motorvals.a4  = (short)state["motors"]["a4"]; 
 
 		cout << "Sending motors" << endl;
 
