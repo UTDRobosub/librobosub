@@ -78,6 +78,10 @@ namespace robosub {
         void clear();
         
         void remove(const string key);
+
+        bool hasKey(const string key);
+
+        bool isEmpty();
     };
 
     class Telemetry {

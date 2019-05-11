@@ -1,6 +1,7 @@
 
 #include "readout.h"
 #include "../include/cvplot/cvplot.h"
+#include "main.h"
 #include <opencv2/opencv.hpp>
 #include <librobosub/timeutil.h>
 
@@ -122,12 +123,12 @@ void readout(ReadoutData* data){
 		}
 		
 		stuff_stuff.addPoint(i+=5);
-		
+
 		rtt.show();
 		cpu.show();
 		accel.show();
 		stuff.show();
-		
+
 		robosub::Time::waitMillis(10);
 	}
 }

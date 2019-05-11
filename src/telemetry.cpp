@@ -36,11 +36,12 @@ namespace robosub {
         return _data[key];
     }
 
-    bool isNull() {
-
+    bool DataBucket::isEmpty()
+    {
+        return _data.size() == 0;
     }
 
-    bool hasKey(const string key) {
+    bool DataBucket::hasKey(const string key) {
 
     }
 
