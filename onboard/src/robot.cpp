@@ -12,11 +12,11 @@ void imuReceiveMessage(const char* message, int length, bool needsresponse, char
 	memcpy(imuLastReceivedMessage, message, length);
 	imuLastReceivedMessage[length] = 0;
 
-    //cout << "IMU: " << imuLastReceivedMessage << endl;
+    cout << "IMU: " << imuLastReceivedMessage << endl;
 }
 
 void mcReceiveMessage(const char* message, int length, bool needsresponse, char** response, int* responselength){
-	//cout << "MC: " << message << endl;
+	cout << "MC: " << message << endl;
 }
 
 void serialReceiveMessage(char* message, int length, bool needsresponse, char** response, int* responselength){
@@ -49,9 +49,9 @@ void initRobotState(){
 	string portstr = Util::execCLI("ls /dev | grep tty[AU]");
 	auto ports = Util::splitString(portstr, '\n');
 
-    for(const auto & port : ports){
+    for(const auto & port : ports) {
         cout << "Starting serial connection " << serialPorts.size() << " on port " << port << endl;
-        Serial* serialport = new Serial("/dev/" + port, 115200, serialReceiveMessage, true, true);
+        Serial* serialport = new Serial("/dev/" + port, 115200, serialReceiveMessage, true, false);
         serialPorts.push_back(serialport);
     }
 

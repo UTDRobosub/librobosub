@@ -12,6 +12,8 @@ using namespace robosub;
 using WsServer = robosub::ws::SocketServer<robosub::ws::WS>;
 using WsClient = robosub::ws::SocketClient<robosub::ws::WS>;
 
+const int SERVER_PORT = 8081;
+
 struct ConnectionState {
 public:
     bool ready = false;
@@ -36,7 +38,7 @@ int main(int argc, char** argv) {
 
     //initialize server
     WsServer server;
-    server.config.port = 8081;
+    server.config.port = SERVER_PORT;
     server.config.thread_pool_size = 1;
     server.config.address = "0.0.0.0";
 
@@ -60,7 +62,7 @@ int main(int argc, char** argv) {
 
         //send current state
         connection->send(send_stream, [](const robosub::ws::error_code &ec) {
-            if(ec) {
+            if((bool)ec) {
                 cout << "Server: Error sending message. " <<
                      // See http://www.boost.org/doc/libs/1_55_0/doc/html/boost_asio/reference.html, Error Codes for error code meanings
                      "Error: " << ec << ", error message: " << ec.message() << endl;
@@ -96,7 +98,7 @@ int main(int argc, char** argv) {
 
                     updateRobotControls(receivedState);
                 }
-            } catch (std::exception e) {
+            } catch (std::exception &e) {
                 cout << "Error processing message: " << message_str << ": " << e.what() << endl;
             }
 
