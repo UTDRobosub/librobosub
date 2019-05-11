@@ -226,6 +226,7 @@ void network(ReadoutData* readout) {
             toRobot["motors"]["a1"] = convertArmValuesToRobot(-(double)current["controller2"]["ly"], 130);
             toRobot["motors"]["a2"] = convertArmRotationValuesToRobot((double)current["controller2"]["rx"], 20, 180);
             toRobot["motors"]["a3"] = int(std::max((double)current["controller2"]["t"], 0.0) * 65.0);
+            toRobot["motors"]["a4"] = int(30 + (int)current["controller2"]["start"] * 30.0);
 
             cout << toRobot["motors"] << endl;
 
