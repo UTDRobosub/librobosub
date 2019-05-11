@@ -1,4 +1,3 @@
-
 #include "robot.h"
 
 char imuLastReceivedMessage[256];
@@ -52,7 +51,7 @@ void initRobotState(){
 
     for(const auto & port : ports){
         cout << "Starting serial connection " << serialPorts.size() << " on port " << port << endl;
-        Serial* serialport = new Serial("/dev/" + port, 115200, serialReceiveMessage, true);
+        Serial* serialport = new Serial("/dev/" + port, 115200, serialReceiveMessage, true, true);
         serialPorts.push_back(serialport);
     }
 

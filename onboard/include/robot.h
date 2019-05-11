@@ -3,9 +3,9 @@
 
 #include <stdio.h>
 #include <stdlib.h> //rand
-#include <librobosub/telemetry.h>
-#include <librobosub/serial.h>
-#include <librobosub/util.h>
+#include <robosub/telemetry.h>
+#include <robosub/serial.h>
+#include <robosub/util.h>
 
 using namespace robosub;
 
