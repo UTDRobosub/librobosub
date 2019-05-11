@@ -12,11 +12,11 @@ void imuReceiveMessage(const char* message, int length, bool needsresponse, char
 	memcpy(imuLastReceivedMessage, message, length);
 	imuLastReceivedMessage[length] = 0;
 
-    cout << "IMU: " << imuLastReceivedMessage << endl;
+//    cout << "IMU: " << imuLastReceivedMessage << endl;
 }
 
 void mcReceiveMessage(const char* message, int length, bool needsresponse, char** response, int* responselength){
-	cout << "MC: " << message << endl;
+//	cout << "MC: " << message << endl;
 }
 
 void serialReceiveMessage(char* message, int length, bool needsresponse, char** response, int* responselength){
