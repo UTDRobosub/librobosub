@@ -1,4 +1,5 @@
 #pragma once
+
 #include "controller.h"
 #include <librobosub/robosub.h>
 #include <librobosub/networktcp.h>
@@ -12,3 +13,10 @@ extern bool refresh;
 extern Controller* controller1;
 extern Controller* controller2;
 extern long controllerTime;
+extern mutex drawLock;
+
+extern const int NUMFEEDS;
+extern const int PORT[5];
+
+extern const String VIDEO_ADDR;
+extern const char* NETWORK_HOST;

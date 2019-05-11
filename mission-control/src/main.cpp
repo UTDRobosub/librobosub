@@ -9,6 +9,11 @@
 using namespace std;
 //using namespace robosub;
 
+const int NUMFEEDS = 4;
+const int PORT[5] = {8500, 8501, 8502, 8503, 8504};
+const String VIDEO_ADDR = "192.168.1.2";
+const char* NETWORK_HOST = "192.168.1.1:8081";
+
 void control();
 void video();
 void network(ReadoutData*);
@@ -18,6 +23,7 @@ bool refresh = false;
 Controller* controller1;
 Controller* controller2;
 long controllerTime;
+mutex drawLock;
 
 ReadoutData readoutData;
 
@@ -25,19 +31,16 @@ int main(int argc, char* argv[]){
 	
 	controller1 = new Controller;
 	controller2 = new Controller;
-	
-	int videoPort;
-	videoPort = 8002;
-	
+
 	thread controlThread(control);
 	thread videoThread(video);
 	thread networkThread(network, &readoutData);
-	thread readoutThread(readout, &readoutData);
+//	thread readoutThread(readout, &readoutData);
 	
 	controlThread.join();
 	videoThread.join();
 	networkThread.join();
-	readoutThread.join();
+//	readoutThread.join();
 
 	return 0;
 }

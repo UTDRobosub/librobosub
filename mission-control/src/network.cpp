@@ -2,13 +2,10 @@
 #include <librobosub/robosub.h>
 #include "readout.h"
 #include "robotState.h"
-
+#include "main.h"
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wmissing-noreturn"
-const char* connectionAddr =
-	"192.168.1.1:8081"
-	//"0.0.0.0:8081"
-;
+const char* connectionAddr = NETWORK_HOST;
 
 using namespace robosub;
 using WsServer = robosub::ws::SocketServer<robosub::ws::WS>;
@@ -230,6 +227,7 @@ void network(ReadoutData* readout) {
             toRobot["motors"]["a1"] = convertArmValuesToRobot(-(double)current["controller2"]["ly"], 130);
             toRobot["motors"]["a2"] = convertArmRotationValuesToRobot((double)current["controller2"]["rx"], 20, 180);
             toRobot["motors"]["a3"] = int(std::max((double)current["controller2"]["t"], 0.0) * 65.0);
+            toRobot["motors"]["a4"] = int(30 + (int)current["controller2"]["start"] * 30.0);
 
             cout << toRobot["motors"] << endl;
 
