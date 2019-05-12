@@ -29,7 +29,6 @@ void drawFrame(int rows, int cols, char* framedata, float framesPerSecond, float
 
     imshow(String("Port ") + String(Util::toStringWithPrecision(port, 0)), frame);
     drawLock.unlock();
-    waitKey(1);
 
 }
 void drawError(int rows, int cols, int port) {
@@ -45,7 +44,6 @@ void drawError(int rows, int cols, int port) {
 
     imshow((String("Port ") + String(Util::toStringWithPrecision(port, 0))), bestframedraw);
     drawLock.unlock();
-    waitKey(100);
 }
 
 void cameraThread(int port, int index){
@@ -66,6 +64,11 @@ void cameraThread(int port, int index){
         if (err != 0) {
             cout << "Connection Error " << err << ": " << strerror(err) << endl;
             drawError(rows, cols, port);
+            char key = waitKey(1);
+            if(key == 'r'){
+                running = false;
+                continue;
+            }
         } else {
             cout << "Connected." << endl;
 
@@ -125,6 +128,8 @@ void cameraThread(int port, int index){
 
                                 if (waitingOnRestOfFrame == 0) {
                                     drawFrame(rows, cols, framedata, framesPerSecond, bitsPerSecond, port);
+                                    char key = waitKey(1);
+                                   
                                     cout << "DEbug" << endl;
                                 }
                             }
@@ -156,6 +161,8 @@ void cameraThread(int port, int index){
                         previousDataRemaining = waitingOnRestOfFrame;
                         if (waitingOnRestOfFrame == 0) {
                             drawFrame(rows, cols, framedata, framesPerSecond, bitsPerSecond, port);
+                            char key = waitKey(1);
+
                         }
 
                     }
