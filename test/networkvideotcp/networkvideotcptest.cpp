@@ -204,7 +204,12 @@ int main(int argc, char **argv) {
                 while (running) {
 
                     if (waitingOnRestOfFrame == 0) {
-                        int headerlen = client.receiveBuffer(headerdata, 16);
+                        int headerlen = -1;
+                        int ecode = client.receiveBuffer(headerdata, 16, headerlen);
+                        if (ecode != 0) {
+                            cout << "Recv error: " << ecode << " " << strerror(ecode) << endl;
+                            break;
+                        }
 
                         if (headerlen == 16) {
                             int ver1 = *(int *) (headerdata + 0);
@@ -229,7 +234,12 @@ int main(int argc, char **argv) {
 
                                 framedata = (char *) malloc(framedatalen);
 
-                                int recvdatalen = client.receiveBuffer(framedata, framedatalen);
+                                int recvdatalen = -1;
+                                int ecode = client.receiveBuffer(framedata, framedatalen, recvdatalen);
+                                if (ecode != 0) {
+                                    cout << "Recv error: " << ecode << " " << strerror(ecode) << endl;
+                                    break;
+                                }
 
                                 if (recvdatalen >= 0) {
                                     waitingOnRestOfFrame = framedatalen - recvdatalen;
@@ -242,8 +252,13 @@ int main(int argc, char **argv) {
                             }
                         }
                     } else {
-                        int recvdatalen = client.receiveBuffer(framedata + (framedatalen - waitingOnRestOfFrame),
-                                                               waitingOnRestOfFrame);
+                        int recvdatalen = -1;
+                        int ecode = client.receiveBuffer(framedata + (framedatalen - waitingOnRestOfFrame),
+                                                               waitingOnRestOfFrame, recvdatalen);
+                        if (ecode != 0) {
+                            cout << "Recv error: " << ecode << " " << strerror(ecode) << endl;
+                            break;
+                        }
 
                         if (recvdatalen >= 0) {
                             waitingOnRestOfFrame = waitingOnRestOfFrame - recvdatalen;
