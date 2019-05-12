@@ -9,11 +9,13 @@ const String ADDR = VIDEO_ADDR;
 const int TIMEOUT_LIMIT = 50;
 
 
-//void catchSignal(int signal) {
-//    running = false;
-//}
 
-void drawFrame(int rows, int cols, char* framedata, float framesPerSecond, float bitsPerSecond, int port) {
+void catchSignal(int signal) {
+
+    running = false;
+}
+
+void drawFrame(int rows, int cols, char* framedata, float framesPerSecond, float bitsPerSecond, int port, int index) {
     drawLock.lock();
     int framedatalen = rows * cols * 3;
     Mat frame = Mat(rows, cols, CV_8UC3, framedata);
@@ -28,8 +30,8 @@ void drawFrame(int rows, int cols, char* framedata, float framesPerSecond, float
     );
 
     imshow(String("Port ") + String(Util::toStringWithPrecision(port, 0)), frame);
+    videoFiles[index].write(frame);
     drawLock.unlock();
-
 }
 void drawError(int rows, int cols, int port) {
     drawLock.lock();
@@ -64,11 +66,8 @@ void cameraThread(int port, int index){
         if (err != 0) {
             cout << "Connection Error " << err << ": " << strerror(err) << endl;
             drawError(rows, cols, port);
-            char key = waitKey(1);
-            if(key == 'r'){
-                running = false;
-                continue;
-            }
+            waitKey(1);
+
         } else {
             cout << "Connected." << endl;
 
@@ -97,7 +96,7 @@ void cameraThread(int port, int index){
                         rows = *(int *) (headerdata + 8);
                         int none = *(int *) (headerdata + 12);
 
-                        cout<<cols<<" "<<rows<<endl;
+//                        cout<<cols<<" "<<rows<<endl;
 
                         if (ver1 == VERIFICATION_CODE) {
 
@@ -124,13 +123,26 @@ void cameraThread(int port, int index){
 
                             if (recvdatalen >= 0) {
                                 waitingOnRestOfFrame = framedatalen - recvdatalen;
-                                cout<<"waiting on 2 "<<waitingOnRestOfFrame<<endl;
+//                                cout<<"waiting on 2 "<<waitingOnRestOfFrame<<endl;
 
                                 if (waitingOnRestOfFrame == 0) {
-                                    drawFrame(rows, cols, framedata, framesPerSecond, bitsPerSecond, port);
-                                    char key = waitKey(1);
-                                   
-                                    cout << "DEbug" << endl;
+                                    if(!videoFiles[index].isOpened()){
+                                        cout << rows << " " << cols;
+
+                                        videoFiles[index] = VideoWriter(FILE_PREFIX+String(Util::toStringWithPrecision(PORT[index]))+"video.avi",cv::VideoWriter::fourcc('M','J','P','G'),10, Size(1280,720));
+                                        cout << "Created video file" << videoFiles[index].isOpened() << endl;
+                                    }
+                                    drawFrame(rows, cols, framedata, framesPerSecond, bitsPerSecond, port, index);
+                                    char c = waitKey(1);
+                                    if(c == 's'){
+                                        for(int i = 0; i < NUMFEEDS; i++) {
+                                            while(videoFiles[i].isOpened())
+                                                videoFiles[i].release();
+                                            cout << PORT[i] << "Saved file" <<  videoFiles[i].isOpened() << endl;
+                                        }
+                                        running = false;
+                                    }
+
                                 }
                             }
                         }
@@ -148,7 +160,7 @@ void cameraThread(int port, int index){
                     if (recvdatalen >= 0) {
                         waitingOnRestOfFrame = waitingOnRestOfFrame - recvdatalen;
 
-                        cout<<port << ": waiting on "<<waitingOnRestOfFrame<<endl;
+//                        cout<<port << ": waiting on "<<waitingOnRestOfFrame<<endl;
 
                         if(previousDataRemaining == waitingOnRestOfFrame){
                             timeoutCounter++;
@@ -160,9 +172,22 @@ void cameraThread(int port, int index){
                         }
                         previousDataRemaining = waitingOnRestOfFrame;
                         if (waitingOnRestOfFrame == 0) {
-                            drawFrame(rows, cols, framedata, framesPerSecond, bitsPerSecond, port);
-                            char key = waitKey(1);
+                            if(!videoFiles[index].isOpened()){
+                                cout << rows << " " << cols;
 
+                                videoFiles[index] = VideoWriter(FILE_PREFIX+String(Util::toStringWithPrecision(PORT[index]))+"video.avi",cv::VideoWriter::fourcc('M','J','P','G'),10, Size(1280,720));
+                                cout << "Created video file" << videoFiles[index].isOpened() << endl;
+                            }
+                            drawFrame(rows, cols, framedata, framesPerSecond, bitsPerSecond, port, index);
+                            char c = waitKey(1);
+                            if(c == 's'){
+                                for(int i = 0; i < NUMFEEDS; i++) {
+                                    while(videoFiles[i].isOpened())
+                                        videoFiles[i].release();
+                                    cout << PORT[i] << "Saved file" <<  videoFiles[i].isOpened() << endl;
+                                }
+                                running = false;
+                            }
                         }
 
                     }
@@ -179,7 +204,6 @@ void cameraThread(int port, int index){
 void video() {
 //    signal(SIGINT, catchSignal);
     thread cameraThreads[NUMFEEDS];
-    XInitThreads();
     for (int i = 0; i < NUMFEEDS; i++) {
         cameraThreads[i] = thread(cameraThread, PORT[i], i);
     }
@@ -187,5 +211,5 @@ void video() {
     for(int i = 0; i < NUMFEEDS; i++) {
         cameraThreads[i].join();
     }
-}
 
+}
