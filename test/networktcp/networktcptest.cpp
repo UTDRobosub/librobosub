@@ -59,8 +59,12 @@ int main(){
 		
 		while(true){
 			Time::waitMillis(10);
-			
-			recvbuflen = client.receiveBuffer(recvbuffer, 255);
+
+			int recvbuflen = -1;
+			int ecode = client.receiveBuffer(recvbuffer, 255, recvbuflen);
+			if (ecode != 0) {
+				cout << "BAD " << strerror(ecode) << endl;
+			}
 			recvbuffer[recvbuflen] = 0;
 			
 			cout<<recvbuffer<<endl;
