@@ -15,7 +15,6 @@ const String VIDEO_ADDR = "0.0.0.0";
 const char* NETWORK_HOST = "192.168.1.2:8081";
 
 void control();
-void video();
 void network(ReadoutData*);
 
 bool running = true;
@@ -33,12 +32,10 @@ int main(int argc, char* argv[]){
 	controller2 = new Controller;
 
 	thread controlThread(control);
-	thread videoThread(video);
 	thread networkThread(network, &readoutData);
 	thread readoutThread(readout, &readoutData);
 	
 	controlThread.join();
-	videoThread.join();
 	networkThread.join();
 	readoutThread.join();
 
