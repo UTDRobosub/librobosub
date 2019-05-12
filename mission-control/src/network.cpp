@@ -92,8 +92,8 @@ void send(shared_ptr<typename T::Connection> connection,
 			connectionState.lastSend = robosub::Time::millis();
 			
 			//check if better to send as compressed or uncompressed
-			//cout << current.toString().length() << " " << compressed.toString().length() << endl;
-			//cout << "sending" << current << endl;
+//			//cout << current.toString().length() << " " << compressed.toString().length() << endl;
+//			//cout << "sending" << current << endl;
 			if (!compress || current.toString().length() < compressed.toString().length())
 			{
 					//better to send uncompressed
@@ -107,7 +107,7 @@ void send(shared_ptr<typename T::Connection> connection,
 					connection->send(send_stream);
 			}
 	} catch (exception e) {
-			cout << "Failed to send to robot: " << e.what() << endl;
+//			cout << "Failed to send to robot: " << e.what() << endl;
 	}
 }
 
@@ -125,17 +125,17 @@ void network(ReadoutData* readout) {
 		clientConnectionData = toRobot;
 		clientConnectionState = ConnectionState();
 		clientConnectionState.lastSend = robosub::Time::millis();
-		cout << "Client: Opened connection" << endl;
+//		cout << "Client: Opened connection" << endl;
 		//convert current state to stream
 		auto send_stream = make_shared<WsClient::SendStream>();
 		*send_stream << clientConnectionData;
 		//send current state
 		connection->send(send_stream, [](const robosub::ws::error_code &ec) {
 			if(ec) {
-				cout << "Client: Error sending message. " <<
-						"Error: " << ec << ", error message: " << ec.message() << endl;
+//				cout << "Client: Error sending message. " <<
+//						"Error: " << ec << ", error message: " << ec.message() << endl;
 			}
-			});
+		});
 	};
 	
 	client.on_message = [&current,&clientConnectionState](shared_ptr<WsClient::Connection> connection, shared_ptr<WsClient::Message> message) {
@@ -144,7 +144,7 @@ void network(ReadoutData* readout) {
 			clientConnectionState.ready = true;
 			clientConnectionState.rtt = robosub::Time::millis() - clientConnectionState.lastSend;
 		} else {
-				//cout << "Client message: \"" << message_str << "\"" << endl;
+//				//cout << "Client message: \"" << message_str << "\"" << endl;
 				try
 				{
 						DataBucket temp = DataBucket(message_str);
@@ -154,7 +154,7 @@ void network(ReadoutData* readout) {
 						current["robotRam"] = Util::round<double>((double)temp["ram"]);
 						current["imu"] = temp["imu"];
 				} catch (exception e) {
-						cout << message_str << endl;
+//						cout << message_str << endl;
 				}
 				
 				auto send_stream = make_shared<WsClient::SendStream>();
@@ -166,13 +166,13 @@ void network(ReadoutData* readout) {
 	};
 	
 	client.on_close = [&clientConnected](shared_ptr<WsClient::Connection> /*connection*/, int status, const string & /*reason*/) {
-		cout << "Client: Closed connection with status code " << status << endl;
+//		cout << "Client: Closed connection with status code " << status << endl;
 		clientConnected = false;
 	};
 	
 	// See http://www.boost.org/doc/libs/1_55_0/doc/html/boost_asio/reference.html, Error Codes for error code meanings
 	client.on_error = [&clientConnected](shared_ptr<WsClient::Connection> /*connection*/, const robosub::ws::error_code &ec) {
-		cout << "Client: Error: " << ec << ", error message: " << ec.message() << endl;
+//		cout << "Client: Error: " << ec << ", error message: " << ec.message() << endl;
 		clientConnected = false;
 	};
 
@@ -180,7 +180,7 @@ void network(ReadoutData* readout) {
 		// Start WS-server
 		while(true){
 			client.start();
-			cout << "Not connected to robot" << endl;
+//			cout << "Not connected to robot" << endl;
 			robosub::Time::waitMillis(1000);
 		}
 	});
@@ -205,7 +205,7 @@ void network(ReadoutData* readout) {
 			
 			readout->valid = true;
 		} catch(exception e) {
-			cout<<"exception setting telemetry: "<< e.what() <<endl;
+//			cout<<"exception setting telemetry: "<< e.what() <<endl;
 			readout->valid = false;
 		}
 		
@@ -215,7 +215,7 @@ void network(ReadoutData* readout) {
 		
 		controller1->controllerDataBucket(current,"controller1");
 		controller2->controllerDataBucket(current,"controller2");
-//		cout << current["controller2"] << endl;
+////		cout << current["controller2"] << endl;
 //		toRobot["motors"] = current["motors"];
 		try {
             Mat x = robotState.motorValues(current["controller1"]["rx"],
@@ -231,10 +231,10 @@ void network(ReadoutData* readout) {
             toRobot["motors"]["a3"] = int(std::max((double)current["controller2"]["t"], 0.0) * 65.0);
             toRobot["motors"]["a4"] = int((int)current["controller2"]["start"] * 2400);
 
-            cout << toRobot["motors"] << endl;
+//            cout << toRobot["motors"] << endl;
 
 		} catch (exception e) {
-			cout<<"exception reading motor values: "<<e.what()<<endl;
+//			cout<<"exception reading motor values: "<<e.what()<<endl;
 		}
 
 		//send update to all active connections

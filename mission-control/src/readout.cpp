@@ -5,6 +5,8 @@
 #include <opencv2/opencv.hpp>
 #include <librobosub/timeutil.h>
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wmissing-noreturn"
 struct ContinuousPlotData{
 	float* dataPoints;
 	int queuePos;
@@ -81,6 +83,7 @@ struct ContinuousPlotGraphic{
 			series[i].data->putIntoSeries(cvplot::figure(figureName).series(series[i].seriesName));
 		}
 		cvplot::figure(figureName).showManualBounds(true, xmin, xmax, ymin, ymax);
+		waitKey(1);
 	}
 };
 
@@ -132,3 +135,5 @@ void readout(ReadoutData* data){
 		robosub::Time::waitMillis(10);
 	}
 }
+
+#pragma clang diagnostic pop

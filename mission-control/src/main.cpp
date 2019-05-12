@@ -9,9 +9,9 @@
 using namespace std;
 //using namespace robosub;
 
-const int NUMFEEDS = 1;
+const int NUMFEEDS = 2;
 const int PORT[5] = {8500, 8501, 8502, 8503, 8504};
-const String VIDEO_ADDR = "192.168.1.1";
+const String VIDEO_ADDR = "0.0.0.0";
 const char* NETWORK_HOST = "192.168.1.2:8081";
 
 void control();

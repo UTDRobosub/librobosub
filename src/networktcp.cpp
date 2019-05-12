@@ -1,4 +1,5 @@
 
+#include <iostream>
 #include "robosub/networktcp.h"
 
 namespace robosub{
@@ -90,6 +91,7 @@ namespace robosub{
 		
 		memset(&addr, 0, sizeof(addr));
 		addr.sin_family = AF_INET;
+//		addr.sin_addr.s_addr = inet_addr(saddr);
 		addr.sin_port = htons(port);
 
         struct timeval tv;
@@ -98,14 +100,19 @@ namespace robosub{
         setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof tv);
 		
 		if(inet_pton(AF_INET, saddr, &addr.sin_addr)<=0){
+		    cout << "E INET_PTON" << endl;
 			return NETWORKTCP_GETERROR;
 		}
+
+		cout << "TEST" << endl;
 		
 		if(connect(sock, (struct sockaddr*)&addr, sizeof(addr))<0){
+            cout << "E CONNECT" << endl;
 			return NETWORKTCP_GETERROR;
 		}
 		
 		connected = true;
+        cout << "CONNECT OK" << endl;
 
 		return 0;
 	}
@@ -116,14 +123,21 @@ namespace robosub{
 			closesocket(sock);
 		#else
 			close(sock);
-		#endif
-		
+        #endif
+
 		connected = false;
 	}
 	
-	int NetworkTcpClient::receiveBuffer(char* data, int maxlen){
+	int NetworkTcpClient::receiveBuffer(char* data, int maxlen, int& numread){
 		if(!connected){ return -1; }
-		return read(sock, data, maxlen);
+		numread = recv(sock, data, maxlen, 0);
+		if (numread == -1) {
+		    int ecode = NETWORKTCP_GETERROR;
+		    if (ecode != 11) {
+                return ecode;
+            }
+		}
+		return 0;
 	}
 	
 	int NetworkTcpClient::sendBuffer(char* data, int datalen){

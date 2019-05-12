@@ -61,6 +61,12 @@ target_link_libraries(mission-control ${LIBRARY_NAME} ${SDL_LIBRARY})
 target_include_directories(mission-control PRIVATE ${Boost_INCLUDE_DIR} mission-control/include mission-control/lib)
 target_compile_features(mission-control PRIVATE cxx_range_for)
 
+file(GLOB VIDEOCONTROL_SOURCES video-control/src/*.cpp)
+add_executable(video-control ${VIDEOCONTROL_SOURCES})
+target_link_libraries(video-control ${LIBRARY_NAME})
+target_include_directories(video-control PRIVATE ${Boost_INCLUDE_DIR} video-control/include)
+target_compile_features(video-control PRIVATE cxx_range_for)
+
 # Onboard Control System
 file(GLOB ONBOARD_SOURCES onboard/src/*.cpp)
 add_executable(onboard-control ${ONBOARD_SOURCES})

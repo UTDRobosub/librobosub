@@ -57,11 +57,11 @@ namespace robosub{
 	//Client
 	
 	class NetworkTcpClient{
-		bool connected;
+		bool connected = false;
 		
 		sockaddr_in addr;
 		int sock;
-		
+
 		public:
 		
 		NetworkTcpClient(){
@@ -73,7 +73,7 @@ namespace robosub{
 		
 		int connectToServer(char* saddr, int port);
 		int disconnectFromServer();
-		int receiveBuffer(char* data, int maxlen);
+		int receiveBuffer(char* data, int maxlen, int& numread);
 		int sendBuffer(char* data, int datalen);
 	};
 }

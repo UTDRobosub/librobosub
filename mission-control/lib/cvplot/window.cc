@@ -294,6 +294,7 @@ namespace cvplot {
         if (dirty_ && buffer_ != NULL) {
             auto b = (cv::Mat *)buffer_;
             if (b->cols > 0 && b->rows > 0) {
+
                 drawLock.lock();
                 cv::Mat mat;
                 if (show_cursor_) {
@@ -312,6 +313,7 @@ namespace cvplot {
 #if CV_MAJOR_VERSION > 2
                 cv::setWindowTitle(name_, title_);
 #endif
+
                 cv::imshow(name_.c_str(), *b);
                 cv::setMouseCallback(name_.c_str(), mouse_callback, this);
                 drawLock.unlock();
@@ -367,15 +369,12 @@ namespace cvplot {
 // Util
 
     void Util::sleep(float seconds) {
-        drawLock.lock();
         cv::waitKey(std::max(1, (int)(seconds * 1000)));
-        drawLock.unlock();
+
     }
 
     char Util::key(float timeout) {
-        drawLock.lock();
         char c = cv::waitKey(std::max(0, (int)(timeout * 1000)));
-        drawLock.unlock();
         return c;
     }
 
@@ -383,9 +382,9 @@ namespace cvplot {
         std::stringstream stream;
         auto ms = (timeout > 0 ? std::max(1, (int)(timeout * 1000)) : -1);
         while (ms != 0) {
-            drawLock.lock();
+
             auto key = cv::waitKey(1);
-            drawLock.unlock();
+
             if (key == -1) {
                 ms--;
                 continue;
