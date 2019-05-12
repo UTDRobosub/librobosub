@@ -76,8 +76,12 @@ namespace robosub{
 	
 	int NetworkTcpServer::sendBuffer(char* data, int datalen){
 		if(!connected){ return -1; }
-		send(client, data, datalen, 0);
-		
+		int numsent = send(client, data, datalen, 0);
+
+		if (numsent == -1) {
+			return NETWORKTCP_GETERROR;
+		}
+
 		return 0;
 	}
 	
