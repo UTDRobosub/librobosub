@@ -113,6 +113,8 @@ int main(int argc, char **argv) {
 	//4 bytes for rows
 	//framelen bytes for image data
 
+    NetworkTcpServer server;
+
 	while(mainloop) {
 
 	    running = true;
@@ -122,7 +124,8 @@ int main(int argc, char **argv) {
             char *senddata = (char *) malloc(datalen);
             Mat frame1;
 
-            NetworkTcpServer server;
+            cout << "Unbinding from port" << endl;
+            server.unbindFromPort();
 
             cout << "Binding to port." << endl;
             server.bindToPort(port);
@@ -148,10 +151,14 @@ int main(int argc, char **argv) {
                 int segmentsize = datalen / 100;
                 int numsegments = datalen / segmentsize + 1;
                 for (int i = 0; i < numsegments; i++) {
-                    server.sendBuffer(senddata + segmentsize * i, min(segmentsize, datalen - segmentsize * i));
+                    int ecode = server.sendBuffer(senddata + segmentsize * i, min(segmentsize, datalen - segmentsize * i));
+                    if (ecode != 0) {
+                        cout << "Send error: " << ecode << " " << strerror(ecode) << endl;
+                        break;
+                    }
+
                     robosub::Time::waitMicros(100);
                 }
-                //server.sendBuffer(senddata, datalen);
 
                 uploadBitsPerSecond = ((float) cam->getFrameRate()) * ((float) ((rows * cols * 3 + 16) * 8));
 
