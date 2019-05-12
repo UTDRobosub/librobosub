@@ -102,10 +102,10 @@ void motor_setup() {
 	servo10.writeMicroseconds(1500); // send "stop" signal to ESC.
 	servo9.writeMicroseconds(1500); // send "stop" signal to ESC.
 	servo8.writeMicroseconds(1500);
-	servo2.write(30);
-	servo3.write(30);
-	servo4.write(30);
-	servo7.write(30);
+	servo2.write(0);
+	servo3.write(0);
+	servo4.write(0);
+	servo7.writeMicroseconds(0);
 	delay(1000); // delay to allow the ESC to recognize the stopped signal
 }
 
@@ -146,7 +146,7 @@ struct MotorValues {
 	short a1; //0 to 130 degrees
 	short a2; //0 to 180 degrees
 	short a3; //0 to 65 degrees
-	short a4; //? to ? degrees
+	short a4; //0 to 2400 ms
 };
 
 MotorValues motorvals;
@@ -160,7 +160,7 @@ void motor_update(){
 	servo2.write(motorvals.a1);              //arm motors
 	servo3.write(motorvals.a2);              
 	servo4.write(motorvals.a3);              
-	servo7.write(motorvals.a4);              
+	servo7.writeMicroseconds(motorvals.a4);              
 }
 
 void receiveMessageCallback(void* instance, char* message, int length, bool needsresponse, char** response, int* responselength){
