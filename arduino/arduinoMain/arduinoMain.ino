@@ -105,7 +105,7 @@ void motor_setup() {
 	servo2.write(0);
 	servo3.write(0);
 	servo4.write(0);
-	servo7.writeMicroseconds(0);
+	servo7.writeMicroseconds(2400);
 	delay(1000); // delay to allow the ESC to recognize the stopped signal
 }
 
@@ -179,7 +179,7 @@ void setup(){
 	motorvals.a1 = 0;
 	motorvals.a2 = 0;
 	motorvals.a3 = 0;
-	motorvals.a4 = 0;
+	motorvals.a4 = 2400;
 	
 	serial_setup();
 	motor_setup();
