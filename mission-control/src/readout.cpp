@@ -3,7 +3,7 @@
 #include "../include/cvplot/cvplot.h"
 #include "main.h"
 #include <opencv2/opencv.hpp>
-#include <librobosub/timeutil.h>
+#include <robosub/timeutil.h>
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wmissing-noreturn"

@@ -1,4 +1,3 @@
-
 #pragma once
 
 #include <stdio.h>
@@ -6,8 +5,6 @@
 #include <robosub/telemetry.h>
 #include <robosub/serial.h>
 #include <robosub/util.h>
-
-using namespace robosub;
 
 void initRobotState();
 void updateRobotTelemetry(DataBucket& state);

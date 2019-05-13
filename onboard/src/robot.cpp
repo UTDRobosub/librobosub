@@ -1,3 +1,4 @@
+#include "main.h"
 #include "robot.h"
 
 char imuLastReceivedMessage[256];

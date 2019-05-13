@@ -1,5 +1,5 @@
 
-#include <librobosub/robosub.h>
+#include <robosub/robosub.h>
 #include "readout.h"
 #include "robotState.h"
 #include "main.h"

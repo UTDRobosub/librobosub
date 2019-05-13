@@ -1,18 +1,8 @@
-#include <stdio.h>
-#include <stdlib.h> //rand
-
+#include "main.h"
 #include "robot.h"
-
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wmissing-noreturn"
-
-using namespace std;
-using namespace robosub;
 
 using WsServer = robosub::ws::SocketServer<robosub::ws::WS>;
 using WsClient = robosub::ws::SocketClient<robosub::ws::WS>;
-
-const int SERVER_PORT = 8081;
 
 struct ConnectionState {
 public:
@@ -29,9 +19,7 @@ void handleMissionControlState(DataBucket& state) {
 
 }
 
-int main(int argc, char** argv) {
-    initRobotState();
-
+void server() {
     //prepare buckets to store data
     DataBucket current;
     DataBucket receivedState;
@@ -144,8 +132,8 @@ int main(int argc, char** argv) {
     int i = 0;
     Telemetry telemetry = Telemetry();
 
-    while(true) {
-        current["index"] = i++ % 1000; //force refresh approx every second
+    while(running) {
+//        current["index"] = i++ % 1000; //force refresh approx every second
         current["cpu"] = Util::round<double>(telemetry.getSystemCPUUsage(), 0);
         current["ram"] = Util::round<double>(telemetry.getSystemRAMUsage(), 0);
 
@@ -203,5 +191,3 @@ int main(int argc, char** argv) {
 
     server_thread.join();
 }
-
-#pragma clang diagnostic pop

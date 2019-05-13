@@ -1,6 +1,6 @@
 //controller.cpp
 
-#include <librobosub/robosub.h>
+#include <robosub/robosub.h>
 #include <SDL/SDL.h>
 #include "controller.h"
 #include "robotState.h"

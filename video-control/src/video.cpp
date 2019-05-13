@@ -179,7 +179,7 @@ void cameraThread(int port, int index){
 void video() {
 //    signal(SIGINT, catchSignal);
     thread cameraThreads[NUMFEEDS];
-    XInitThreads();
+//    XInitThreads();
     for (int i = 0; i < NUMFEEDS; i++) {
         cameraThreads[i] = thread(cameraThread, PORT[i], i);
     }

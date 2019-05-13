@@ -2,12 +2,12 @@
 #include <SDL/SDL.h>
 #include <iostream>
 #include <thread>
-#include <librobosub/robosub.h>
+#include <robosub/robosub.h>
 #include "main.h"
 #include "readout.h"
 
 using namespace std;
-//using namespace robosub;
+using namespace robosub;
 
 const int NUMFEEDS = 2;
 const int PORT[5] = {8500, 8501, 8502, 8503, 8504};

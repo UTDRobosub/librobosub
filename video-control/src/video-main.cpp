@@ -1,6 +1,6 @@
 #include <iostream>
 #include <thread>
-#include <librobosub/robosub.h>
+#include <robosub/robosub.h>
 #include "video-main.h"
 
 using namespace std;
