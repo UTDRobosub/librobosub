@@ -95,7 +95,8 @@ int main(int argc, char **argv) {
 			cout<<"Camera failed to open."<<endl;
 			return -1;
 		}
-		frameSize = cam->setFrameSize(frameSize);
+//		frameSize = cam->setFrameSize(frameSize);
+        frameSize = cam->getFrameSize();
 		cout << frameSize << endl;
 	} else {
 		screenRes = Util::getDesktopResolution();

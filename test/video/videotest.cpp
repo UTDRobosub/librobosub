@@ -6,7 +6,7 @@ using namespace std;
 using namespace robosub;
 bool running = true;
 
-int CAMERA_INDEX = 1;
+int CAMERA_INDEX = 0;
 double EPSILON_APPROX_TOLERANCE_FACTOR = 0.0425;
 double MIN_AREA = 50;
 double MAX_AREA = 8220;

@@ -21,7 +21,7 @@ int main(int argc, char* argv[]){
 
     const String keys =
             "{help ?   |                    | print this message     }"
-            "{p        | /media/v-patel/USb | video file prefix      }";
+            "{p        | /media/v-patel/uSB | video file prefix      }";
 
     CommandLineParser parser(argc, argv, keys);
     parser.about("Robosub Video Control");
