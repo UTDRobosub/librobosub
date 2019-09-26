@@ -157,7 +157,7 @@ void cameraThread(int port, int index) {
                     if (recvdatalen >= 0) {
                         waitingOnRestOfFrame = waitingOnRestOfFrame - recvdatalen;
 
-//                        cout<<port << ": waiting on "<<waitingOnRestOfFrame<<endl;
+                        cout<<port << ": waiting on "<<waitingOnRestOfFrame<<endl;
 
                         if (previousDataRemaining == waitingOnRestOfFrame) {
                             timeoutCounter++;
