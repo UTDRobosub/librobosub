@@ -6,7 +6,7 @@ using namespace std;
 using namespace robosub;
 bool running = true;
 
-int CAMERA_INDEX = 0;
+int CAMERA_INDEX = 2;
 double EPSILON_APPROX_TOLERANCE_FACTOR = 0.0425;
 double MIN_AREA = 50;
 double MAX_AREA = 8220;
@@ -71,7 +71,6 @@ int getAverageCount(deque<int> previousCounts, int nextCount, int lookBack) {
 int main(int argc, char **argv) {
     //catch signal
     signal(SIGINT, catchSignal);
-
     namedWindow("Input");
     namedWindow("Output");
 

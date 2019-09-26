@@ -6,9 +6,9 @@
 using namespace std;
 //using namespace robosub;
 
-const int NUMFEEDS = 1;
+const int NUMFEEDS = 3;
 const int PORT[5] = {8500, 8501, 8502, 8503, 8504};
-const String VIDEO_ADDR = "192.168.1.2";
+const String VIDEO_ADDR = "192.168.1.1";
 String FILE_PREFIX;
 void video();
 
