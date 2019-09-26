@@ -4,28 +4,29 @@
 #include <SDL/SDL.h>
 #include "controller.h"
 #include "robotState.h"
+
 using namespace std;
 using namespace robosub;
 
 
-void Controller::setJoystick(SDL_Joystick* j){
+void Controller::setJoystick(SDL_Joystick *j) {
     joystick = j;
 }
 
-int Controller::mode(){
-    if(joystick == nullptr)
+int Controller::mode() {
+    if (joystick == nullptr)
         return 0;
-    if(SDL_JoystickNumAxes(joystick) == 4)      //D
+    if (SDL_JoystickNumAxes(joystick) == 4)      //D
         return 1;
-    if(SDL_JoystickNumAxes(joystick) == 6)      //X
+    if (SDL_JoystickNumAxes(joystick) == 6)      //X
         return 2;
 }
 
-void Controller::controllerDataBucket(DataBucket &b, String s){
+void Controller::controllerDataBucket(DataBucket &b, String s) {
 
     b[s] = {};
 
-    switch(mode()) {
+    switch (mode()) {
         case 1:
             b[s]["connected"] = 1;
             b[s]["mode"] = "D";

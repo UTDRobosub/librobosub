@@ -19,8 +19,7 @@ using namespace cv;
 const float inlier_threshold = 2.5f; // Distance threshold to identify inliers
 const float nn_match_ratio = 0.8f;   // Nearest neighbor matching ratio
 
-int main(void)
-{
+int main(void) {
     Mat img1 = imread("../data/graf1.png", IMREAD_GRAYSCALE);
     Mat img2 = imread("../data/graf3.png", IMREAD_GRAYSCALE);
 
@@ -45,7 +44,7 @@ int main(void)
     latch->compute(img2, kpts2, desc2);
 
     BFMatcher matcher(NORM_HAMMING);
-    vector< vector<DMatch> > nn_matches;
+    vector<vector<DMatch> > nn_matches;
     matcher.knnMatch(desc1, desc2, nn_matches, 2);
 
     vector<KeyPoint> matched1, matched2, inliers1, inliers2;
@@ -69,7 +68,7 @@ int main(void)
         col = homography * col;
         col /= col.at<double>(2);
         double dist = sqrt(pow(col.at<double>(0) - matched2[i].pt.x, 2) +
-            pow(col.at<double>(1) - matched2[i].pt.y, 2));
+                           pow(col.at<double>(1) - matched2[i].pt.y, 2));
 
         if (dist < inlier_threshold) {
             int new_i = static_cast<int>(inliers1.size());

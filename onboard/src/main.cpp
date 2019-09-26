@@ -7,9 +7,10 @@ using namespace robosub;
 bool running = true;
 
 void server();
+
 void startVideo();
 
-int main(int argc, char** argv) {
+int main(int argc, char **argv) {
     initRobotState();
 
     //start server thread

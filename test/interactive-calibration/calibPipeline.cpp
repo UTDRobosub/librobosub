@@ -13,56 +13,49 @@ using namespace calib;
 
 #define CAP_DELAY 10
 
-cv::Size CalibPipeline::getCameraResolution()
-{
+cv::Size CalibPipeline::getCameraResolution() {
     mCapture.set(cv::CAP_PROP_FRAME_WIDTH, 10000);
     mCapture.set(cv::CAP_PROP_FRAME_HEIGHT, 10000);
-    int w = (int)mCapture.get(cv::CAP_PROP_FRAME_WIDTH);
-    int h = (int)mCapture.get(cv::CAP_PROP_FRAME_HEIGHT);
-    return cv::Size(w,h);
+    int w = (int) mCapture.get(cv::CAP_PROP_FRAME_WIDTH);
+    int h = (int) mCapture.get(cv::CAP_PROP_FRAME_HEIGHT);
+    return cv::Size(w, h);
 }
 
 CalibPipeline::CalibPipeline(captureParameters params) :
-    mCaptureParams(params)
-{
+        mCaptureParams(params) {
 
 }
 
-PipelineExitStatus CalibPipeline::start(std::vector<cv::Ptr<FrameProcessor> > processors)
-{
-    if(mCaptureParams.source == Camera && !mCapture.isOpened())
-    {
+PipelineExitStatus CalibPipeline::start(std::vector<cv::Ptr<FrameProcessor> > processors) {
+    if (mCaptureParams.source == Camera && !mCapture.isOpened()) {
         mCapture.open(mCaptureParams.camID);
         cv::Size maxRes = getCameraResolution();
         cv::Size neededRes = mCaptureParams.cameraResolution;
 
-        if(maxRes.width < neededRes.width) {
-            double aR = (double)maxRes.width / maxRes.height;
+        if (maxRes.width < neededRes.width) {
+            double aR = (double) maxRes.width / maxRes.height;
             mCapture.set(cv::CAP_PROP_FRAME_WIDTH, neededRes.width);
-            mCapture.set(cv::CAP_PROP_FRAME_HEIGHT, neededRes.width/aR);
-        }
-        else if(maxRes.height < neededRes.height) {
-            double aR = (double)maxRes.width / maxRes.height;
+            mCapture.set(cv::CAP_PROP_FRAME_HEIGHT, neededRes.width / aR);
+        } else if (maxRes.height < neededRes.height) {
+            double aR = (double) maxRes.width / maxRes.height;
             mCapture.set(cv::CAP_PROP_FRAME_HEIGHT, neededRes.height);
-            mCapture.set(cv::CAP_PROP_FRAME_WIDTH, neededRes.height*aR);
-        }
-        else {
+            mCapture.set(cv::CAP_PROP_FRAME_WIDTH, neededRes.height * aR);
+        } else {
             mCapture.set(cv::CAP_PROP_FRAME_HEIGHT, neededRes.height);
             mCapture.set(cv::CAP_PROP_FRAME_WIDTH, neededRes.width);
         }
         mCapture.set(cv::CAP_PROP_AUTOFOCUS, 0);
-    }
-    else if (mCaptureParams.source == File && !mCapture.isOpened())
+    } else if (mCaptureParams.source == File && !mCapture.isOpened())
         mCapture.open(mCaptureParams.videoFileName);
-    mImageSize = cv::Size((int)mCapture.get(cv::CAP_PROP_FRAME_WIDTH), (int)mCapture.get(cv::CAP_PROP_FRAME_HEIGHT));
+    mImageSize = cv::Size((int) mCapture.get(cv::CAP_PROP_FRAME_WIDTH), (int) mCapture.get(cv::CAP_PROP_FRAME_HEIGHT));
 
-    if(!mCapture.isOpened())
+    if (!mCapture.isOpened())
         throw std::runtime_error("Unable to open video source");
 
     cv::Mat frame, processedFrame;
-    while(mCapture.grab()) {
+    while (mCapture.grab()) {
         mCapture.retrieve(frame);
-        if(mCaptureParams.flipVertical)
+        if (mCaptureParams.flipVertical)
             cv::flip(frame, frame, -1);
 
         frame.copyTo(processedFrame);
@@ -73,9 +66,9 @@ PipelineExitStatus CalibPipeline::start(std::vector<cv::Ptr<FrameProcessor> > pr
 //        cv::resize(processedFrame, processedFrame, cv::Size(frameSize.width * 2, frameSize.height * 2));
 
         cv::imshow(mainWindowName, processedFrame);
-        char key = (char)cv::waitKey(CAP_DELAY);
+        char key = (char) cv::waitKey(CAP_DELAY);
 
-        if(key == 27) // esc
+        if (key == 27) // esc
             return Finished;
         else if (key == 114) // r
             return DeleteLastFrame;
@@ -89,14 +82,13 @@ PipelineExitStatus CalibPipeline::start(std::vector<cv::Ptr<FrameProcessor> > pr
             return SwitchVisualisation;
 
         for (std::vector<cv::Ptr<FrameProcessor> >::iterator it = processors.begin(); it != processors.end(); ++it)
-            if((*it)->isProcessed())
+            if ((*it)->isProcessed())
                 return Calibrate;
     }
 
     return Finished;
 }
 
-cv::Size CalibPipeline::getImageSize() const
-{
+cv::Size CalibPipeline::getImageSize() const {
     return mImageSize;
 }

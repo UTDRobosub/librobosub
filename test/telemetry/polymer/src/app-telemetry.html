@@ -185,7 +185,7 @@
         ws.onopen = (evt) => {
           // ws.send("hello");
           this.set("status", "Connected");
-        }
+        };
         ws.onclose = function (event) {
           console.error("Connection lost due to error", event.code);
           self.set("status", "Connection lost");

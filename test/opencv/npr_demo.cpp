@@ -26,27 +26,23 @@
 using namespace std;
 using namespace cv;
 
-int main(int argc, char* argv[])
-{
+int main(int argc, char *argv[]) {
     cv::CommandLineParser parser(argc, argv, "{help h||show help message}{@image||input image}");
-    if (parser.has("help"))
-    {
+    if (parser.has("help")) {
         parser.printMessage();
         exit(0);
     }
-    if (parser.get<string>("@image").empty())
-    {
+    if (parser.get<string>("@image").empty()) {
         parser.printMessage();
         exit(0);
     }
 
     Mat I = imread(parser.get<string>("@image"));
 
-    int num,type;
+    int num, type;
 
-    if(I.empty())
-    {
-        cout <<  "Image not found" << endl;
+    if (I.empty()) {
+        cout << "Image not found" << endl;
         exit(0);
     }
 
@@ -71,33 +67,26 @@ int main(int argc, char* argv[])
 
     Mat img;
 
-    if(num == 1)
-    {
+    if (num == 1) {
         cout << endl;
         cout << "Press 1 for Normalized Convolution Filter and 2 for Recursive Filter: ";
 
         cin >> type;
 
-        edgePreservingFilter(I,img,type);
-        imshow("Edge Preserve Smoothing",img);
+        edgePreservingFilter(I, img, type);
+        imshow("Edge Preserve Smoothing", img);
 
-    }
-    else if(num == 2)
-    {
-        detailEnhance(I,img);
-        imshow("Detail Enhanced",img);
-    }
-    else if(num == 3)
-    {
+    } else if (num == 2) {
+        detailEnhance(I, img);
+        imshow("Detail Enhanced", img);
+    } else if (num == 3) {
         Mat img1;
-        pencilSketch(I,img1, img, 10 , 0.1f, 0.03f);
-        imshow("Pencil Sketch",img1);
-        imshow("Color Pencil Sketch",img);
-    }
-    else if(num == 4)
-    {
-        stylization(I,img);
-        imshow("Stylization",img);
+        pencilSketch(I, img1, img, 10, 0.1f, 0.03f);
+        imshow("Pencil Sketch", img1);
+        imshow("Color Pencil Sketch", img);
+    } else if (num == 4) {
+        stylization(I, img);
+        imshow("Stylization", img);
     }
     waitKey(0);
 }

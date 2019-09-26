@@ -9,7 +9,9 @@
 #include <opencv2/ccalib/omnidir.hpp>
 
 #ifdef HAVE_OPENCV_ARUCO
+
 #include <opencv2/aruco/charuco.hpp>
+
 #endif
 
 #include <string>
@@ -27,7 +29,7 @@
 
 using namespace calib;
 
-const std::string keys  =
+const std::string keys =
         "{v        |         | Input from video file }"
         "{ci       | 0       | Default camera id }"
         "{flip     | false   | Vertical flip of input frames }"
@@ -44,8 +46,7 @@ const std::string keys  =
         "{pf       | defaultConfig.xml| Advanced application parameters}"
         "{help     |         | Print help}";
 
-bool calib::showOverlayMessage(const std::string& message)
-{
+bool calib::showOverlayMessage(const std::string &message) {
 #ifdef HAVE_QT
     cv::displayOverlay(mainWindowName, message, OVERLAY_DELAY);
     return true;
@@ -55,21 +56,18 @@ bool calib::showOverlayMessage(const std::string& message)
 #endif
 }
 
-static void deleteButton(int, void* data)
-{
-    (static_cast<cv::Ptr<calibDataController>*>(data))->get()->deleteLastFrame();
+static void deleteButton(int, void *data) {
+    (static_cast<cv::Ptr<calibDataController> *>(data))->get()->deleteLastFrame();
     calib::showOverlayMessage("Last frame deleted");
 }
 
-static void deleteAllButton(int, void* data)
-{
-    (static_cast<cv::Ptr<calibDataController>*>(data))->get()->deleteAllData();
+static void deleteAllButton(int, void *data) {
+    (static_cast<cv::Ptr<calibDataController> *>(data))->get()->deleteAllData();
     calib::showOverlayMessage("All frames deleted");
 }
 
-static void saveCurrentParamsButton(int, void* data)
-{
-    if((static_cast<cv::Ptr<calibDataController>*>(data))->get()->saveCurrentCameraParameters())
+static void saveCurrentParamsButton(int, void *data) {
+    if ((static_cast<cv::Ptr<calibDataController> *>(data))->get()->saveCurrentCameraParameters())
         calib::showOverlayMessage("Calibration parameters saved");
 }
 
@@ -89,17 +87,16 @@ static void undistortButton(int state, void* data)
 }
 #endif //HAVE_QT
 
-int main(int argc, char** argv)
-{
+int main(int argc, char **argv) {
     cv::CommandLineParser parser(argc, argv, keys);
-    if(parser.has("help")) {
+    if (parser.has("help")) {
         parser.printMessage();
         return 0;
     }
     std::cout << consoleHelp << std::endl;
     parametersController paramsController;
 
-    if(!paramsController.loadFromParser(parser))
+    if (!paramsController.loadFromParser(parser))
         return 0;
 
     captureParameters capParams = paramsController.getCaptureParameters();
@@ -110,25 +107,27 @@ int main(int argc, char** argv)
                                                " Consider usage of another calibration pattern\n");
 #endif
 
-    cv::TermCriteria solverTermCrit = cv::TermCriteria(cv::TermCriteria::COUNT+cv::TermCriteria::EPS,
+    cv::TermCriteria solverTermCrit = cv::TermCriteria(cv::TermCriteria::COUNT + cv::TermCriteria::EPS,
                                                        intParams.solverMaxIters, intParams.solverEps);
     cv::Ptr<calibrationData> globalData(new calibrationData);
-    if(!parser.has("v")) globalData->imageSize = capParams.cameraResolution;
+    if (!parser.has("v")) globalData->imageSize = capParams.cameraResolution;
 
     int calibrationFlags = 0;
-    if(intParams.fastSolving) calibrationFlags |= cv::CALIB_USE_QR;
+    if (intParams.fastSolving) calibrationFlags |= cv::CALIB_USE_QR;
     cv::Ptr<calibController> controller(new calibController(globalData, calibrationFlags,
-                                                         parser.get<bool>("ft"), capParams.minFramesNum, capParams.calibType, capParams.board));
+                                                            parser.get<bool>("ft"), capParams.minFramesNum,
+                                                            capParams.calibType, capParams.board));
     cv::Ptr<calibDataController> dataController(new calibDataController(globalData, capParams.maxFramesNum,
-                                                                     intParams.filterAlpha, capParams.calibType));
+                                                                        intParams.filterAlpha, capParams.calibType));
     dataController->setParametersFileName(parser.get<std::string>("of"));
 
     cv::Ptr<FrameProcessor> capProcessor, showProcessor;
     capProcessor = cv::Ptr<FrameProcessor>(new CalibProcessor(globalData, capParams));
-    showProcessor = cv::Ptr<FrameProcessor>(new ShowProcessor(globalData, controller, capParams.board, capParams.calibType));
+    showProcessor = cv::Ptr<FrameProcessor>(
+            new ShowProcessor(globalData, controller, capParams.board, capParams.calibType));
 
-    if(parser.get<std::string>("vis").find("window") == 0) {
-        static_cast<ShowProcessor*>(showProcessor.get())->setVisualizationMode(Window);
+    if (parser.get<std::string>("vis").find("window") == 0) {
+        static_cast<ShowProcessor *>(showProcessor.get())->setVisualizationMode(Window);
         cv::namedWindow(gridWindowName);
         cv::moveWindow(gridWindowName, 1280, 500);
     }
@@ -154,57 +153,57 @@ int main(int argc, char** argv)
 #endif //HAVE_QT
     try {
         bool pipelineFinished = false;
-        while(!pipelineFinished)
-        {
+        while (!pipelineFinished) {
             PipelineExitStatus exitStatus = pipeline->start(processors);
             if (exitStatus == Finished) {
-                if(controller->getCommonCalibrationState())
+                if (controller->getCommonCalibrationState())
                     saveCurrentParamsButton(0, &dataController);
                 pipelineFinished = true;
                 continue;
-            }
-            else if (exitStatus == Calibrate) {
+            } else if (exitStatus == Calibrate) {
 
                 dataController->rememberCurrentParameters();
                 globalData->imageSize = pipeline->getImageSize();
                 calibrationFlags = controller->getNewFlags();
 
-                if((capParams.board != chAruco) && (capParams.calibType == Pinhole)) {
+                if ((capParams.board != chAruco) && (capParams.calibType == Pinhole)) {
                     globalData->totalAvgErr =
                             cv::calibrateCamera(globalData->objectPoints, globalData->imagePoints,
-                                                    globalData->imageSize, globalData->cameraMatrix,
-                                                    globalData->distCoeffs, cv::noArray(), cv::noArray(),
-                                                    globalData->stdDeviations, cv::noArray(), globalData->perViewErrors,
-                                                    calibrationFlags, solverTermCrit);
-                }
-                else if (capParams.calibType == Fisheye) {
-                  globalData->totalAvgErr =
-                    cv::fisheye::calibrate(globalData->objectPoints, globalData->imagePoints,
-                                          globalData->imageSize, globalData->cameraMatrix,
-                                          globalData->distCoeffs, cv::noArray(), cv::noArray(),
-                                          0, solverTermCrit);
-                }
-                else if (capParams.calibType == Omni) {
+                                                globalData->imageSize, globalData->cameraMatrix,
+                                                globalData->distCoeffs, cv::noArray(), cv::noArray(),
+                                                globalData->stdDeviations, cv::noArray(), globalData->perViewErrors,
+                                                calibrationFlags, solverTermCrit);
+                } else if (capParams.calibType == Fisheye) {
+                    globalData->totalAvgErr =
+                            cv::fisheye::calibrate(globalData->objectPoints, globalData->imagePoints,
+                                                   globalData->imageSize, globalData->cameraMatrix,
+                                                   globalData->distCoeffs, cv::noArray(), cv::noArray(),
+                                                   0, solverTermCrit);
+                } else if (capParams.calibType == Omni) {
                     globalData->totalAvgErr =
                             cv::omnidir::calibrate(globalData->objectPoints, globalData->imagePoints,
-                                                    globalData->imageSize, globalData->cameraMatrix,
-                                                    globalData->omniXi, globalData->distCoeffs, cv::noArray(), cv::noArray(),
-                                                    0, solverTermCrit);
-                }
-                else if (capParams.board == chAruco){
+                                                   globalData->imageSize, globalData->cameraMatrix,
+                                                   globalData->omniXi, globalData->distCoeffs, cv::noArray(),
+                                                   cv::noArray(),
+                                                   0, solverTermCrit);
+                } else if (capParams.board == chAruco) {
 #ifdef HAVE_OPENCV_ARUCO
                     cv::Ptr<cv::aruco::Dictionary> dictionary =
-                            cv::aruco::getPredefinedDictionary(cv::aruco::PREDEFINED_DICTIONARY_NAME(capParams.charucoDictName));
+                            cv::aruco::getPredefinedDictionary(
+                                    cv::aruco::PREDEFINED_DICTIONARY_NAME(capParams.charucoDictName));
                     cv::Ptr<cv::aruco::CharucoBoard> charucoboard =
-                                cv::aruco::CharucoBoard::create(capParams.boardSize.width, capParams.boardSize.height,
-                                                                capParams.charucoSquareLenght, capParams.charucoMarkerSize, dictionary);
+                            cv::aruco::CharucoBoard::create(capParams.boardSize.width, capParams.boardSize.height,
+                                                            capParams.charucoSquareLenght, capParams.charucoMarkerSize,
+                                                            dictionary);
 
                     globalData->totalAvgErr =
-                          cv::aruco::calibrateCameraCharuco(globalData->allCharucoCorners, globalData->allCharucoIds,
-                             charucoboard, globalData->imageSize,
-                             globalData->cameraMatrix, globalData->distCoeffs,
-                             cv::noArray(), cv::noArray(), globalData->stdDeviations, cv::noArray(),
-                             globalData->perViewErrors, calibrationFlags, solverTermCrit);
+                            cv::aruco::calibrateCameraCharuco(globalData->allCharucoCorners, globalData->allCharucoIds,
+                                                              charucoboard, globalData->imageSize,
+                                                              globalData->cameraMatrix, globalData->distCoeffs,
+                                                              cv::noArray(), cv::noArray(), globalData->stdDeviations,
+                                                              cv::noArray(),
+                                                              globalData->perViewErrors, calibrationFlags,
+                                                              solverTermCrit);
 #endif
                 }
                 std::cout << globalData->cameraMatrix << std::endl;
@@ -213,25 +212,21 @@ int main(int argc, char** argv)
                 dataController->updateUndistortMap();
                 dataController->printParametersToConsole(std::cout, capParams.calibType);
                 controller->updateState();
-                for(int j = 0; j < capParams.calibrationStep; j++)
+                for (int j = 0; j < capParams.calibrationStep; j++)
                     dataController->filterFrames();
-                static_cast<ShowProcessor*>(showProcessor.get())->updateBoardsView();
-            }
-            else if (exitStatus == DeleteLastFrame) {
+                static_cast<ShowProcessor *>(showProcessor.get())->updateBoardsView();
+            } else if (exitStatus == DeleteLastFrame) {
                 deleteButton(0, &dataController);
-                static_cast<ShowProcessor*>(showProcessor.get())->updateBoardsView();
-            }
-            else if (exitStatus == DeleteAllFrames) {
+                static_cast<ShowProcessor *>(showProcessor.get())->updateBoardsView();
+            } else if (exitStatus == DeleteAllFrames) {
                 deleteAllButton(0, &dataController);
-                static_cast<ShowProcessor*>(showProcessor.get())->updateBoardsView();
-            }
-            else if (exitStatus == SaveCurrentData) {
+                static_cast<ShowProcessor *>(showProcessor.get())->updateBoardsView();
+            } else if (exitStatus == SaveCurrentData) {
                 saveCurrentParamsButton(0, &dataController);
-            }
-            else if (exitStatus == SwitchUndistort)
-                static_cast<ShowProcessor*>(showProcessor.get())->switchUndistort();
+            } else if (exitStatus == SwitchUndistort)
+                static_cast<ShowProcessor *>(showProcessor.get())->switchUndistort();
             else if (exitStatus == SwitchVisualisation)
-                static_cast<ShowProcessor*>(showProcessor.get())->switchVisualizationMode();
+                static_cast<ShowProcessor *>(showProcessor.get())->switchVisualizationMode();
 
             for (std::vector<cv::Ptr<FrameProcessor> >::iterator it = processors.begin(); it != processors.end(); ++it)
                 (*it)->resetState();

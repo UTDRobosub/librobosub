@@ -9,12 +9,11 @@ const String ADDR = VIDEO_ADDR;
 const int TIMEOUT_LIMIT = 50;
 
 
-
 void catchSignal(int signal) {
     running = false;
 }
 
-void drawFrame(int rows, int cols, char* framedata, float framesPerSecond, float bitsPerSecond, int port, int index) {
+void drawFrame(int rows, int cols, char *framedata, float framesPerSecond, float bitsPerSecond, int port, int index) {
     drawLock.lock();
     int framedatalen = rows * cols * 3;
     Mat frame = Mat(rows, cols, CV_8UC3, framedata);
@@ -32,6 +31,7 @@ void drawFrame(int rows, int cols, char* framedata, float framesPerSecond, float
     videoFiles[index].write(frame);
     drawLock.unlock();
 }
+
 void drawError(int rows, int cols, int port) {
     drawLock.lock();
     int framedatalen = rows * cols * 3;
@@ -47,7 +47,7 @@ void drawError(int rows, int cols, int port) {
     drawLock.unlock();
 }
 
-void cameraThread(int port, int index){
+void cameraThread(int port, int index) {
     int rows = 720;
     int cols = 1280;
     FPS fps = FPS();
@@ -55,8 +55,7 @@ void cameraThread(int port, int index){
     float framesPerSecond;
     float bitsPerSecond;
 
-    while(running)
-    {
+    while (running) {
         NetworkTcpClient client;
         cout << port << endl;
         cout << "Connecting to server." << endl;
@@ -83,8 +82,7 @@ void cameraThread(int port, int index){
                 if (waitingOnRestOfFrame == 0) {
                     int headerlen = -1;
                     ecode = client.receiveBuffer(headerdata, 16, headerlen);
-                    if(ecode != 0)
-                    {
+                    if (ecode != 0) {
                         cout << "Connection Error " << ecode << ": " << strerror(ecode) << endl;
                     }
 
@@ -113,8 +111,7 @@ void cameraThread(int port, int index){
 
                             int recvdatalen = -1;
                             ecode = client.receiveBuffer(framedata, framedatalen, recvdatalen);
-                            if(ecode != 0)
-                            {
+                            if (ecode != 0) {
                                 cout << "Connection Error " << ecode << ": " << strerror(ecode) << endl;
                                 break;
                             }
@@ -124,19 +121,22 @@ void cameraThread(int port, int index){
 //                                cout<<"waiting on 2 "<<waitingOnRestOfFrame<<endl;
 
                                 if (waitingOnRestOfFrame == 0) {
-                                    if(!videoFiles[index].isOpened()){
+                                    if (!videoFiles[index].isOpened()) {
                                         cout << rows << " " << cols;
 
-                                        videoFiles[index] = VideoWriter(FILE_PREFIX+String(Util::toStringWithPrecision(PORT[index]))+"video.avi",cv::VideoWriter::fourcc('M','J','P','G'),10, Size(1280,720));
+                                        videoFiles[index] = VideoWriter(
+                                                FILE_PREFIX + String(Util::toStringWithPrecision(PORT[index])) +
+                                                "video.avi", cv::VideoWriter::fourcc('M', 'J', 'P', 'G'), 10,
+                                                Size(1280, 720));
                                         cout << "Created video file" << videoFiles[index].isOpened() << endl;
                                     }
                                     drawFrame(rows, cols, framedata, framesPerSecond, bitsPerSecond, port, index);
                                     char c = waitKey(1);
-                                    if(c == 's'){
-                                        for(int i = 0; i < NUMFEEDS; i++) {
-                                            while(videoFiles[i].isOpened())
+                                    if (c == 's') {
+                                        for (int i = 0; i < NUMFEEDS; i++) {
+                                            while (videoFiles[i].isOpened())
                                                 videoFiles[i].release();
-                                            cout << PORT[i] << "Saved file" <<  videoFiles[i].isOpened() << endl;
+                                            cout << PORT[i] << "Saved file" << videoFiles[i].isOpened() << endl;
                                         }
                                         running = false;
                                     }
@@ -149,8 +149,7 @@ void cameraThread(int port, int index){
                     int recvdatalen = -1;
                     ecode = client.receiveBuffer(framedata + (framedatalen - waitingOnRestOfFrame),
                                                  waitingOnRestOfFrame, recvdatalen);
-                    if(ecode != 0)
-                    {
+                    if (ecode != 0) {
                         cout << "Connection Error " << ecode << ": " << strerror(ecode) << endl;
                         break;
                     }
@@ -160,9 +159,9 @@ void cameraThread(int port, int index){
 
 //                        cout<<port << ": waiting on "<<waitingOnRestOfFrame<<endl;
 
-                        if(previousDataRemaining == waitingOnRestOfFrame){
+                        if (previousDataRemaining == waitingOnRestOfFrame) {
                             timeoutCounter++;
-                            if(timeoutCounter > TIMEOUT_LIMIT){
+                            if (timeoutCounter > TIMEOUT_LIMIT) {
                                 break;
                             }
                         } else {
@@ -170,19 +169,21 @@ void cameraThread(int port, int index){
                         }
                         previousDataRemaining = waitingOnRestOfFrame;
                         if (waitingOnRestOfFrame == 0) {
-                            if(!videoFiles[index].isOpened()){
+                            if (!videoFiles[index].isOpened()) {
                                 cout << rows << " " << cols;
 
-                                videoFiles[index] = VideoWriter(FILE_PREFIX+String(Util::toStringWithPrecision(PORT[index]))+"video.avi",cv::VideoWriter::fourcc('M','J','P','G'),10, Size(1280,720));
+                                videoFiles[index] = VideoWriter(
+                                        FILE_PREFIX + String(Util::toStringWithPrecision(PORT[index])) + "video.avi",
+                                        cv::VideoWriter::fourcc('M', 'J', 'P', 'G'), 10, Size(1280, 720));
                                 cout << "Created video file" << videoFiles[index].isOpened() << endl;
                             }
                             drawFrame(rows, cols, framedata, framesPerSecond, bitsPerSecond, port, index);
                             char c = waitKey(1);
-                            if(c == 's'){
-                                for(int i = 0; i < NUMFEEDS; i++) {
-                                    while(videoFiles[i].isOpened())
+                            if (c == 's') {
+                                for (int i = 0; i < NUMFEEDS; i++) {
+                                    while (videoFiles[i].isOpened())
                                         videoFiles[i].release();
-                                    cout << PORT[i] << "Saved file" <<  videoFiles[i].isOpened() << endl;
+                                    cout << PORT[i] << "Saved file" << videoFiles[i].isOpened() << endl;
                                 }
                                 running = false;
                             }
@@ -198,7 +199,6 @@ void cameraThread(int port, int index){
 }
 
 
-
 void video() {
 //    signal(SIGINT, catchSignal);
     thread cameraThreads[NUMFEEDS];
@@ -206,7 +206,7 @@ void video() {
         cameraThreads[i] = thread(cameraThread, PORT[i], i);
     }
 
-    for(int i = 0; i < NUMFEEDS; i++) {
+    for (int i = 0; i < NUMFEEDS; i++) {
         cameraThreads[i].join();
     }
 

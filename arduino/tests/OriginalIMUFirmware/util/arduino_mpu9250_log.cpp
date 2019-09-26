@@ -28,18 +28,14 @@ Supported Platforms:
 #define PACKET_QUAT     (2)
 #define PACKET_DATA     (3)
 
-void logString(char * string) 
-{
+void logString(char *string) {
 }
 
-int _MLPrintLog (int priority, const char* tag, const char* fmt, ...)
-{
+int _MLPrintLog(int priority, const char *tag, const char *fmt, ...) {
 }
 
-void eMPL_send_quat(long *quat)
-{
+void eMPL_send_quat(long *quat) {
 }
 
-void eMPL_send_data(unsigned char type, long *data)
-{
+void eMPL_send_data(unsigned char type, long *data) {
 }

@@ -15,7 +15,7 @@ bool handleSpecialMissionControlMessage(string message) {
     return false; //nothing to handle
 }
 
-void handleMissionControlState(DataBucket& state) {
+void handleMissionControlState(DataBucket &state) {
 
 }
 
@@ -50,7 +50,7 @@ void server() {
 
         //send current state
         connection->send(send_stream, [](const robosub::ws::error_code &ec) {
-            if((bool)ec) {
+            if ((bool) ec) {
                 cout << "Server: Error sending message. " <<
                      // See http://www.boost.org/doc/libs/1_55_0/doc/html/boost_asio/reference.html, Error Codes for error code meanings
                      "Error: " << ec << ", error message: " << ec.message() << endl;
@@ -58,7 +58,8 @@ void server() {
         });
     };
 
-    root.on_message = [&connectionState,&receivedState](shared_ptr<WsServer::Connection> connection, shared_ptr<WsServer::Message> message) {
+    root.on_message = [&connectionState, &receivedState](shared_ptr<WsServer::Connection> connection,
+                                                         shared_ptr<WsServer::Message> message) {
         auto message_str = message->string();
 
         if (message_str == "\x06") {
@@ -94,7 +95,7 @@ void server() {
             auto send_stream = make_shared<WsServer::SendStream>();
             *send_stream << "\x06"; //ACK
             connection->send(send_stream, [](const robosub::ws::error_code &ec) {
-                if(ec) {
+                if (ec) {
                     cout << "Server: Error sending message. " <<
                          // See http://www.boost.org/doc/libs/1_55_0/doc/html/boost_asio/reference.html, Error Codes for error code meanings
                          "Error: " << ec << ", error message: " << ec.message() << endl;
@@ -106,14 +107,16 @@ void server() {
     };
 
     // See RFC 6455 7.4.1. for status codes
-    root.on_close = [&connectionState, &connectionData](shared_ptr<WsServer::Connection> connection, int status, const string & /*reason*/) {
+    root.on_close = [&connectionState, &connectionData](shared_ptr<WsServer::Connection> connection, int status,
+                                                        const string & /*reason*/) {
         connectionState.erase(connection);
         connectionData.erase(connection);
         cout << "Server: Closed connection " << connection.get() << " with status code " << status << endl;
     };
 
     // See http://www.boost.org/doc/libs/1_55_0/doc/html/boost_asio/reference.html, Error Codes for error code meanings
-    root.on_error = [&connectionState, &connectionData](shared_ptr<WsServer::Connection> connection, const robosub::ws::error_code &ec) {
+    root.on_error = [&connectionState, &connectionData](shared_ptr<WsServer::Connection> connection,
+                                                        const robosub::ws::error_code &ec) {
         connectionState.erase(connection);
         connectionData.erase(connection);
         cout << "Server: Error in connection " << connection.get() << ". "
@@ -132,7 +135,7 @@ void server() {
     int i = 0;
     Telemetry telemetry = Telemetry();
 
-    while(running) {
+    while (running) {
 //        current["index"] = i++ % 1000; //force refresh approx every second
         current["cpu"] = Util::round<double>(telemetry.getSystemCPUUsage(), 0);
         current["ram"] = Util::round<double>(telemetry.getSystemRAMUsage(), 0);
@@ -143,8 +146,7 @@ void server() {
         updateRobotTelemetry(current);
 
         //send data to connections
-        for(auto &connection : server.get_connections())
-        {
+        for (auto &connection : server.get_connections()) {
             if (!connectionState[connection].ready) continue;
 
             //compress data
@@ -171,8 +173,7 @@ void server() {
 
             //check if better to send as compressed or uncompressed
             //cout << current.toString().length() << " " << compressed.toString().length() << endl;
-            if (current.toString().length() < compressed.toString().length())
-            {
+            if (current.toString().length() < compressed.toString().length()) {
                 //better to send uncompressed
                 auto send_stream = make_shared<WsServer::SendStream>();
                 *send_stream << sentState;

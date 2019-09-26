@@ -22,11 +22,11 @@ int main(int argc, char **argv) {
     if (!rightCam.isOpen()) return -2;
 
     int fileNumber = 1;
-    while(Util::fileExists("left" + to_string(fileNumber) + ".jpg")) {
+    while (Util::fileExists("left" + to_string(fileNumber) + ".jpg")) {
         fileNumber++;
     }
 
-    while(true) {
+    while (true) {
         leftCam.grabFrame();
         rightCam.grabFrame();
 
@@ -51,10 +51,10 @@ int main(int argc, char **argv) {
 
             cout << "Saved image number " << fileNumber << endl;
 
-            while(Util::fileExists("left" + to_string(fileNumber) + ".jpg")) {
+            while (Util::fileExists("left" + to_string(fileNumber) + ".jpg")) {
                 fileNumber++;
             }
-            
+
         } else if (key == 119) { //w key (write and save)
             ofstream xml;
             xml.open("stereo_calib.xml");
@@ -62,7 +62,7 @@ int main(int argc, char **argv) {
             xml << "<?xml version=\"1.0\"?>\n"
                    "<opencv_storage>\n"
                    "<imagelist>\n";
-            for (int i=1; i<fileNumber; i++) {
+            for (int i = 1; i < fileNumber; i++) {
                 xml << "left" << i << ".jpg" << endl;
                 xml << "right" << i << ".jpg" << endl;
             }

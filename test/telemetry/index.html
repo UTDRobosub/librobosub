@@ -36,7 +36,7 @@
       var line = d3.line()
         .x(function(d) { return x(d3.timeParse("%Q")(d.time)); })
         .y(function(d) { return y(d.rand); })
-        .curve(d3.curveNatural)
+          .curve(d3.curveNatural);
 
       if (!moment(graphData[0].time).isAfter(moment().subtract(15, 'seconds'))) {
         graphData.shift();
@@ -102,7 +102,7 @@
     ws.onopen=function(evt){
       // ws.send("hello");
     }
-  }
+  };
   function send(message) {
     ws.send(message);
   }

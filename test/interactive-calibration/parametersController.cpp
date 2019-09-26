@@ -6,33 +6,29 @@
 
 #include <iostream>
 
-template <typename T>
-static bool readFromNode(cv::FileNode node, T& value)
-{
-    if(!node.isNone()) {
+template<typename T>
+static bool readFromNode(cv::FileNode node, T &value) {
+    if (!node.isNone()) {
         node >> value;
         return true;
-    }
-    else
+    } else
         return false;
 }
 
-static bool checkAssertion(bool value, const std::string& msg)
-{
-    if(!value)
+static bool checkAssertion(bool value, const std::string &msg) {
+    if (!value)
         std::cerr << "Error: " << msg << std::endl;
 
     return value;
 }
 
-bool calib::parametersController::loadFromFile(const std::string &inputFileName)
-{
+bool calib::parametersController::loadFromFile(const std::string &inputFileName) {
     cv::FileStorage reader;
     reader.open(inputFileName, cv::FileStorage::READ);
 
-    if(!reader.isOpened()) {
+    if (!reader.isOpened()) {
         std::cerr << "Warning: Unable to open " << inputFileName <<
-                     " Applicatioin stated with default advanced parameters" << std::endl;
+                  " Applicatioin stated with default advanced parameters" << std::endl;
         return true;
     }
 
@@ -57,7 +53,7 @@ bool calib::parametersController::loadFromFile(const std::string &inputFileName)
             checkAssertion(mCapParams.maxFramesNum > mCapParams.minFramesNum, "maxFramesNum < minFramesNum") &&
             checkAssertion(mInternalParameters.solverEps > 0, "Solver precision must be positive") &&
             checkAssertion(mInternalParameters.solverMaxIters > 0, "Max solver iterations number must be positive") &&
-            checkAssertion(mInternalParameters.filterAlpha >=0 && mInternalParameters.filterAlpha <=1 ,
+            checkAssertion(mInternalParameters.filterAlpha >= 0 && mInternalParameters.filterAlpha <= 1,
                            "Frame filter convolution parameter must be in [0,1] interval") &&
             checkAssertion(mCapParams.cameraResolution.width > 0 && mCapParams.cameraResolution.height > 0,
                            "Wrong camera resolution values");
@@ -66,91 +62,79 @@ bool calib::parametersController::loadFromFile(const std::string &inputFileName)
     return retValue;
 }
 
-calib::parametersController::parametersController()
-{
+calib::parametersController::parametersController() {
 }
 
-calib::captureParameters calib::parametersController::getCaptureParameters() const
-{
+calib::captureParameters calib::parametersController::getCaptureParameters() const {
     return mCapParams;
 }
 
-calib::internalParameters calib::parametersController::getInternalParameters() const
-{
+calib::internalParameters calib::parametersController::getInternalParameters() const {
     return mInternalParameters;
 }
 
-bool calib::parametersController::loadFromParser(cv::CommandLineParser &parser)
-{
+bool calib::parametersController::loadFromParser(cv::CommandLineParser &parser) {
     mCapParams.flipVertical = parser.get<bool>("flip");
     mCapParams.captureDelay = parser.get<float>("d");
     mCapParams.squareSize = parser.get<float>("sz");
     mCapParams.templDst = parser.get<float>("dst");
 
-    if(!checkAssertion(mCapParams.squareSize > 0, "Distance between corners or circles must be positive"))
+    if (!checkAssertion(mCapParams.squareSize > 0, "Distance between corners or circles must be positive"))
         return false;
-    if(!checkAssertion(mCapParams.templDst > 0, "Distance between parts of dual template must be positive"))
+    if (!checkAssertion(mCapParams.templDst > 0, "Distance between parts of dual template must be positive"))
         return false;
 
     if (parser.has("v")) {
         mCapParams.source = File;
         mCapParams.videoFileName = parser.get<std::string>("v");
-    }
-    else {
+    } else {
         mCapParams.source = Camera;
         mCapParams.camID = parser.get<int>("ci");
     }
 
     std::string templateType = parser.get<std::string>("t");
 
-    if(templateType.find("circles", 0) == 0) {
+    if (templateType.find("circles", 0) == 0) {
         mCapParams.board = AcirclesGrid;
         mCapParams.boardSize = cv::Size(4, 11);
-    }
-    else if(templateType.find("chessboard", 0) == 0) {
+    } else if (templateType.find("chessboard", 0) == 0) {
         mCapParams.board = Chessboard;
         mCapParams.boardSize = cv::Size(7, 7);
-    }
-    else if(templateType.find("dualcircles", 0) == 0) {
+    } else if (templateType.find("dualcircles", 0) == 0) {
         mCapParams.board = DoubleAcirclesGrid;
         mCapParams.boardSize = cv::Size(4, 11);
-    }
-    else if(templateType.find("charuco", 0) == 0) {
+    } else if (templateType.find("charuco", 0) == 0) {
         mCapParams.board = chAruco;
         mCapParams.boardSize = cv::Size(6, 8);
         mCapParams.charucoDictName = 0;
         mCapParams.charucoSquareLenght = 200;
         mCapParams.charucoMarkerSize = 100;
-    }
-    else {
+    } else {
         std::cerr << "Invalid template type\n";
         return false;
     }
 
     std::string calibType = parser.get<std::string>("ct");
     if (calibType.find("pinhole", 0) == 0) {
-      mCapParams.calibType = Pinhole;
-    }
-    else if (calibType.find("fisheye", 0) == 0) {
-      mCapParams.calibType = Fisheye;
-    }
-    else if (calibType.find("omni", 0) == 0) {
-      mCapParams.calibType = Omni;
-    }
-    else {
-      std::cerr << "Invalid calibration type\n";
-      return false;
+        mCapParams.calibType = Pinhole;
+    } else if (calibType.find("fisheye", 0) == 0) {
+        mCapParams.calibType = Fisheye;
+    } else if (calibType.find("omni", 0) == 0) {
+        mCapParams.calibType = Omni;
+    } else {
+        std::cerr << "Invalid calibration type\n";
+        return false;
     }
 
-    if(parser.has("w") && parser.has("h")) {
+    if (parser.has("w") && parser.has("h")) {
         mCapParams.boardSize = cv::Size(parser.get<int>("w"), parser.get<int>("h"));
-        if(!checkAssertion(mCapParams.boardSize.width > 0 || mCapParams.boardSize.height > 0,
-                           "Board size must be positive"))
+        if (!checkAssertion(mCapParams.boardSize.width > 0 || mCapParams.boardSize.height > 0,
+                            "Board size must be positive"))
             return false;
     }
 
-    if(!checkAssertion(parser.get<std::string>("of").find(".xml") > 0,
-                       "Wrong output file name: correct format is [name].xml"))
+    if (!checkAssertion(parser.get<std::string>("of").find(".xml") > 0,
+                        "Wrong output file name: correct format is [name].xml"))
         return false;
 
     loadFromFile(parser.get<std::string>("pf"));

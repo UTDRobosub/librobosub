@@ -25,21 +25,21 @@ const int VERIFICATION_CODE = 1234567890;
 
 bool mainloop = true;
 
-void drawFrame(int rows, int cols, char* framedata, float framesPerSecond, float bitsPerSecond){
-	int framedatalen = rows*cols*3;
-	
-	Mat bestframedraw(rows, cols, CV_8UC3, framedata);
-	
-	Drawing::text(bestframedraw,
-		String(Util::toStringWithPrecision(framesPerSecond)) + String(" fps"),
-		Point(16,48), Scalar(255,255,255), Drawing::Anchor::BOTTOM_LEFT, 0.5
-	);
-	Drawing::text(bestframedraw,
-		String(Util::toStringWithPrecision((bitsPerSecond)/1024.0f/1024.0f) + String(" Mbps")),
-		Point(16,16), Scalar(255, 255, 255), Drawing::Anchor::BOTTOM_LEFT, 0.5
-	);
-	
-	imshow("Latest Frame", bestframedraw);
+void drawFrame(int rows, int cols, char *framedata, float framesPerSecond, float bitsPerSecond) {
+    int framedatalen = rows * cols * 3;
+
+    Mat bestframedraw(rows, cols, CV_8UC3, framedata);
+
+    Drawing::text(bestframedraw,
+                  String(Util::toStringWithPrecision(framesPerSecond)) + String(" fps"),
+                  Point(16, 48), Scalar(255, 255, 255), Drawing::Anchor::BOTTOM_LEFT, 0.5
+    );
+    Drawing::text(bestframedraw,
+                  String(Util::toStringWithPrecision((bitsPerSecond) / 1024.0f / 1024.0f) + String(" Mbps")),
+                  Point(16, 16), Scalar(255, 255, 255), Drawing::Anchor::BOTTOM_LEFT, 0.5
+    );
+
+    imshow("Latest Frame", bestframedraw);
 }
 
 int main(int argc, char **argv) {
@@ -57,68 +57,67 @@ int main(int argc, char **argv) {
 //	cout << cv::getBuildInformation() << endl;
 
 
-	CommandLineParser parser(argc, argv, keys);
-	parser.about("Network Video Transfer Test");
-	
-	if (parser.has("help"))
-	{
-		parser.printMessage();
-		return 0;
-	}
-	
-	if (!parser.has("@mode")) {
-			cout << "Mode is required." << endl << endl;
-			parser.printMessage();
-			return 0;
-	}
-	if (!parser.check())
-	{
-		parser.printErrors();
-		return 0;
-	}
-	
-	int mode = parser.get<String>("@mode")[0] == 's' ? MODE_SEND : MODE_RECEIVE;
-	int port = parser.get<int>("port");
-	String addr = parser.get<String>("host");
-	bool showDisplay = !parser.get<bool>("d");
-	const string camera = parser.get<string>("camera");
-	Size frameSize = Size(parser.get<int>("cols"), parser.get<int>("rows"));
-	
-	//catch signal
-	signal(SIGPIPE, catchSignal);
-	
-	Size screenRes;
-	Camera *cam;
-	if(mode == MODE_SEND){
-		cam = new Camera(camera);
-		if (!cam->isOpen()){
-			cout<<"Camera failed to open."<<endl;
-			return -1;
-		}
+    CommandLineParser parser(argc, argv, keys);
+    parser.about("Network Video Transfer Test");
+
+    if (parser.has("help")) {
+        parser.printMessage();
+        return 0;
+    }
+
+    if (!parser.has("@mode")) {
+        cout << "Mode is required." << endl << endl;
+        parser.printMessage();
+        return 0;
+    }
+    if (!parser.check()) {
+        parser.printErrors();
+        return 0;
+    }
+
+    int mode = parser.get<String>("@mode")[0] == 's' ? MODE_SEND : MODE_RECEIVE;
+    int port = parser.get<int>("port");
+    String addr = parser.get<String>("host");
+    bool showDisplay = !parser.get<bool>("d");
+    const string camera = parser.get<string>("camera");
+    Size frameSize = Size(parser.get<int>("cols"), parser.get<int>("rows"));
+
+    //catch signal
+    signal(SIGPIPE, catchSignal);
+
+    Size screenRes;
+    Camera *cam;
+    if (mode == MODE_SEND) {
+        cam = new Camera(camera);
+        if (!cam->isOpen()) {
+            cout << "Camera failed to open." << endl;
+            return -1;
+        }
 //		frameSize = cam->setFrameSize(frameSize);
         frameSize = cam->getFrameSize();
-		cout << frameSize << endl;
-	} else {
-		screenRes = Util::getDesktopResolution();
-	}
+        cout << frameSize << endl;
+    } else {
+        screenRes = Util::getDesktopResolution();
+    }
 
-	//these can be overridden by the receiver
-	int cols = frameSize.width;
-	int rows = frameSize.height;
-	
-	//load calibration data - run AFTER resolution set
-	Camera::CalibrationData calibrationData = *Camera::loadCalibrationDataFromXML("../config/fisheye180_cameracalib_fisheye.xml", frameSize);
-	
-	const int datalen = rows*cols*3 + 16;
-	//4 bytes for cols
-	//4 bytes for rows
-	//framelen bytes for image data
+    //these can be overridden by the receiver
+    int cols = frameSize.width;
+    int rows = frameSize.height;
+
+    //load calibration data - run AFTER resolution set
+    Camera::CalibrationData calibrationData = *Camera::loadCalibrationDataFromXML(
+            "../config/fisheye180_cameracalib_fisheye.xml", frameSize);
+
+    const int datalen = rows * cols * 3 + 16;
+    //4 bytes for cols
+    //4 bytes for rows
+    //framelen bytes for image data
 
     NetworkTcpServer server;
 
-	while(mainloop) {
+    while (mainloop) {
 
-	    running = true;
+        running = true;
 
         if (mode == MODE_SEND) {
 
@@ -152,7 +151,8 @@ int main(int argc, char **argv) {
                 int segmentsize = datalen / 100;
                 int numsegments = datalen / segmentsize + 1;
                 for (int i = 0; i < numsegments; i++) {
-                    int ecode = server.sendBuffer(senddata + segmentsize * i, min(segmentsize, datalen - segmentsize * i));
+                    int ecode = server.sendBuffer(senddata + segmentsize * i,
+                                                  min(segmentsize, datalen - segmentsize * i));
                     if (ecode != 0) {
                         cout << "Send error: " << ecode << " " << strerror(ecode) << endl;
                         break;
@@ -255,7 +255,7 @@ int main(int argc, char **argv) {
                     } else {
                         int recvdatalen = -1;
                         int ecode = client.receiveBuffer(framedata + (framedatalen - waitingOnRestOfFrame),
-                                                               waitingOnRestOfFrame, recvdatalen);
+                                                         waitingOnRestOfFrame, recvdatalen);
                         if (ecode != 0) {
                             cout << "Recv error: " << ecode << " " << strerror(ecode) << endl;
                             break;
@@ -280,7 +280,7 @@ int main(int argc, char **argv) {
         }
     }
 
-	cout << "Safely, nicely exited" << endl;
-	
-	return 0;
+    cout << "Safely, nicely exited" << endl;
+
+    return 0;
 }

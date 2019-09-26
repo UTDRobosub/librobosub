@@ -16,8 +16,7 @@
 using namespace cv;
 using namespace robosub;
 
-int main (int argc, char* argv[])
-{
+int main(int argc, char *argv[]) {
 #ifdef HAVE_OPENCV_CUDAIMGPROC
     try
     {

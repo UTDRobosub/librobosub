@@ -3,7 +3,7 @@
 namespace robosub {
 
     DataBucket::DataBucket() {
-        _data = json({ });
+        _data = json({});
     }
 
     DataBucket::DataBucket(json data) {
@@ -14,7 +14,7 @@ namespace robosub {
         _data = json::parse(string);
     }
 
-    DataBucket::DataBucket(vector<uint8_t> cborFormat) {
+    DataBucket::DataBucket(vector <uint8_t> cborFormat) {
         _data = json::from_cbor(cborFormat);
     }
 
@@ -22,22 +22,21 @@ namespace robosub {
         return _compressed;
     }
 
-    DataBucket::reference DataBucket::operator[] (const string key) {
+    DataBucket::reference DataBucket::operator[](const string key) {
         if (isCompressed()) {
             throw runtime_error("Accessors not allowed on compressed buckets");
         }
         return _data[key];
     }
 
-    DataBucket::reference DataBucket::operator[] (const int key) {
+    DataBucket::reference DataBucket::operator[](const int key) {
         if (isCompressed()) {
             throw runtime_error("Accessors not allowed on compressed buckets");
         }
         return _data[key];
     }
 
-    bool DataBucket::isEmpty()
-    {
+    bool DataBucket::isEmpty() {
         return _data.size() == 0;
     }
 
@@ -45,7 +44,7 @@ namespace robosub {
 
     }
 
-    DataBucket& DataBucket::operator= (const DataBucket& other) {
+    DataBucket &DataBucket::operator=(const DataBucket &other) {
         _data = other._data;
         return *this;
     }
@@ -62,7 +61,7 @@ namespace robosub {
         return _data.dump(4); //number of spaces to indent
     }
 
-    vector<uint8_t> DataBucket::toCbor() {
+    vector <uint8_t> DataBucket::toCbor() {
         return json::to_cbor(_data);
     }
 
@@ -74,7 +73,7 @@ namespace robosub {
         _data.clear();
     }
 
-    DataBucket DataBucket::compress(DataBucket& previousState) {
+    DataBucket DataBucket::compress(DataBucket &previousState) {
         json diffs = json::diff(previousState._data, _data);
 
         DataBucket newBucket;
@@ -83,7 +82,7 @@ namespace robosub {
         return newBucket;
     }
 
-    DataBucket DataBucket::inflate(DataBucket& previousState) {
+    DataBucket DataBucket::inflate(DataBucket &previousState) {
         cout << previousState._data << endl;
         cout << _data << endl;
 
@@ -102,7 +101,7 @@ namespace robosub {
     }
 
     void Telemetry::_initCPUCounter() {
-        FILE* file = fopen("/proc/stat", "r");
+        FILE *file = fopen("/proc/stat", "r");
         fscanf(file, "cpu %llu %llu %llu %llu", &_lastTotalUser, &_lastTotalUserLow,
                &_lastTotalSys, &_lastTotalIdle);
         fclose(file);
@@ -113,7 +112,7 @@ namespace robosub {
         if (robosub::Time::millis() < 1000 + _lastSystemCPUTime) return _lastCPUPercent;
 
         double percent;
-        FILE* file;
+        FILE *file;
         unsigned long long totalUser, totalUserLow, totalSys, totalIdle, total;
 
         file = fopen("/proc/stat", "r");
@@ -122,7 +121,7 @@ namespace robosub {
         fclose(file);
 
         if (totalUser < _lastTotalUser || totalUserLow < _lastTotalUserLow ||
-            totalSys < _lastTotalSys || totalIdle < _lastTotalIdle){
+            totalSys < _lastTotalSys || totalIdle < _lastTotalIdle) {
             //Overflow detection. Just skip this value.
             return _lastCPUPercent;
         } else {
@@ -179,7 +178,7 @@ namespace robosub {
     }
 
     double Telemetry::getSystemRAMUsage() {
-        return (double)getTotalPhysicalMemoryUsed() * 100.0 / (double)getTotalPhysicalMemory();
+        return (double) getTotalPhysicalMemoryUsed() * 100.0 / (double) getTotalPhysicalMemory();
     }
 
     struct sysinfo Telemetry::_pollMemory() {

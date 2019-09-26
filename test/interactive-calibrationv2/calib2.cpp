@@ -1,6 +1,6 @@
 #include "calib2.h"
 
-static bool loadCaptureParams(CommandLineParser& parser, CaptureParameters& capParams) {
+static bool loadCaptureParams(CommandLineParser &parser, CaptureParameters &capParams) {
     //model type
     String m = parser.get<String>("m");
     String b = parser.get<String>("b");
@@ -12,8 +12,7 @@ static bool loadCaptureParams(CommandLineParser& parser, CaptureParameters& capP
         model = Model::OMNI;
         cout << "Omni currently not supported" << endl;
         return false;
-    }
-    else return false;
+    } else return false;
 
     if (b == "checkerboard") boardType = BoardType::CHECKERBOARD;
     if (b == "charuco") {
@@ -35,16 +34,17 @@ static bool loadCaptureParams(CommandLineParser& parser, CaptureParameters& capP
     return true;
 }
 
-void prepareChArucoDictionary(const CaptureParameters& capParams) {
+void prepareChArucoDictionary(const CaptureParameters &capParams) {
     mArucoDictionary = cv::aruco::getPredefinedDictionary(
             cv::aruco::PREDEFINED_DICTIONARY_NAME(capParams.charucoDictName));
     mCharucoBoard = cv::aruco::CharucoBoard::create(capParams.boardSize.width, capParams.boardSize.height,
-                                                    capParams.charucoSquareLength, capParams.charucoMarkerSize, mArucoDictionary);
+                                                    capParams.charucoSquareLength, capParams.charucoMarkerSize,
+                                                    mArucoDictionary);
 }
 
 bool detectAndParseCheckerboard(const cv::Mat &frame, const cv::Mat &gray,
-        std::vector<cv::Point3f> &currentObjectPoints, std::vector<cv::Point2f> &currentImagePoints)
-{
+                                std::vector<cv::Point3f> &currentObjectPoints,
+                                std::vector<cv::Point2f> &currentImagePoints) {
 
     bool patternFound = findChessboardCorners(frame, Size(9, 6), currentImagePoints,
                                               CALIB_CB_ADAPTIVE_THRESH + CALIB_CB_NORMALIZE_IMAGE
@@ -54,18 +54,17 @@ bool detectAndParseCheckerboard(const cv::Mat &frame, const cv::Mat &gray,
     cornerSubPix(gray, currentImagePoints, Size(11, 11), Size(-1, -1),
                  TermCriteria(cv::TermCriteria::EPS + cv::TermCriteria::MAX_ITER, 30, 0.1));
     drawChessboardCorners(frame, boardSize, Mat(currentImagePoints), patternFound);
-    for( int i = 0; i < boardSize.height; ++i )
-    {
-        for( int j = 0; j < boardSize.width; ++j )
-            currentObjectPoints.push_back(Point3f(j*squareSize, i*squareSize, 0));
+    for (int i = 0; i < boardSize.height; ++i) {
+        for (int j = 0; j < boardSize.width; ++j)
+            currentObjectPoints.push_back(Point3f(j * squareSize, i * squareSize, 0));
     }
 
     return true;
 }
 
-bool detectAndParseChAruco(const cv::Mat &frame, std::vector<cv::Point3f> &currentObjectPoints, std::vector<cv::Point2f> &currentImagePoints,
-                           cv::Mat &currentCharucoCorners, cv::Mat &currentCharucoIds)
-{
+bool detectAndParseChAruco(const cv::Mat &frame, std::vector<cv::Point3f> &currentObjectPoints,
+                           std::vector<cv::Point2f> &currentImagePoints,
+                           cv::Mat &currentCharucoCorners, cv::Mat &currentCharucoIds) {
 
     cv::Ptr<cv::aruco::Board> board = mCharucoBoard.staticCast<cv::aruco::Board>();
 
@@ -73,7 +72,7 @@ bool detectAndParseChAruco(const cv::Mat &frame, std::vector<cv::Point3f> &curre
     std::vector<int> ids;
     cv::aruco::detectMarkers(frame, mArucoDictionary, corners, ids, cv::aruco::DetectorParameters::create(), rejected);
     cv::aruco::refineDetectedMarkers(frame, board, corners, ids, rejected);
-    if(ids.size() > 0) {
+    if (ids.size() > 0) {
         cv::aruco::interpolateCornersCharuco(corners, ids, frame, mCharucoBoard, currentCharucoCorners,
                                              currentCharucoIds);
         cv::aruco::drawDetectedMarkers(frame, corners);
@@ -81,7 +80,7 @@ bool detectAndParseChAruco(const cv::Mat &frame, std::vector<cv::Point3f> &curre
                                                 currentObjectPoints, currentImagePoints);
     }
 
-    if(currentCharucoCorners.total() > 3) {
+    if (currentCharucoCorners.total() > 3) {
         cv::aruco::drawDetectedCornersCharuco(frame, currentCharucoCorners, currentCharucoIds);
         return true;
     }
@@ -89,20 +88,21 @@ bool detectAndParseChAruco(const cv::Mat &frame, std::vector<cv::Point3f> &curre
     return false;
 }
 
-template<typename _Tp> static cv::Mat toMat(const vector<vector<_Tp> > vecIn, const int type) {
+template<typename _Tp>
+static cv::Mat toMat(const vector<vector<_Tp> > vecIn, const int type) {
     cv::Mat mat(vecIn.size(), vecIn.at(0).size(), type);
-    for(int i=0; i<mat.rows; ++i)
-        for(int j=0; j<mat.cols; ++j)
+    for (int i = 0; i < mat.rows; ++i)
+        for (int j = 0; j < mat.cols; ++j)
             mat.at<_Tp>(i, j) = vecIn.at(i).at(j);
     return mat;
 }
 
-void recalibrate(const Ptr<CalibrationData>& calibData, Model model) {
-    TermCriteria termCriteria = cv::TermCriteria(cv::TermCriteria::EPS+cv::TermCriteria::COUNT, 30, 0.1);
+void recalibrate(const Ptr<CalibrationData> &calibData, Model model) {
+    TermCriteria termCriteria = cv::TermCriteria(cv::TermCriteria::EPS + cv::TermCriteria::COUNT, 30, 0.1);
 
     cv::Mat P;
 
-    switch(model) {
+    switch (model) {
         case PINHOLE:
             cv::aruco::calibrateCameraCharuco(calibData->allCharucoCorners, calibData->allCharucoIds,
                                               mCharucoBoard, calibData->frameSize,
@@ -111,19 +111,20 @@ void recalibrate(const Ptr<CalibrationData>& calibData, Model model) {
                                               cv::noArray(), 0, termCriteria);
 
             P = cv::getOptimalNewCameraMatrix(calibData->cameraMatrix, calibData->distCoeffs,
-                                                      calibData->frameSize, 0.0, calibData->frameSize);
+                                              calibData->frameSize, 0.0, calibData->frameSize);
             cv::initUndistortRectifyMap(calibData->cameraMatrix, calibData->distCoeffs, cv::noArray(), P,
                                         calibData->frameSize, CV_16SC2, calibData->undistMap1, calibData->undistMap2);
             break;
         case FISHEYE:
             cv::fisheye::calibrate(calibData->objectPoints, calibData->imagePoints, calibData->frameSize,
-                    calibData->cameraMatrix, calibData->distCoeffs, cv::noArray(), cv::noArray());
+                                   calibData->cameraMatrix, calibData->distCoeffs, cv::noArray(), cv::noArray());
 
             cv::Mat R;
             cv::Rodrigues(cv::Vec3d(0, 0, 0), R);
             cv::fisheye::estimateNewCameraMatrixForUndistortRectify(calibData->cameraMatrix, calibData->distCoeffs,
-                    calibData->frameSize, R, P);
-            cv::fisheye::initUndistortRectifyMap(calibData->cameraMatrix, calibData->distCoeffs, R, P, calibData->frameSize,
+                                                                    calibData->frameSize, R, P);
+            cv::fisheye::initUndistortRectifyMap(calibData->cameraMatrix, calibData->distCoeffs, R, P,
+                                                 calibData->frameSize,
                                                  CV_16SC2, calibData->undistMap1, calibData->undistMap2);
             break;
 
@@ -167,27 +168,32 @@ void recalibrate(const Ptr<CalibrationData>& calibData, Model model) {
     cout << calibData->objectPoints.size() << " images used in calibration" << endl;
 }
 
-bool saveCameraParametersToFile(const Ptr<CalibrationData>& calibData, CaptureParameters& capParams)
-{
+bool saveCameraParametersToFile(const Ptr<CalibrationData> &calibData, CaptureParameters &capParams) {
     bool success = false;
-    if(calibData->cameraMatrix.total()) {
+    if (calibData->cameraMatrix.total()) {
         cv::FileStorage parametersWriter(capParams.outputFilename, cv::FileStorage::WRITE);
-        if(parametersWriter.isOpened()) {
+        if (parametersWriter.isOpened()) {
             time_t rawtime;
             time(&rawtime);
             char buf[256];
-            strftime(buf, sizeof(buf)-1, "%c", localtime(&rawtime));
+            strftime(buf, sizeof(buf) - 1, "%c", localtime(&rawtime));
 
             string model;
-            switch(capParams.calibModel) {
-                case PINHOLE: model = "pinhole"; break;
-                case FISHEYE: model = "fisheye"; break;
-                case OMNI: model = "omni"; break;
+            switch (capParams.calibModel) {
+                case PINHOLE:
+                    model = "pinhole";
+                    break;
+                case FISHEYE:
+                    model = "fisheye";
+                    break;
+                case OMNI:
+                    model = "omni";
+                    break;
             }
 
             parametersWriter << "calibrationDate" << buf;
             parametersWriter << "calibrationModel" << model;
-            parametersWriter << "framesCount" << (int)calibData->objectPoints.size();
+            parametersWriter << "framesCount" << (int) calibData->objectPoints.size();
             parametersWriter << "cameraResolution" << calibData->frameSize;
             parametersWriter << "cameraMatrix" << calibData->cameraMatrix;
             parametersWriter << "distortionMatrix" << calibData->distCoeffs;
@@ -200,7 +206,7 @@ bool saveCameraParametersToFile(const Ptr<CalibrationData>& calibData, CapturePa
     return success;
 }
 
-int main(int argc, char** argv) {
+int main(int argc, char **argv) {
     //parse command line arguments
     const String keys =
             "{help ?         |                   | print this message }"
@@ -268,7 +274,7 @@ int main(int argc, char** argv) {
         switch (capParams.boardType) {
             case CHARUCO:
                 boardDetected = detectAndParseChAruco(frame, currentObjectPoints, currentImagePoints,
-                                      currentCharucoCorners, currentCharucoIds);
+                                                      currentCharucoCorners, currentCharucoIds);
                 break;
             case CHECKERBOARD:
                 boardDetected = detectAndParseCheckerboard(frame, gray, currentObjectPoints, currentImagePoints);
@@ -280,7 +286,7 @@ int main(int argc, char** argv) {
         imshow("Uncalibrated Image", frame);
 
         //perform operation on keypress
-        key = (char)cv::waitKey(1);
+        key = (char) cv::waitKey(1);
 
         //take frame
         if (key == ' ' && boardDetected) {
@@ -296,7 +302,7 @@ int main(int argc, char** argv) {
             }
             recalibrate(calibData, capParams.calibModel);
 
-        //remove frame
+            //remove frame
         } else if ((key == 'z') && (!calibData->objectPoints.empty())) {
             calibData->objectPoints.pop_back();
             calibData->imagePoints.pop_back();
@@ -305,7 +311,7 @@ int main(int argc, char** argv) {
                 calibData->allCharucoIds.pop_back();
             }
             recalibrate(calibData, capParams.calibModel);
-        //save data
+            //save data
         } else if ((key == 's') && (!calibData->objectPoints.empty())) {
             if (!saveCameraParametersToFile(calibData, capParams)) {
                 cout << "Failed to save camera parameters" << endl;

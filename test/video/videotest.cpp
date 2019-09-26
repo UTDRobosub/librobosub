@@ -114,14 +114,14 @@ int main(int argc, char **argv) {
     while (running) {
 
         //update trackbars
-        MIN_AREA = (double)getTrackbar("MIN_AREA");
-        MAX_AREA = (double)getTrackbar("MAX_AREA");
+        MIN_AREA = (double) getTrackbar("MIN_AREA");
+        MAX_AREA = (double) getTrackbar("MAX_AREA");
         EROSION_SIZE = getTrackbar("EROSION_SIZE");
-        SQUARE_RATIO_THRESHOLD = getTrackbar("SQUARE_RATIO_THRESHOLD")/100.0;
-        TRIANGLE_RATIO_THRESHOLD = getTrackbar("TRIANGLE_RATIO_THRESHOLD")/100.0;
-        EPSILON_APPROX_TOLERANCE_FACTOR = getTrackbar("EPSILON_APPROX_TOLERANCE_FACTOR")/1000.0;
-        IMAGE_BLACK_THRESHOLD = getTrackbar("IMAGE_BLACK_THRESHOLD")/10.0;
-        CONTOUR_BLACK_THRESHOLD = getTrackbar("CONTOUR_BLACK_THRESHOLD")/10.0;
+        SQUARE_RATIO_THRESHOLD = getTrackbar("SQUARE_RATIO_THRESHOLD") / 100.0;
+        TRIANGLE_RATIO_THRESHOLD = getTrackbar("TRIANGLE_RATIO_THRESHOLD") / 100.0;
+        EPSILON_APPROX_TOLERANCE_FACTOR = getTrackbar("EPSILON_APPROX_TOLERANCE_FACTOR") / 1000.0;
+        IMAGE_BLACK_THRESHOLD = getTrackbar("IMAGE_BLACK_THRESHOLD") / 10.0;
+        CONTOUR_BLACK_THRESHOLD = getTrackbar("CONTOUR_BLACK_THRESHOLD") / 10.0;
 
 
         cam.retrieveFrameBGR(input);

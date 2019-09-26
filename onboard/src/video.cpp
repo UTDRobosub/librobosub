@@ -5,17 +5,18 @@ const int VERIFICATION_CODE = 1234567890;
 const int PORT[5] = {8500, 8501, 8502, 8503, 8504};
 const String STEREO_ID = "usb-SHENZHEN_RERVISION_TECHNOLOGY_Stereo_Vision_2-video-index0";
 mutex drawLock;
+
 void catchSignal(int signal) {
     running = false;
 }
 
-void cameraThread(int port, String cameraName){
+void cameraThread(int port, String cameraName) {
     signal(SIGPIPE, catchSignal);
 
-    Camera* cam;
+    Camera *cam;
     cam = new Camera(cameraName);
-    if (!cam->isOpen()){
-        cout<<"Camera failed to open."<<endl;
+    if (!cam->isOpen()) {
+        cout << "Camera failed to open." << endl;
         return;
     }
     Size frameSize = Size(1280, 720);
@@ -24,7 +25,7 @@ void cameraThread(int port, String cameraName){
     cout << frameSize << endl;
     int cols = frameSize.width;
     int rows = frameSize.height;
-    const int datalen = rows*cols*3 + 16;
+    const int datalen = rows * cols * 3 + 16;
     NetworkTcpServer server;
 
     char *senddata = (char *) malloc(datalen);
@@ -77,41 +78,41 @@ void startVideo() {
     vector<String> deviceIndexes = Util::splitString(deviceIndexStr, '\n');
 
     String deviceNameStr = Util::execCLI("ls /dev/v4l/by-id/");
-    vector<String> deviceNames = Util::splitString(deviceNameStr,'\n');
+    vector<String> deviceNames = Util::splitString(deviceNameStr, '\n');
     bool stereoFound = false;
     //link camera id to port
-    for(int i = 0; i< deviceNames.size(); i++){
-        if(STEREO_ID == deviceNames.at(i)){
+    for (int i = 0; i < deviceNames.size(); i++) {
+        if (STEREO_ID == deviceNames.at(i)) {
             stereoFound = true;
             cout << "Got stereo" << endl;
             continue;
         }
 
-        String camIndex = Util::execCLI(String("readlink -f /dev/v4l/by-id/")+String(deviceNames.at(i)));
+        String camIndex = Util::execCLI(String("readlink -f /dev/v4l/by-id/") + String(deviceNames.at(i)));
         camIndex.pop_back();
         //find the camIndex in deviceIndexes then swap it into i
 
         auto it = std::find(deviceIndexes.begin(), deviceIndexes.end(), camIndex);
         cout << "CAM INDEX: " << camIndex << endl;
 
-        std::iter_swap(deviceIndexes.begin()+i,it);
-        cout << i <<" I did this " << deviceIndexes.at(i) << endl;
+        std::iter_swap(deviceIndexes.begin() + i, it);
+        cout << i << " I did this " << deviceIndexes.at(i) << endl;
     }
 
     cout << "Left loop" << endl;
 
     //last two indexes in deviceIndexes will be for the stereo camera
-    if(stereoFound){
+    if (stereoFound) {
         //check that the second to last index is the one linked in v4l OR vice-versa (depends on when left/right once feeds are started)
     }
-    const int numFeeds = (int)deviceIndexes.size();
+    const int numFeeds = (int) deviceIndexes.size();
     thread cameraThreads[numFeeds];
     for (int i = 0; i < numFeeds; i++) {
         String d = deviceIndexes.at(i);
         cameraThreads[i] = thread(cameraThread, PORT[i], d);
     }
 
-    for(int i = 0; i < numFeeds; i++) {
+    for (int i = 0; i < numFeeds; i++) {
         cameraThreads[i].join();
     }
 }
