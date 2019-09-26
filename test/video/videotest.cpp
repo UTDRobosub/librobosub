@@ -6,7 +6,7 @@ using namespace std;
 using namespace robosub;
 bool running = true;
 
-int CAMERA_INDEX = 2;
+int CAMERA_INDEX = 1;
 double EPSILON_APPROX_TOLERANCE_FACTOR = 0.0425;
 double MIN_AREA = 50;
 double MAX_AREA = 8220;
@@ -44,10 +44,10 @@ int mode(deque<int> q) {
 
     int mode = 0;
     int mode_freq = 0;
-    for (auto itor = table.begin(); itor != table.end(); itor++) {
-        if (itor->second > mode_freq) {
-            mode = itor->first;
-            mode_freq = itor->second;
+    for (auto iterator = table.begin(); iterator != table.end(); iterator++) {
+        if (iterator->second > mode_freq) {
+            mode = iterator->first;
+            mode_freq = iterator->second;
         }
     }
 
@@ -71,6 +71,7 @@ int getAverageCount(deque<int> previousCounts, int nextCount, int lookBack) {
 int main(int argc, char **argv) {
     //catch signal
     signal(SIGINT, catchSignal);
+
     namedWindow("Input");
     namedWindow("Output");
 
@@ -94,7 +95,7 @@ int main(int argc, char **argv) {
     setTrackbarPos("CONTOUR_BLACK_THRESHOLD", "Output", (int) (CONTOUR_BLACK_THRESHOLD * 10));
 
 
-    Camera cam = Camera(CAMERA_INDEX);
+    Camera cam = Camera("/dev/video1");
 //    cam.setFrameSize(Size(1280, 720));
     auto calibrationData = *cam.loadCalibrationDataFromXML("../config/fisheye_cameracalib.xml",
                                                            cam.getFrameSize());
@@ -242,8 +243,8 @@ int main(int argc, char **argv) {
                       String(Util::toStringWithPrecision(cam.getFrameRate())) + String(" FPS"),
                       Point(16, 16), Scalar(255, 255, 255), Drawing::Anchor::BOTTOM_LEFT, 0.5);
 
-        ImageTransform::scale(input, 2);
-        ImageTransform::scale(output, 2);
+        ImageTransform::scale(input, .5);
+        ImageTransform::scale(output, .5);
 
         imshow("Input", input);
         imshow("Output", output);
