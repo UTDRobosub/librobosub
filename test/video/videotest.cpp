@@ -44,10 +44,10 @@ int mode(deque<int> q) {
 
     int mode = 0;
     int mode_freq = 0;
-    for (auto itor = table.begin(); itor != table.end(); itor++) {
-        if (itor->second > mode_freq) {
-            mode = itor->first;
-            mode_freq = itor->second;
+    for (auto iterator = table.begin(); iterator != table.end(); iterator++) {
+        if (iterator->second > mode_freq) {
+            mode = iterator->first;
+            mode_freq = iterator->second;
         }
     }
 
@@ -243,8 +243,8 @@ int main(int argc, char **argv) {
                       String(Util::toStringWithPrecision(cam.getFrameRate())) + String(" FPS"),
                       Point(16, 16), Scalar(255, 255, 255), Drawing::Anchor::BOTTOM_LEFT, 0.5);
 
-        ImageTransform::scale(input, 2);
-        ImageTransform::scale(output, 2);
+        ImageTransform::scale(input, .5);
+        ImageTransform::scale(output, .5);
 
         imshow("Input", input);
         imshow("Output", output);
