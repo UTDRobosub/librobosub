@@ -64,7 +64,6 @@ int main(int argc, char **argv) {
         parser.printMessage();
         return 0;
     }
-
     if (!parser.has("@mode")) {
         cout << "Mode is required." << endl << endl;
         parser.printMessage();

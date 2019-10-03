@@ -4,23 +4,13 @@
 #include <thread>
 #include <robosub/robosub.h>
 #include "main.h"
-#include "readout.h"
 
 using namespace std;
 using namespace robosub;
 
-const int NUMFEEDS = 2;
-const int PORT[5] = {8500, 8501, 8502, 8503, 8504};
-const char *NETWORK_HOST = "192.168.1.1:8081";
-
-void control();
-
-void network(ReadoutData *);
-
 bool running = true;
 bool refresh = false;
-Controller *controller1;
-Controller *controller2;
+
 long controllerTime;
 mutex drawLock;
 
@@ -28,16 +18,55 @@ ReadoutData readoutData;
 
 int main(int argc, char *argv[]) {
 
-    controller1 = new Controller;
-    controller2 = new Controller;
+    const String keys =
+            "{help ?   |                    | print this message     }"
+            "{f nfed   | 2                  | number of feeds        }"
+            "{p port   | 8500               | starting port number   }"
+            "{x pfix   |                    | file prefix            }"
+            "{h host   | 192.168.1.1:8081   | network host           }";
 
-    thread controlThread(control);
-    thread networkThread(network, &readoutData);
-    thread readoutThread(readout, &readoutData);
+    CommandLineParser parser(argc, argv, keys);
+    parser.about("Network Video Transfer Test");
+
+    if (parser.has("help")) {
+        parser.printMessage();
+        return 0;
+    }
+    if (!parser.check()) {
+        parser.printErrors();
+        return 0;
+    }
+
+    int numFeeds = parser.get<int>("nfed");
+    int port = parser.get<int>("port");
+    String filePrefix = parser.get<String>("pfix");
+    String networkHost = parser.get<String>("host");
+
+    Controller* controller1 = new Controller;
+    Controller* controller2 = new Controller;
+
+    ThreadData* threaddata = new ThreadData;
+    threaddata->readout = &readoutData;
+    threaddata->networkFeeds = numFeeds;
+    threaddata->port = port;
+    threaddata->filePrefix = filePrefix;
+    threaddata->networkHost = networkHost;
+    threaddata->controller1 = controller1;
+    threaddata->controller2 = controller2;
+
+
+
+    thread controlThread(control, threaddata);
+    thread networkThread(network, threaddata);
+    thread readoutThread(readout, threaddata);
 
     controlThread.join();
     networkThread.join();
     readoutThread.join();
+
+    delete controller1;
+    delete controller2;
+    delete threaddata;
 
     return 0;
 }
@@ -45,43 +74,3 @@ int main(int argc, char *argv[]) {
 //Thread for mission control window (everything but video feed)
 //Display and send controller inputs,
 //Recieve and display diagnostics
-void control() {
-
-    //start SDL
-    if (SDL_Init(SDL_INIT_JOYSTICK | SDL_INIT_VIDEO) < 0) {
-        cout << "Couldn't initialize SDL: " << SDL_GetError() << endl;
-        exit(1);
-    }
-
-    //Uint8 *keystate = SDL_GetKeyState(NULL);
-
-    //get controllers
-    controller1->setJoystick(SDL_JoystickOpen(0));
-    controller2->setJoystick(SDL_JoystickOpen(1));
-
-    SDL_Event event;
-    //main loop
-    while (running) {
-
-        //event loop
-        SDL_PumpEvents();
-        while (SDL_PollEvent(&event) != 0) {
-            if (event.type == SDL_QUIT)
-                running = false;
-        }
-
-        //refresh when requested or both joysticks are disconnected
-        if (refresh || (controller1->mode() == 0) && (controller2->mode() == 0)) {
-            refresh = false;
-            SDL_QuitSubSystem(SDL_INIT_JOYSTICK);
-            SDL_InitSubSystem(SDL_INIT_JOYSTICK);
-            controller1->setJoystick(SDL_JoystickOpen(0));
-            controller2->setJoystick(SDL_JoystickOpen(1));
-        }
-
-        controllerTime = robosub::Time::millis(); //add current timestamp
-        robosub::Time::waitMillis(1); //prevent pinning the processor at 100%
-    }
-
-    SDL_Quit();
-}
