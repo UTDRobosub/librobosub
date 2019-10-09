@@ -6,7 +6,7 @@ using namespace std;
 using namespace robosub;
 bool running = true;
 
-int CAMERA_INDEX = 1;
+int CAMERA_INDEX = 0;
 double EPSILON_APPROX_TOLERANCE_FACTOR = 0.0425;
 double MIN_AREA = 50;
 double MAX_AREA = 8220;
@@ -72,6 +72,7 @@ int main(int argc, char **argv) {
     //catch signal
     signal(SIGINT, catchSignal);
 
+
     namedWindow("Input");
     namedWindow("Output");
 
@@ -95,7 +96,7 @@ int main(int argc, char **argv) {
     setTrackbarPos("CONTOUR_BLACK_THRESHOLD", "Output", (int) (CONTOUR_BLACK_THRESHOLD * 10));
 
 
-    Camera cam = Camera("/dev/video1");
+    Camera cam = Camera("/dev/video0");
 //    cam.setFrameSize(Size(1280, 720));
     auto calibrationData = *cam.loadCalibrationDataFromXML("../config/fisheye_cameracalib.xml",
                                                            cam.getFrameSize());
@@ -111,6 +112,9 @@ int main(int argc, char **argv) {
     deque<int> rectangleCounts = deque<int>();
     deque<int> circleCounts = deque<int>();
 
+    ofstream ofs("video.hvec", ios::out | ios::binary);
+    vector<uchar> encodedImg(50000);
+
     while (running) {
 
         //update trackbars
@@ -125,6 +129,8 @@ int main(int argc, char **argv) {
 
 
         cam.retrieveFrameBGR(input);
+        imencode(".mp4", input, encodedImg);
+        ofs.write((const char *) &encodedImg[0], encodedImg.size());
         //undistort
         input = cam.undistort(input, calibrationData);
 
@@ -256,6 +262,9 @@ int main(int argc, char **argv) {
         else if (waitKey(1) >= 0) break;
         cout << "frame " << std::setprecision(4) << " @ " << cam.getFrameRate() << " fps" << endl;
     }
+
+    ofs.close();
+
     return 0;
 }
 
