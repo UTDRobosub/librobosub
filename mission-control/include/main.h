@@ -1,8 +1,8 @@
 #pragma once
 
 #include "controller.h"
-#include "librobosub/robosub.h"
-#include "librobosub/networktcp.h"
+#include "robosub/robosub.h"
+#include "robosub/networktcp.h"
 #include <signal.h>
 #include <opencv2/opencv.hpp>
 #include <opencv2/ximgproc.hpp>
@@ -10,9 +10,33 @@
 
 extern bool running;
 extern bool refresh;
-extern Controller* controller1;
-extern Controller* controller2;
 extern long controllerTime;
 extern mutex drawLock;
 
-extern const char* NETWORK_HOST;
+struct ReadoutData{
+    int scale;
+
+    bool valid;
+
+    float rtt;
+    float cpu;
+    float ram;
+
+    float accel_x;
+    float accel_y;
+    float accel_z;
+};
+
+struct ThreadData {
+    ReadoutData* readout;
+    int networkFeeds;
+    int port;
+    String filePrefix;
+    String networkHost;
+    Controller *controller1;
+    Controller *controller2;
+};
+
+void control(ThreadData*);
+void network(ThreadData*);
+void readout(ThreadData*);

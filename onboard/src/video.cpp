@@ -61,7 +61,14 @@ void cameraThread(int port, String cameraName) {
             int ecode = server.sendBuffer(senddata + segmentsize * i, min(segmentsize, datalen - segmentsize * i));
             if (ecode != 0) {
                 cout << "Send error: " << ecode << " " << strerror(ecode) << endl;
-                break;
+                // wait to reconnect
+                cout << "Unbinding from port" <<port  << endl;
+                server.unbindFromPort();
+                cout << "Binding to port." << endl;
+                server.bindToPort(port);
+                cout << "Accepting client." << endl;
+                server.acceptClient();
+
             }
 
             robosub::Time::waitMicros(100);

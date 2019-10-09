@@ -28,4 +28,5 @@ double RobotState::smoothControllerValue(double x) {
     int s = x < 0 ? -1 : 1;
     x = abs(x);
     return s * min(max(2.5925925925 * x * x * x - 3.7407407407 * x * x + 2.348148148148 * x - 0.2, 0.0), 1.0);
+
 }
