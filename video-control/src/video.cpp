@@ -15,7 +15,6 @@ void catchSignal(int signal) {
 
 void drawFrame(int rows, int cols, char *framedata, float framesPerSecond, float bitsPerSecond, int port, int index) {
     drawLock.lock();
-    int framedatalen = rows * cols * 3;
     Mat frame = Mat(rows, cols, CV_8UC3, framedata);
 
     Drawing::text(frame,
@@ -34,7 +33,6 @@ void drawFrame(int rows, int cols, char *framedata, float framesPerSecond, float
 
 void drawError(int rows, int cols, int port) {
     drawLock.lock();
-    int framedatalen = rows * cols * 3;
 
     Mat bestframedraw(rows, cols, CV_8UC3, Scalar(32, 32, 32));
 
@@ -52,8 +50,8 @@ void cameraThread(int port, int index) {
     int cols = 1280;
     FPS fps = FPS();
 
-    float framesPerSecond;
-    float bitsPerSecond;
+    float framesPerSecond = 0;
+    float bitsPerSecond = 0;
 
     while (running) {
         NetworkTcpClient client;
@@ -90,7 +88,6 @@ void cameraThread(int port, int index) {
                         int ver1 = *(int *) (headerdata + 0);
                         cols = *(int *) (headerdata + 4);
                         rows = *(int *) (headerdata + 8);
-                        int none = *(int *) (headerdata + 12);
 
 //                        cout<<cols<<" "<<rows<<endl;
 
@@ -99,7 +96,7 @@ void cameraThread(int port, int index) {
                             fps.frame();
 
                             framesPerSecond = (float) fps.fps();
-                            bitsPerSecond = (float) (framesPerSecond * (framedatalen + 16) * 8);
+                            bitsPerSecond = (float) (framesPerSecond * (framedatalen + 16.0) * 8);
 
                             framedatalen = rows * cols * 3;
 
@@ -131,7 +128,7 @@ void cameraThread(int port, int index) {
                                         cout << "Created video file" << videoFiles[index].isOpened() << endl;
                                     }
                                     drawFrame(rows, cols, framedata, framesPerSecond, bitsPerSecond, port, index);
-                                    char c = waitKey(1);
+                                    char c = (char) waitKey(1);
                                     if (c == 's') {
                                         for (int i = 0; i < NUMFEEDS; i++) {
                                             while (videoFiles[i].isOpened())
@@ -177,8 +174,9 @@ void cameraThread(int port, int index) {
                                         cv::VideoWriter::fourcc('M', 'J', 'P', 'G'), 10, Size(1280, 720));
                                 cout << "Created video file" << videoFiles[index].isOpened() << endl;
                             }
-                            drawFrame(rows, cols, framedata, framesPerSecond, bitsPerSecond, port, index);
-                            char c = waitKey(1);
+                            process
+                                    drawFrame(rows, cols, framedata, framesPerSecond, bitsPerSecond, port, index);
+                            char c = (char) waitKey(1);
                             if (c == 's') {
                                 for (int i = 0; i < NUMFEEDS; i++) {
                                     while (videoFiles[i].isOpened())

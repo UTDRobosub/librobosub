@@ -30,7 +30,7 @@ IF (UNIX)
 ENDIF()
 
 # Find files
-file(GLOB SOURCES src/*.cpp)
+file(GLOB SOURCES src/**/*.cpp src/*.cpp)
 file(GLOB HEADERS include/**/*.h)
 file(GLOB WS_HEADERS include/**/ws/*.h include/**/ws/*.hpp)
 file(GLOB JSON_HEADERS include/**/json/*.h include/**/json/*.hpp)
