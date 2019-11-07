@@ -13,6 +13,51 @@ void catchSignal(int signal) {
     running = false;
 }
 
+static int getTrackbar(char *name) {
+    return cv::getTrackbarPos(name, "Output");
+}
+
+void updateTrackbars(ShapeFinder shapeFinder) {
+    shapeFinder.MIN_AREA = (double) getTrackbar("MIN_AREA");
+    shapeFinder.MAX_AREA = (double) getTrackbar("MAX_AREA");
+    shapeFinder.EROSION_SIZE = getTrackbar("EROSION_SIZE");
+    shapeFinder.SQUARE_RATIO_THRESHOLD = getTrackbar("SQUARE_RATIO_THRESHOLD") / 100.0;
+    shapeFinder.TRIANGLE_RATIO_THRESHOLD = getTrackbar("TRIANGLE_RATIO_THRESHOLD") / 100.0;
+    shapeFinder.EPSILON_APPROX_TOLERANCE_FACTOR = getTrackbar("EPSILON_APPROX_TOLERANCE_FACTOR") / 1000.0;
+    shapeFinder.IMAGE_BLACK_THRESHOLD = getTrackbar("IMAGE_BLACK_THRESHOLD") / 10.0;
+    shapeFinder.CONTOUR_BLACK_THRESHOLD = getTrackbar("CONTOUR_BLACK_THRESHOLD") / 10.0;
+}
+
+
+void displayShapes(ShapeFindResult &result,
+                   const Mat &outputImage) {
+    drawContours(outputImage, result.triangles, -1, Scalar(213, 0, 249), 4, 8); //magenta
+    drawContours(outputImage, result.rectangles, -1, Scalar(0, 176, 255), 4, 8); //blue
+    drawContours(outputImage, result.squares, -1, Scalar(255, 255, 0), 4, 8); //yellow
+    drawContours(outputImage, result.circles, -1, Scalar(100, 230, 0), 4, 8); //teal
+
+}
+
+void displayShapeCountUi(ShapeFindResult &result, Mat &outputImage) {
+    vector<vector<Point>> tp = vector<vector<Point>>({{Point(80, 100), Point(120, 100), Point(100, 60)}});
+    circle(outputImage, Point(100, 30), 20, Scalar(0, 0, 255), -1);
+    fillPoly(outputImage, tp, Scalar(0, 0, 255));
+    Drawing::rectangle(outputImage, Point(80, 130), Point(120, 135), Scalar(0, 0, 255),
+                       Scalar(0, 0, 255));
+    Drawing::rectangle(outputImage, Point(80, 165), Point(120, 205), Scalar(0, 0, 255),
+                       Scalar(0, 0, 255));
+
+    Drawing::text(outputImage, to_string(result.getCountMode(result.circleCounts)), Point(20, 50),
+                  Scalar(0, 0, 255), Drawing::TOP_LEFT, 2, 4);
+    Drawing::text(outputImage, to_string(result.getCountMode(result.triangleCounts)),
+                  Point(20, 100), Scalar(0, 0, 255), Drawing::TOP_LEFT, 2, 4);
+    Drawing::text(outputImage, to_string(result.getCountMode(result.rectangleCounts)),
+                  Point(20, 150), Scalar(0, 0, 255), Drawing::TOP_LEFT, 2, 4);
+    Drawing::text(outputImage, to_string(result.getCountMode(result.squareCounts)), Point(20, 200),
+                  Scalar(0, 0, 255), Drawing::TOP_LEFT, 2, 4);
+}
+
+
 static void makeTrackbar(char *name, int length) {
     int *v = new int(1);
     cv::createTrackbar(name, "Output", v, length);
@@ -23,7 +68,7 @@ static void createViewingWindows() {
     namedWindow("Output");
 }
 
-void CreateTuningWindow(ShapeFinder shapeFinder) {
+void createTuningWindow(ShapeFinder shapeFinder) {
     createViewingWindows();
 
     makeTrackbar("MIN_AREA", 10000);
@@ -36,8 +81,8 @@ void CreateTuningWindow(ShapeFinder shapeFinder) {
     makeTrackbar("IMAGE_BLACK_THRESHOLD", 10000);
 
 
-    setTrackbarPos("MIN_AREA", "Output", (int) shapeFinder.MIN_AREA;
-    setTrackbarPos("MAX_AREA", "Output", (int) shapeFinder.MAX_AREA;
+    setTrackbarPos("MIN_AREA", "Output", (int) shapeFinder.MIN_AREA);
+    setTrackbarPos("MAX_AREA", "Output", (int) shapeFinder.MAX_AREA);
     setTrackbarPos("EROSION_SIZE", "Output", shapeFinder.EROSION_SIZE);
     setTrackbarPos("SQUARE_RATIO_THRESHOLD", "Output", (int) (shapeFinder.SQUARE_RATIO_THRESHOLD * 100));
     setTrackbarPos("TRIANGLE_RATIO_THRESHOLD", "Output", (int) (shapeFinder.TRIANGLE_RATIO_THRESHOLD * 100));
@@ -53,13 +98,32 @@ int main(int argc, char **argv) {
 
     sigaction(SIGINT, &action, NULL);
 
-    Mat input;
+    // cam.setFrameSize(Size(1280, 720));
+    Camera::CalibrationData calibrationData = *Camera::loadCalibrationDataFromXML("../config/fisheye_cameracalib.xml",
+                                                                                  std::move(Size(1280, 720)));
+    Mat input, output;
     Camera cam = Camera("/dev/video0");
-    ShapeFinder shapeFinder(cv::Size(1280, 720));
+    ShapeFinder shapeFinder(calibrationData);
+    ShapeFindResult result;
+
+    createTuningWindow(shapeFinder);
+
 
     while (running) {
         cam.retrieveFrameBGR(input);
-        shapeFinder.processFrame(input);
+        shapeFinder.processFrame(input, result);
+        displayShapes(result, input);
+        displayShapeCountUi(result, input);
+
+        ImageTransform::scale(input, .5);
+
+        ImageTransform::scale(input, .5);
+
+        imshow("Output", input);
+
+        if (waitKey(1) == 32)
+            waitKey(0);
+
     }
 
     return 0;

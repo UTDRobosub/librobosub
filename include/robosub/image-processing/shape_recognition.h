@@ -6,10 +6,43 @@
 #define LIBROBOSUB_SHAPE_RECOGNITION_H
 
 namespace robosub {
+    class ShapeFindResult {
+    private:
+        int COUNT_MODE_LOOKBACK;
+
+        static int mode(const deque<int> &q);
+
+    public:
+        deque<int> triangleCounts = deque<int>();
+        deque<int> squareCounts = deque<int>();
+        deque<int> rectangleCounts = deque<int>();
+        deque<int> circleCounts = deque<int>();
+
+        vector<vector<Point>> triangles;
+        vector<vector<Point>> rectangles;
+        vector<vector<Point>> squares;
+        vector<vector<Point>> circles;
+
+        static int getCountMode(const deque<int> &previousCounts);
+
+        void addCount(deque<int> &previousCounts, int newCount);
+    };
+
+
     class ShapeFinder {
     private:
         bool running = true;
 
+        Camera::CalibrationData calibrationData;
+
+        Mat outputImage, processedImage;
+        Scalar mu, sigma;
+
+        void classifyShape(ShapeFindResult &result, vector<Point> &approx);
+
+        Mat preprocessImage(Mat &input);
+
+    public:
         double EPSILON_APPROX_TOLERANCE_FACTOR = 0.0425;
         double MIN_AREA = 50;
         double MAX_AREA = 8220;
@@ -21,36 +54,11 @@ namespace robosub {
         double IMAGE_BLACK_THRESHOLD = 38;
         double CONTOUR_BLACK_THRESHOLD = 150;
 
-        Camera::CalibrationData calibrationData;
-        deque<int> triangleCounts = deque<int>();
-        deque<int> squareCounts = deque<int>();
-        deque<int> rectangleCounts = deque<int>();
-        deque<int> circleCounts = deque<int>();
+        explicit ShapeFinder(Camera::CalibrationData calibrationData);
 
-        Mat outputImage, processedImage;
-        Scalar mu, sigma;
-
-        void createTuningWindow();
-
-        void updateTrackbars();
-
-        void classifyShape(vector<vector<Point>> &triangles, vector<vector<Point>> &rectangles,
-                           vector<vector<Point>> &squares,
-                           vector<vector<Point>> &circles, vector<Point> &approx);
-
-        void displayShapes(const vector<vector<Point>> &triangles, const vector<vector<Point>> &rectangles,
-                           const vector<vector<Point>> &squares, const vector<vector<Point>> &circles) const;
-
-        void displayShapeCountUi(const vector<vector<cv::Point>> &circles, const vector<vector<cv::Point>> &triangles,
-                                 const vector<vector<cv::Point>> &rectangles, const vector<vector<cv::Point>> &squares);
-
-        Mat preprocessImage(Mat &input);
-
-    public:
-        explicit ShapeFinder(cv::Size);
-
-        void processFrame(Mat &input);
+        void processFrame(Mat &input, ShapeFindResult &result);
     };
+
 }
 
 #endif //LIBROBOSUB_SHAPE_RECOGNITION_H

@@ -10,13 +10,7 @@
 using namespace std;
 
 namespace robosub {
-
-
-    static int getTrackbar(char *name) {
-        return cv::getTrackbarPos(name, "Output");
-    }
-
-    static int mode(deque<int> const &q) {
+    int ShapeFindResult::mode(deque<int> const &q) {
         std::unordered_map<int, int> table;
         for (int i: q)
             table[i]++;
@@ -33,110 +27,64 @@ namespace robosub {
         return mode;
     }
 
-    static int getCountMode(deque<int> previousCounts, int nextCount, int lookBack) {
-        if (previousCounts.empty()) {
-            previousCounts.push_back(nextCount);
-            return nextCount;
-        } else if (previousCounts.size() < lookBack) {
-            previousCounts.push_back(nextCount);
+    int ShapeFindResult::getCountMode(const deque<int> &previousCounts) {
+        if (previousCounts.empty())
+            return -1;
+        else
             return mode(previousCounts);
-        } else {
-            previousCounts.push_back(nextCount);
+    }
+
+    void ShapeFindResult::addCount(deque<int> &previousCounts, int newCount) {
+        previousCounts.push_back(newCount);
+        while (previousCounts.size() > this->COUNT_MODE_LOOKBACK) {
             previousCounts.pop_front();
-            return mode(previousCounts);
         }
     }
 
-    void ShapeFinder::updateTrackbars() {
-        MIN_AREA = (double) getTrackbar("MIN_AREA");
-        MAX_AREA = (double) getTrackbar("MAX_AREA");
-        EROSION_SIZE = getTrackbar("EROSION_SIZE");
-        SQUARE_RATIO_THRESHOLD = getTrackbar("SQUARE_RATIO_THRESHOLD") / 100.0;
-        TRIANGLE_RATIO_THRESHOLD = getTrackbar("TRIANGLE_RATIO_THRESHOLD") / 100.0;
-        EPSILON_APPROX_TOLERANCE_FACTOR = getTrackbar("EPSILON_APPROX_TOLERANCE_FACTOR") / 1000.0;
-        IMAGE_BLACK_THRESHOLD = getTrackbar("IMAGE_BLACK_THRESHOLD") / 10.0;
-        CONTOUR_BLACK_THRESHOLD = getTrackbar("CONTOUR_BLACK_THRESHOLD") / 10.0;
-    }
-
-    void
-    ShapeFinder::classifyShape(vector<vector<Point>> &triangles, vector<vector<Point>> &rectangles,
-                               vector<vector<Point>> &squares,
-                               vector<vector<Point>> &circles, vector<Point> &approx) {
+    void ShapeFinder::classifyShape(ShapeFindResult &result, vector<Point> &approx) {
         if (approx.size() >= 5) {
-            circles.push_back(approx);
+            result.circles.push_back(approx);
         } else if (approx.size() == 4) {
             Rectangle r = Rectangle(approx);
             double dimensionRatio = r.height() / r.width();
             if (dimensionRatio > 1) dimensionRatio = 1 / dimensionRatio;
 
             if (dimensionRatio < SQUARE_RATIO_THRESHOLD)
-                rectangles.push_back(approx);
+                result.rectangles.push_back(approx);
             else
-                squares.push_back(approx);
+                result.squares.push_back(approx);
         } else if (approx.size() == 3) {
             Triangle t = Triangle(approx);
             double dimensionRatio = t.height() / t.width();
 
             if (dimensionRatio < TRIANGLE_RATIO_THRESHOLD)
-                rectangles.push_back(approx);
+                result.rectangles.push_back(approx);
             else
-                triangles.push_back(approx);
+                result.triangles.push_back(approx);
         } else {
-            rectangles.push_back(approx);
+            result.rectangles.push_back(approx);
         }
     }
 
-    void ShapeFinder::displayShapes(const vector<vector<Point>> &triangles, const vector<vector<Point>> &rectangles,
-                                    const vector<vector<Point>> &squares, const vector<vector<Point>> &circles) const {
-        drawContours(outputImage, triangles, -1, Scalar(213, 0, 249), 4, 8); //magenta
-        drawContours(outputImage, rectangles, -1, Scalar(0, 176, 255), 4, 8); //blue
-        drawContours(outputImage, squares, -1, Scalar(255, 255, 0), 4, 8); //yellow
-        drawContours(outputImage, circles, -1, Scalar(100, 230, 0), 4, 8); //teal
-
-    }
-
-    void ShapeFinder::displayShapeCountUi(vector<vector<cv::Point>> const &circles,
-                                          vector<vector<cv::Point>> const &triangles,
-                                          vector<vector<cv::Point>> const &rectangles,
-                                          vector<vector<cv::Point>> const &squares) {
-        vector<vector<Point>> tp = vector<vector<Point>>({{Point(80, 100), Point(120, 100), Point(100, 60)}});
-        circle(outputImage, Point(100, 30), 20, Scalar(0, 0, 255), -1);
-        fillPoly(outputImage, tp, Scalar(0, 0, 255));
-        Drawing::rectangle(outputImage, Point(80, 130), Point(120, 135), Scalar(0, 0, 255),
-                           Scalar(0, 0, 255));
-        Drawing::rectangle(outputImage, Point(80, 165), Point(120, 205), Scalar(0, 0, 255),
-                           Scalar(0, 0, 255));
-
-        Drawing::text(outputImage, to_string(getCountMode(circleCounts, circles.size(), 30)), Point(20, 50),
-                      Scalar(0, 0, 255), Drawing::TOP_LEFT, 2, 4);
-        Drawing::text(outputImage, to_string(getCountMode(triangleCounts, triangles.size(), 30)),
-                      Point(20, 100),
-                      Scalar(0, 0, 255), Drawing::TOP_LEFT, 2, 4);
-        Drawing::text(outputImage, to_string(getCountMode(rectangleCounts, rectangles.size(), 30)),
-                      Point(20, 150),
-                      Scalar(0, 0, 255), Drawing::TOP_LEFT, 2, 4);
-        Drawing::text(outputImage, to_string(getCountMode(squareCounts, squares.size(), 30)), Point(20, 200),
-                      Scalar(0, 0, 255), Drawing::TOP_LEFT, 2, 4);
-    }
 
     Mat ShapeFinder::preprocessImage(Mat &input) {
         Mat procImg = input;
-        //Compute standard deviation for image
+        // Compute standard deviation for image
         meanStdDev(procImg, mu, sigma);
 
-        //Remove small noise
-        Mat element = getStructuringElement(MORPH_RECT,
-                                            Size(2 * EROSION_SIZE + 1, 2 * EROSION_SIZE + 1),
-                                            Point(EROSION_SIZE, EROSION_SIZE));
-
+        // Remove small noise
         ImageFilter::downsample(procImg, 2);
         ImageFilter::upsample(procImg, 2);
 
-        //Threshold
+        // Threshold
         double threshold1 = mu.val[0] - 2.0 * sigma.val[0];
         double threshold2 = mu.val[0] + 0.0 * sigma.val[0];
         Canny(procImg, procImg, threshold1, threshold2);
 
+        // Erosion and dilation
+        Mat element = getStructuringElement(MORPH_RECT,
+                                            Size(2 * EROSION_SIZE + 1, 2 * EROSION_SIZE + 1),
+                                            Point(EROSION_SIZE, EROSION_SIZE));
 
         dilate(procImg, procImg, element);
         erode(procImg, procImg, element);
@@ -145,25 +93,13 @@ namespace robosub {
         return procImg;
     }
 
-    ShapeFinder::ShapeFinder(cv::Size
-                             frameSize) {
-        createTuningWindow();
-
-        // cam.setFrameSize(Size(1280, 720));
-        calibrationData = *Camera::loadCalibrationDataFromXML("../config/fisheye_cameracalib.xml",
-                                                              std::move(frameSize));
+    ShapeFinder::ShapeFinder(Camera::CalibrationData calibrationData) {
+        this->calibrationData = std::move(calibrationData);
     }
 
-    void ShapeFinder::processFrame(Mat &input) {
+    void ShapeFinder::processFrame(Mat &input, ShapeFindResult &result) {
         vector<vector<Point>> contours;
         vector<Vec4i> hierarchy;
-        vector<vector<Point>> triangles;
-        vector<vector<Point>> rectangles;
-        vector<vector<Point>> squares;
-        vector<vector<Point>> circles;
-
-        // update trackbars
-        updateTrackbars();
 
         // undistort
         input = Camera::undistort(input, calibrationData);
@@ -191,21 +127,12 @@ namespace robosub {
             if (c.area() > MAX_AREA || c.area() < MIN_AREA)
                 continue;
 
-            classifyShape(triangles, rectangles, squares, circles, approx);
+            classifyShape(result, approx);
         }
 
-        cvtColor(input, outputImage, cv::COLOR_GRAY2RGB);
-        displayShapes(triangles, rectangles, squares, circles);
-        displayShapeCountUi(circles, triangles, rectangles, squares);
-
-        ImageTransform::scale(outputImage, .5);
-
-        ImageTransform::scale(input, .5);
-
-        imshow("Input", input);
-        imshow("Output", outputImage);
-
-        if (waitKey(1) == 32)
-            waitKey(0);
+        result.addCount(result.triangleCounts, result.triangles.size());
+        result.addCount(result.squareCounts, result.squares.size());
+        result.addCount(result.rectangleCounts, result.rectangles.size());
+        result.addCount(result.circleCounts, result.circles.size());
     }
 }
