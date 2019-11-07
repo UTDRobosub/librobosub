@@ -10,10 +10,7 @@
 using namespace std;
 
 namespace robosub {
-    static void makeTrackbar(char *name, int length) {
-        int *v = new int(1);
-        cv::createTrackbar(name, "Output", v, length);
-    }
+
 
     static int getTrackbar(char *name) {
         return cv::getTrackbarPos(name, "Output");
@@ -48,34 +45,6 @@ namespace robosub {
             previousCounts.pop_front();
             return mode(previousCounts);
         }
-    }
-
-    static void createViewingWindows() {
-        namedWindow("Input");
-        namedWindow("Output");
-    }
-
-    void ShapeFinder::createTuningWindow() {
-        createViewingWindows();
-
-        //create trackbars
-        makeTrackbar("MIN_AREA", 10000);
-        makeTrackbar("MAX_AREA", 10000);
-        makeTrackbar("EROSION_SIZE", 20);
-        makeTrackbar("SQUARE_RATIO_THRESHOLD", 100);
-        makeTrackbar("TRIANGLE_RATIO_THRESHOLD", 100);
-        makeTrackbar("EPSILON_APPROX_TOLERANCE_FACTOR", 100);
-        makeTrackbar("IMAGE_BLACK_THRESHOLD", 10000);
-        makeTrackbar("CONTOUR_BLACK_THRESHOLD", 10000);
-
-        setTrackbarPos("MIN_AREA", "Output", (int) MIN_AREA);
-        setTrackbarPos("MAX_AREA", "Output", (int) MAX_AREA);
-        setTrackbarPos("EROSION_SIZE", "Output", EROSION_SIZE);
-        setTrackbarPos("SQUARE_RATIO_THRESHOLD", "Output", (int) (SQUARE_RATIO_THRESHOLD * 100));
-        setTrackbarPos("TRIANGLE_RATIO_THRESHOLD", "Output", (int) (TRIANGLE_RATIO_THRESHOLD * 100));
-        setTrackbarPos("EPSILON_APPROX_TOLERANCE_FACTOR", "Output", (int) (EPSILON_APPROX_TOLERANCE_FACTOR * 1000));
-        setTrackbarPos("IMAGE_BLACK_THRESHOLD", "Output", (int) (IMAGE_BLACK_THRESHOLD * 10));
-        setTrackbarPos("CONTOUR_BLACK_THRESHOLD", "Output", (int) (CONTOUR_BLACK_THRESHOLD * 10));
     }
 
     void ShapeFinder::updateTrackbars() {

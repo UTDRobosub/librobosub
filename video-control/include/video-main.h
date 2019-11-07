@@ -12,7 +12,7 @@ extern bool refresh;
 extern mutex drawLock;
 extern VideoWriter videoFiles[];
 
-extern const int NUMFEEDS;
-extern const int PORT[5];
-extern const String VIDEO_ADDR;
+const int NUMFEEDS = 2;
+const int PORT[5] = {8500, 8501, 8502, 8503, 8504};
+const String VIDEO_ADDR = "127.0.0.1";
 extern String FILE_PREFIX;

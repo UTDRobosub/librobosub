@@ -11,7 +11,9 @@ void video();
 bool running = true;
 bool refresh = false;
 mutex drawLock;
-VideoWriter videoFiles[numFeeds];
+VideoWriter videoFiles[8];
+
+String FILE_PREFIX;
 
 int main(int argc, char *argv[]) {
 
