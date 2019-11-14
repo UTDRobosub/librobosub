@@ -92,6 +92,11 @@ void createTuningWindow(ShapeFinder shapeFinder) {
     setTrackbarPos("CONTOUR_BLACK_THRESHOLD", "Output", (int) (shapeFinder.CONTOUR_BLACK_THRESHOLD * 10));
 }
 
+void displayFrameCount(double rate, Mat &outputImage) {
+    Drawing::text(outputImage, to_string(rate), Point(20, 50),
+                  Scalar(255, 0, 0), Drawing::BOTTOM_LEFT, 2, 4);
+}
+
 int main(int argc, char **argv) {
     // TODO: Fix this to compile. The code should be correct, but the project build is having issues
     struct sigaction action = getSigaction();
@@ -111,9 +116,12 @@ int main(int argc, char **argv) {
 
     while (running) {
         cam.retrieveFrameBGR(input);
+        imshow("Input", input);
+
         shapeFinder.processFrame(input, result);
         displayShapes(result, input);
         displayShapeCountUi(result, input);
+        displayFrameCount(cam.getFrameRate(), input);
 
         ImageTransform::scale(input, .5);
 
@@ -121,9 +129,12 @@ int main(int argc, char **argv) {
 
         imshow("Output", input);
 
-        if (waitKey(1) == 32)
-            waitKey(0);
+        int keyPress = waitKey(1);
 
+        if (keyPress == 32)
+            waitKey(0);
+        else if (keyPress >= 65 && keyPress <= 122)
+            break;
     }
 
     return 0;
