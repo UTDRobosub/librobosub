@@ -17,7 +17,7 @@ static int getTrackbar(char *name) {
     return cv::getTrackbarPos(name, "Output");
 }
 
-void updateTrackbars(ShapeFinder shapeFinder) {
+void updateTrackbars(ShapeFinder &shapeFinder) {
     shapeFinder.MIN_AREA = (double) getTrackbar("MIN_AREA");
     shapeFinder.MAX_AREA = (double) getTrackbar("MAX_AREA");
     shapeFinder.EROSION_SIZE = getTrackbar("EROSION_SIZE");
@@ -64,7 +64,6 @@ static void makeTrackbar(char *name, int length) {
 }
 
 static void createViewingWindows() {
-    namedWindow("Input");
     namedWindow("Output");
 }
 
@@ -116,7 +115,7 @@ int main(int argc, char **argv) {
 
     while (running) {
         cam.retrieveFrameBGR(input);
-        imshow("Input", input);
+        updateTrackbars(shapeFinder);
 
         shapeFinder.processFrame(input, result);
         displayShapes(result, input);
@@ -124,7 +123,6 @@ int main(int argc, char **argv) {
         displayFrameCount(cam.getFrameRate(), input);
 
         ImageTransform::scale(input, .5);
-
         ImageTransform::scale(input, .5);
 
         imshow("Output", input);
