@@ -98,6 +98,10 @@ namespace robosub {
     }
 
     void ShapeFinder::processFrame(Mat &input, ShapeFindResult &result) {
+        result.triangles.clear();
+        result.rectangles.clear();
+        result.squares.clear();
+        result.circles.clear();
         vector<vector<Point>> contours;
         vector<Vec4i> hierarchy;
 
