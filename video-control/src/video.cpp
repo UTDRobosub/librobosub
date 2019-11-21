@@ -174,8 +174,8 @@ void cameraThread(int port, int index) {
                                         cv::VideoWriter::fourcc('M', 'J', 'P', 'G'), 10, Size(1280, 720));
                                 cout << "Created video file" << videoFiles[index].isOpened() << endl;
                             }
-                            process
-                                    drawFrame(rows, cols, framedata, framesPerSecond, bitsPerSecond, port, index);
+
+                            drawFrame(rows, cols, framedata, framesPerSecond, bitsPerSecond, port, index);
                             char c = (char) waitKey(1);
                             if (c == 's') {
                                 for (int i = 0; i < NUMFEEDS; i++) {
