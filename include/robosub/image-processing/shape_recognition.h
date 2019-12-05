@@ -1,7 +1,3 @@
-//
-// Created by ryan on 10/9/19.
-//
-
 #ifndef LIBROBOSUB_SHAPE_RECOGNITION_H
 #define LIBROBOSUB_SHAPE_RECOGNITION_H
 

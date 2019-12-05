@@ -10,6 +10,8 @@ using namespace std;
 using namespace robosub;
 
 bool running = true;
+Camera::CalibrationData calibrationData;
+
 
 struct sigaction getSigaction();
 
@@ -100,6 +102,20 @@ void displayFrameCount(double rate, Mat &outputImage) {
                   Scalar(255, 0, 0), Drawing::BOTTOM_LEFT, 2, 4);
 }
 
+double parameterEvaluationFunction(map<string, double> parameters) {
+    ShapeFinder sf(calibrationData);
+    sf.EPSILON_APPROX_TOLERANCE_FACTOR = parameters.at("EPSILON_APPROX_TOLERANCE_FACTOR");
+    sf.MIN_AREA = parameters.at("MIN_AREA");
+    sf.MAX_AREA = parameters.at("MAX_AREA");
+    sf.SQUARE_RATIO_THRESHOLD = parameters.at("SQUARE_RATIO_THRESHOLD");
+    sf.TRIANGLE_RATIO_THRESHOLD = parameters.at("TRIANGLE_RATIO_THRESHOLD");
+    sf.EROSION_SIZE = parameters.at("EROSION_SIZE");
+    sf.IMAGE_BLACK_THRESHOLD = parameters.at("IMAGE_BLACK_THRESHOLD");
+    sf.CONTOUR_BLACK_THRESHOLD = parameters.at("CONTOUR_BLACK_THRESHOLD");
+
+    return -1;
+}
+
 int main(int argc, char **argv) {
     // TODO: Fix this to compile. The code should be correct, but the project build is having issues
     struct sigaction action = getSigaction();
@@ -107,12 +123,29 @@ int main(int argc, char **argv) {
     sigaction(SIGINT, &action, NULL);
 
     // cam.setFrameSize(Size(1280, 720));
-    Camera::CalibrationData calibrationData = *Camera::loadCalibrationDataFromXML(
+    calibrationData = *Camera::loadCalibrationDataFromXML(
             "../config/fisheye_cameracalib.xml",
             std::move(Size(1280, 720)));
     Mat input, output;
     Camera cam = Camera("/dev/video0");
     ShapeFinder shapeFinder(calibrationData);
+
+    map<string, double> parameters = map<string, double>{
+            {"EPSILON_APPROX_TOLERANCE_FACTOR", shapeFinder.EPSILON_APPROX_TOLERANCE_FACTOR},
+            {"MIN_AREA",                        shapeFinder.MIN_AREA},
+            {"MAX_AREA",                        shapeFinder.MAX_AREA},
+            {"SQUARE_RATIO_THRESHOLD",          shapeFinder.SQUARE_RATIO_THRESHOLD},
+            {"TRIANGLE_RATIO_THRESHOLD",        shapeFinder.TRIANGLE_RATIO_THRESHOLD},
+            {"EROSION_SIZE",                    shapeFinder.EROSION_SIZE},
+            {"IMAGE_BLACK_THRESHOLD",           shapeFinder.IMAGE_BLACK_THRESHOLD},
+            {"CONTOUR_BLACK_THRESHOLD",         shapeFinder.CONTOUR_BLACK_THRESHOLD}
+    };
+
+
+    ParameterTuner pt = ParameterTuner();
+    pt.tuneParameters(parameters, (void *) parameterEvaluationFunction);
+
+
     ShapeFindResult result;
 
     createTuningWindow(shapeFinder);
