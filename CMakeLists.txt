@@ -162,3 +162,8 @@ add_executable(test-videostab test/videostab/videostab.cpp)
 target_link_libraries(test-videostab ${LIBRARY_NAME})
 target_include_directories(test-videostab PRIVATE ${Boost_INCLUDE_DIR})
 target_compile_features(test-videostab PRIVATE cxx_range_for)
+
+add_executable(test-parametertuning test/shape-recognition-calibration/shapecalibimagecapture.cpp)
+target_link_libraries(test-parametertuning ${LIBRARY_NAME})
+target_include_directories(test-parametertuning PRIVATE ${Boost_INCLUDE_DIR})
+target_compile_features(test-parametertuning PRIVATE cxx_range_for)

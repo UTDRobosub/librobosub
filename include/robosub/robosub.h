@@ -32,3 +32,4 @@ BOOL APIENTRY DllMain(HMODULE hModule,
 #include "telemetry.h"
 #include "serial.h"
 #include "robosub/image-processing/shape_recognition.h"
+#include "robosub/image-processing/parametertuning.h"

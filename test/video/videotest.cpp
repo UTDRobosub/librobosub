@@ -106,7 +106,7 @@ int main(int argc, char **argv) {
     Camera::CalibrationData calibrationData = *Camera::loadCalibrationDataFromXML("../config/fisheye_cameracalib.xml",
                                                                                   std::move(Size(1280, 720)));
     Mat input, output;
-    Camera cam = Camera("/dev/video0");
+    Camera cam = Camera("/dev/video1");
     ShapeFinder shapeFinder(calibrationData);
     ShapeFindResult result;
 
