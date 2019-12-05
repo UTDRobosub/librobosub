@@ -109,7 +109,6 @@ double parameterEvaluationFunction(map<string, double> parameters) {
     sf.MAX_AREA = parameters.at("MAX_AREA");
     sf.SQUARE_RATIO_THRESHOLD = parameters.at("SQUARE_RATIO_THRESHOLD");
     sf.TRIANGLE_RATIO_THRESHOLD = parameters.at("TRIANGLE_RATIO_THRESHOLD");
-    sf.EROSION_SIZE = parameters.at("EROSION_SIZE");
     sf.IMAGE_BLACK_THRESHOLD = parameters.at("IMAGE_BLACK_THRESHOLD");
     sf.CONTOUR_BLACK_THRESHOLD = parameters.at("CONTOUR_BLACK_THRESHOLD");
 
@@ -130,15 +129,14 @@ int main(int argc, char **argv) {
     Camera cam = Camera("/dev/video0");
     ShapeFinder shapeFinder(calibrationData);
 
-    map<string, double> parameters = map<string, double>{
-            {"EPSILON_APPROX_TOLERANCE_FACTOR", shapeFinder.EPSILON_APPROX_TOLERANCE_FACTOR},
-            {"MIN_AREA",                        shapeFinder.MIN_AREA},
-            {"MAX_AREA",                        shapeFinder.MAX_AREA},
-            {"SQUARE_RATIO_THRESHOLD",          shapeFinder.SQUARE_RATIO_THRESHOLD},
-            {"TRIANGLE_RATIO_THRESHOLD",        shapeFinder.TRIANGLE_RATIO_THRESHOLD},
-            {"EROSION_SIZE",                    shapeFinder.EROSION_SIZE},
-            {"IMAGE_BLACK_THRESHOLD",           shapeFinder.IMAGE_BLACK_THRESHOLD},
-            {"CONTOUR_BLACK_THRESHOLD",         shapeFinder.CONTOUR_BLACK_THRESHOLD}
+    map<string, ParameterMetadata> parameters = map<string, ParameterMetadata>{
+            {"EPSILON_APPROX_TOLERANCE_FACTOR", ParameterMetadata(shapeFinder.EPSILON_APPROX_TOLERANCE_FACTOR, 0, 1)},
+            {"MIN_AREA",                        ParameterMetadata(shapeFinder.MIN_AREA, 0, 100)},
+            {"MAX_AREA",                        ParameterMetadata(shapeFinder.MAX_AREA, 1000, 10000)},
+            {"SQUARE_RATIO_THRESHOLD",          ParameterMetadata(shapeFinder.SQUARE_RATIO_THRESHOLD, 0, 1)},
+            {"TRIANGLE_RATIO_THRESHOLD",        ParameterMetadata(shapeFinder.TRIANGLE_RATIO_THRESHOLD, 0, 1)},
+            {"IMAGE_BLACK_THRESHOLD",           ParameterMetadata(shapeFinder.IMAGE_BLACK_THRESHOLD, 0, 300)},
+            {"CONTOUR_BLACK_THRESHOLD",         ParameterMetadata(shapeFinder.CONTOUR_BLACK_THRESHOLD, 0, 300)}
     };
 
 
