@@ -145,7 +145,6 @@ int main(int argc, char **argv) {
     ParameterTuner pt = ParameterTuner();
     pt.tuneParameters(parameters, (void *) parameterEvaluationFunction);
 
-
     ShapeFindResult result;
 
     createTuningWindow(shapeFinder);

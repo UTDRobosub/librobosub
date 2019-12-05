@@ -5,7 +5,6 @@
 #include <opencv2/opencv.hpp>
 #include <robosub/robosub.h>
 #include <utility>
-#include "robosub/image-processing/shape_recognition.h"
 
 using namespace std;
 

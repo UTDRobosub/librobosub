@@ -1,6 +1,6 @@
 #include <robosub/robosub.h>
-#include <robosub/image-processing/parametertuning.h>
 
+using namespace std;
 
 namespace robosub {
     map<string, double>
