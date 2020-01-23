@@ -22,6 +22,14 @@ namespace robosub {
         static int getCountMode(const deque<int> &previousCounts);
 
         void addCount(deque<int> &previousCounts, int newCount);
+
+        int getLastTriangleCount();
+
+        int getLastSquareCount();
+
+        int getLastRectangleCount();
+
+        int getLastCircleCount();
     };
 
 

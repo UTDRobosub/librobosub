@@ -20,13 +20,15 @@ namespace robosub {
     class ParameterTuner {
     private:
         map<string, ParameterMetadata> parameterMetadata;
-        void *evaluationFunction;
+
+        double (*evaluationFunction)(map<string, double>);
 
         default_random_engine generator;
         normal_distribution<double> norm_distribution;
+        bernoulli_distribution bern_dist;
 
         static constexpr double mutationRate = 0.01;
-        static constexpr int generationSize = 100;
+        static constexpr int generationSize = 30;
 
         double mutateParameter(double currentValue, ParameterMetadata data);
 
@@ -37,12 +39,26 @@ namespace robosub {
 
         void generateInitialPopulation(map<string, double> *populationBuffer, int populationSize = generationSize);
 
+        void generateNewPopulation(map<string, double> *populationBuffer, int populationSize);
+
+        map<string, double> getBestParameterSet(map<string, double> *population, int populationSize);
+
     public:
         ParameterTuner();
 
         map<string, double>
-        tuneParameters(map<string, ParameterMetadata> parameters, void *evalFunction,
+        tuneParameters(map<string, ParameterMetadata> parameters, double (*evalFunction)(map<string, double>),
                        TuningMethods method = TuningMethods::GENETIC_ALGORITHM);
+    };
+
+    class TuningSample {
+    public:
+        Mat image;
+        map<string, void *> *sampleData;
+
+        TuningSample() {
+            sampleData = new map<string, void *>();
+        }
     };
 }
 

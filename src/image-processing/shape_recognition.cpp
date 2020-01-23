@@ -5,6 +5,8 @@
 #include <opencv2/opencv.hpp>
 #include <robosub/robosub.h>
 #include <utility>
+#include <robosub/image-processing/shape_recognition.h>
+
 
 using namespace std;
 
@@ -38,6 +40,30 @@ namespace robosub {
         while (previousCounts.size() > this->COUNT_MODE_LOOKBACK) {
             previousCounts.pop_front();
         }
+    }
+
+    int ShapeFindResult::getLastTriangleCount() {
+        if (triangleCounts.size() == 0) return 0;
+
+        return triangleCounts.at(triangleCounts.size() - 1);
+    }
+
+    int ShapeFindResult::getLastSquareCount() {
+        if (squareCounts.size() == 0) return 0;
+
+        return squareCounts.at(squareCounts.size() - 1);
+    }
+
+    int ShapeFindResult::getLastRectangleCount() {
+        if (rectangleCounts.size() == 0) return 0;
+
+        return rectangleCounts.at(rectangleCounts.size() - 1);
+    }
+
+    int ShapeFindResult::getLastCircleCount() {
+        if (circleCounts.size() == 0) return 0;
+
+        return circleCounts.at(circleCounts.size() - 1);
     }
 
     void ShapeFinder::classifyShape(ShapeFindResult &result, vector<Point> &approx) {

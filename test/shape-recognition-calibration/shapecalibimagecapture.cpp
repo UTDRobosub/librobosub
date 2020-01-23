@@ -9,29 +9,27 @@
 using namespace std;
 using namespace robosub;
 
-bool running = true;
-Camera::CalibrationData calibrationData;
-
+bool RUNNING = true;
+Camera::CalibrationData CALIBRATION_DATA;
+TuningSample *CURRENT_SAMPLE;
+int N_SQUARES, N_CIRCLES, N_RECTANGLES, N_TRIANGLES;
+vector<TuningSample> *TUNING_SAMPLES;
 
 struct sigaction getSigaction();
 
 void catchSignal(int signal) {
-    running = false;
+    RUNNING = false;
 }
 
 static int getTrackbar(char *name) {
     return cv::getTrackbarPos(name, "Output");
 }
 
-void updateTrackbars(ShapeFinder &shapeFinder) {
-    shapeFinder.MIN_AREA = (double) getTrackbar("MIN_AREA");
-    shapeFinder.MAX_AREA = (double) getTrackbar("MAX_AREA");
-    shapeFinder.EROSION_SIZE = getTrackbar("EROSION_SIZE");
-    shapeFinder.SQUARE_RATIO_THRESHOLD = getTrackbar("SQUARE_RATIO_THRESHOLD") / 100.0;
-    shapeFinder.TRIANGLE_RATIO_THRESHOLD = getTrackbar("TRIANGLE_RATIO_THRESHOLD") / 100.0;
-    shapeFinder.EPSILON_APPROX_TOLERANCE_FACTOR = getTrackbar("EPSILON_APPROX_TOLERANCE_FACTOR") / 1000.0;
-    shapeFinder.IMAGE_BLACK_THRESHOLD = getTrackbar("IMAGE_BLACK_THRESHOLD") / 10.0;
-    shapeFinder.CONTOUR_BLACK_THRESHOLD = getTrackbar("CONTOUR_BLACK_THRESHOLD") / 10.0;
+static void updateSample(TuningSample *sample) {
+    sample->sampleData->insert({"N_SQUARES", (void *) &N_SQUARES});
+    sample->sampleData->insert({"N_CIRCLES", (void *) &N_CIRCLES});
+    sample->sampleData->insert({"N_RECTANGLES", (void *) &N_RECTANGLES});
+    sample->sampleData->insert({"N_TRIANGLES", (void *) &N_TRIANGLES});
 }
 
 
@@ -41,7 +39,6 @@ void displayShapes(ShapeFindResult &result,
     drawContours(outputImage, result.rectangles, -1, Scalar(0, 176, 255), 4, 8); //blue
     drawContours(outputImage, result.squares, -1, Scalar(255, 255, 0), 4, 8); //yellow
     drawContours(outputImage, result.circles, -1, Scalar(100, 230, 0), 4, 8); //teal
-
 }
 
 void displayShapeCountUi(ShapeFindResult &result, Mat &outputImage) {
@@ -53,48 +50,28 @@ void displayShapeCountUi(ShapeFindResult &result, Mat &outputImage) {
     Drawing::rectangle(outputImage, Point(80, 165), Point(120, 205), Scalar(0, 0, 255),
                        Scalar(0, 0, 255));
 
-    Drawing::text(outputImage, to_string(result.getCountMode(result.circleCounts)), Point(20, 50),
+    Drawing::text(outputImage, to_string(result.getCountMode(result.circleCounts)), Point(0, 50),
                   Scalar(0, 0, 255), Drawing::TOP_LEFT, 2, 4);
     Drawing::text(outputImage, to_string(result.getCountMode(result.triangleCounts)),
-                  Point(20, 100), Scalar(0, 0, 255), Drawing::TOP_LEFT, 2, 4);
+                  Point(0, 100), Scalar(0, 0, 255), Drawing::TOP_LEFT, 2, 4);
     Drawing::text(outputImage, to_string(result.getCountMode(result.rectangleCounts)),
-                  Point(20, 150), Scalar(0, 0, 255), Drawing::TOP_LEFT, 2, 4);
-    Drawing::text(outputImage, to_string(result.getCountMode(result.squareCounts)), Point(20, 200),
+                  Point(0, 150), Scalar(0, 0, 255), Drawing::TOP_LEFT, 2, 4);
+    Drawing::text(outputImage, to_string(result.getCountMode(result.squareCounts)), Point(0, 200),
                   Scalar(0, 0, 255), Drawing::TOP_LEFT, 2, 4);
 }
 
-
-static void makeTrackbar(char *name, int length) {
-    int *v = new int(1);
-    cv::createTrackbar(name, "Output", v, length);
-}
 
 static void createViewingWindows() {
     namedWindow("Output");
 }
 
-void createTuningWindow(ShapeFinder shapeFinder) {
+void createTuningWindow() {
     createViewingWindows();
 
-    makeTrackbar("MIN_AREA", 10000);
-    makeTrackbar("MAX_AREA", 10000);
-    makeTrackbar("EROSION_SIZE", 20);
-    makeTrackbar("SQUARE_RATIO_THRESHOLD", 100);
-    makeTrackbar("TRIANGLE_RATIO_THRESHOLD", 100);
-    makeTrackbar("EPSILON_APPROX_TOLERANCE_FACTOR", 100);
-    makeTrackbar("CONTOUR_BLACK_THRESHOLD", 10000);
-    makeTrackbar("IMAGE_BLACK_THRESHOLD", 10000);
-
-
-    setTrackbarPos("MIN_AREA", "Output", (int) shapeFinder.MIN_AREA);
-    setTrackbarPos("MAX_AREA", "Output", (int) shapeFinder.MAX_AREA);
-    setTrackbarPos("EROSION_SIZE", "Output", shapeFinder.EROSION_SIZE);
-    setTrackbarPos("SQUARE_RATIO_THRESHOLD", "Output", (int) (shapeFinder.SQUARE_RATIO_THRESHOLD * 100));
-    setTrackbarPos("TRIANGLE_RATIO_THRESHOLD", "Output", (int) (shapeFinder.TRIANGLE_RATIO_THRESHOLD * 100));
-    setTrackbarPos("EPSILON_APPROX_TOLERANCE_FACTOR", "Output",
-                   (int) (shapeFinder.EPSILON_APPROX_TOLERANCE_FACTOR * 1000));
-    setTrackbarPos("IMAGE_BLACK_THRESHOLD", "Output", (int) (shapeFinder.IMAGE_BLACK_THRESHOLD * 10));
-    setTrackbarPos("CONTOUR_BLACK_THRESHOLD", "Output", (int) (shapeFinder.CONTOUR_BLACK_THRESHOLD * 10));
+    cv::createTrackbar("N_SQUARES", "Output", &N_SQUARES, 10);
+    cv::createTrackbar("N_CIRCLES", "Output", &N_CIRCLES, 10);
+    cv::createTrackbar("N_RECTANGLES", "Output", &N_RECTANGLES, 10);
+    cv::createTrackbar("N_TRIANGLES", "Output", &N_TRIANGLES, 10);
 }
 
 void displayFrameCount(double rate, Mat &outputImage) {
@@ -102,8 +79,7 @@ void displayFrameCount(double rate, Mat &outputImage) {
                   Scalar(255, 0, 0), Drawing::BOTTOM_LEFT, 2, 4);
 }
 
-double parameterEvaluationFunction(map<string, double> parameters) {
-    ShapeFinder sf(calibrationData);
+void setParameters(ShapeFinder &sf, map<string, double> parameters) {
     sf.EPSILON_APPROX_TOLERANCE_FACTOR = parameters.at("EPSILON_APPROX_TOLERANCE_FACTOR");
     sf.MIN_AREA = parameters.at("MIN_AREA");
     sf.MAX_AREA = parameters.at("MAX_AREA");
@@ -111,23 +87,40 @@ double parameterEvaluationFunction(map<string, double> parameters) {
     sf.TRIANGLE_RATIO_THRESHOLD = parameters.at("TRIANGLE_RATIO_THRESHOLD");
     sf.IMAGE_BLACK_THRESHOLD = parameters.at("IMAGE_BLACK_THRESHOLD");
     sf.CONTOUR_BLACK_THRESHOLD = parameters.at("CONTOUR_BLACK_THRESHOLD");
+}
 
-    return -1;
+double parameterEvaluationFunction(map<string, double> parameters) {
+    ShapeFinder sf(CALIBRATION_DATA);
+    setParameters(sf, parameters);
+
+    double error = 0;
+    for (auto sample: *TUNING_SAMPLES) {
+        auto result = new ShapeFindResult();
+        sf.processFrame(sample.image, *result);
+
+        error += abs(result->getLastSquareCount() - *((int *) sample.sampleData->at("N_SQUARES")));
+        error += abs(result->getLastCircleCount() - *((int *) sample.sampleData->at("N_CIRCLES")));
+        error += abs(result->getLastRectangleCount() - *((int *) sample.sampleData->at("N_RECTANGLES")));
+        error += abs(result->getLastTriangleCount() - *((int *) sample.sampleData->at("N_TRIANGLES")));
+    }
+
+    return error;
 }
 
 int main(int argc, char **argv) {
-    // TODO: Fix this to compile. The code should be correct, but the project build is having issues
     struct sigaction action = getSigaction();
 
     sigaction(SIGINT, &action, NULL);
 
     // cam.setFrameSize(Size(1280, 720));
-    calibrationData = *Camera::loadCalibrationDataFromXML(
+    CALIBRATION_DATA = *Camera::loadCalibrationDataFromXML(
             "../config/fisheye_cameracalib.xml",
             std::move(Size(1280, 720)));
-    Mat input, output;
+    Mat raw, input, output;
     Camera cam = Camera("/dev/video0");
-    ShapeFinder shapeFinder(calibrationData);
+    ShapeFinder shapeFinder(CALIBRATION_DATA);
+    TUNING_SAMPLES = new vector<TuningSample>();
+    CURRENT_SAMPLE = new TuningSample();
 
     map<string, ParameterMetadata> parameters = map<string, ParameterMetadata>{
             {"EPSILON_APPROX_TOLERANCE_FACTOR", ParameterMetadata(shapeFinder.EPSILON_APPROX_TOLERANCE_FACTOR, 0, 1)},
@@ -141,15 +134,14 @@ int main(int argc, char **argv) {
 
 
     ParameterTuner pt = ParameterTuner();
-    pt.tuneParameters(parameters, (void *) parameterEvaluationFunction);
-
     ShapeFindResult result;
 
-    createTuningWindow(shapeFinder);
+    createTuningWindow();
 
 
-    while (running) {
-        cam.retrieveFrameBGR(input);
+    while (RUNNING) {
+        cam.retrieveFrameBGR(raw);
+        raw.copyTo(input);
         imshow("Input", input);
 
         shapeFinder.processFrame(input, result);
@@ -157,20 +149,28 @@ int main(int argc, char **argv) {
         displayShapeCountUi(result, input);
         displayFrameCount(cam.getFrameRate(), input);
 
-        ImageTransform::scale(input, .5);
+        ImageTransform::scale(input, .75);
 
-        ImageTransform::scale(input, .5);
+        ImageTransform::scale(input, .75);
 
         imshow("Output", input);
 
         int keyPress = waitKey(1);
 
         if (keyPress == 32) { //take a picture and save values
+            updateSample(CURRENT_SAMPLE);
+            raw.copyTo(CURRENT_SAMPLE->image);
 
+            TUNING_SAMPLES->push_back(*CURRENT_SAMPLE);
+        } else if (keyPress == 84 || keyPress == 116) {
+            auto bestParameters = pt.tuneParameters(parameters, parameterEvaluationFunction);
 
+            setParameters(shapeFinder, bestParameters);
 
-
-
+            cout << "Best parameters:" << endl;
+            for (auto const &parameter: bestParameters) {
+                cout << "\t" << parameter.first << ": " << parameter.second << endl;
+            }
         } else if (keyPress >= 65 && keyPress <= 122)
             break;
     }
