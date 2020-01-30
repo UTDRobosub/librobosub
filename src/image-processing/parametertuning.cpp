@@ -42,7 +42,9 @@ namespace robosub {
 
         for (int i = 0; i < 10; ++i) {
             cout << "Starting iteration " << i << " of genetic algorithm training" << endl;
-            generateNewPopulation(populationBuffer, generationSize);
+            //put fitness percentage here
+            double avgError = generateNewPopulation(populationBuffer, generationSize);
+            cout << "Average Error: " << avgError << endl;
         }
 
         cout << "Determining the best possible parameter set" << endl;
@@ -85,14 +87,18 @@ namespace robosub {
         }
     }
 
-    void ParameterTuner::generateNewPopulation(map<string, double> *populationBuffer, int populationSize) {
+    double ParameterTuner::generateNewPopulation(map<string, double> *populationBuffer, int populationSize) {
         map<string, double> oldParameters[populationSize];
         copy(populationBuffer, populationBuffer + populationSize, oldParameters);
+        auto totalerror = evaluationFunction(oldParameters[0]);
 
         vector<double> populationFitnessLevels;
         for (int i = 0; i < populationSize; ++i) {
             auto error = evaluationFunction(oldParameters[i]);
             populationFitnessLevels.push_back(error);
+            //initialized with 0 so don't double count
+            if (i != 0)
+                totalerror += error;
         }
 
         discrete_distribution<int> distribution(populationFitnessLevels.begin(), populationFitnessLevels.end());
@@ -114,6 +120,7 @@ namespace robosub {
         for (int i = 0; i < populationSize; ++i) {
             populationBuffer[i] = mutateParameters(populationBuffer[i]);
         }
+        return (double) totalerror / populationSize;
     }
 
     map<string, double> ParameterTuner::getBestParameterSet(map<string, double> *population, int populationSize) {

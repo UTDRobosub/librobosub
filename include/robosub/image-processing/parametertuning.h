@@ -39,7 +39,7 @@ namespace robosub {
 
         void generateInitialPopulation(map<string, double> *populationBuffer, int populationSize = generationSize);
 
-        void generateNewPopulation(map<string, double> *populationBuffer, int populationSize);
+        double generateNewPopulation(map<string, double> *populationBuffer, int populationSize);
 
         map<string, double> getBestParameterSet(map<string, double> *population, int populationSize);
 
