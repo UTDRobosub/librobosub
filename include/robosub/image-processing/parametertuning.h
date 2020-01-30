@@ -51,14 +51,17 @@ namespace robosub {
                        TuningMethods method = TuningMethods::GENETIC_ALGORITHM);
     };
 
+    template<typename T>
     class TuningSample {
     public:
         Mat image;
-        map<string, void *> *sampleData;
+        map<string, T> *sampleData;
 
         TuningSample() {
-            sampleData = new map<string, void *>();
+            sampleData = new map<string, T>();
         }
+
+        bool saveToFile(string filePrefix, string (*toString)(T));
     };
 }
 

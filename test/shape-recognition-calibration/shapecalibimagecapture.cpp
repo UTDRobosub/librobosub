@@ -11,9 +11,9 @@ using namespace robosub;
 
 bool RUNNING = true;
 Camera::CalibrationData CALIBRATION_DATA;
-TuningSample *CURRENT_SAMPLE;
+TuningSample<int> *CURRENT_SAMPLE;
 int N_SQUARES, N_CIRCLES, N_RECTANGLES, N_TRIANGLES;
-vector<TuningSample> *TUNING_SAMPLES;
+vector<TuningSample<int>> *TUNING_SAMPLES;
 
 struct sigaction getSigaction();
 
@@ -25,11 +25,11 @@ static int getTrackbar(char *name) {
     return cv::getTrackbarPos(name, "Output");
 }
 
-static void updateSample(TuningSample *sample) {
-    sample->sampleData->insert({"N_SQUARES", (void *) &N_SQUARES});
-    sample->sampleData->insert({"N_CIRCLES", (void *) &N_CIRCLES});
-    sample->sampleData->insert({"N_RECTANGLES", (void *) &N_RECTANGLES});
-    sample->sampleData->insert({"N_TRIANGLES", (void *) &N_TRIANGLES});
+static void updateSample(TuningSample<int> *sample) {
+    sample->sampleData->insert({"N_SQUARES", N_SQUARES});
+    sample->sampleData->insert({"N_CIRCLES", N_CIRCLES});
+    sample->sampleData->insert({"N_RECTANGLES", N_RECTANGLES});
+    sample->sampleData->insert({"N_TRIANGLES", N_TRIANGLES});
 }
 
 
@@ -112,15 +112,14 @@ int main(int argc, char **argv) {
 
     sigaction(SIGINT, &action, NULL);
 
-    // cam.setFrameSize(Size(1280, 720));
     CALIBRATION_DATA = *Camera::loadCalibrationDataFromXML(
             "../config/fisheye_cameracalib.xml",
             std::move(Size(1280, 720)));
     Mat raw, input, output;
     Camera cam = Camera("/dev/video0");
     ShapeFinder shapeFinder(CALIBRATION_DATA);
-    TUNING_SAMPLES = new vector<TuningSample>();
-    CURRENT_SAMPLE = new TuningSample();
+    TUNING_SAMPLES = new vector<TuningSample<int>>();
+    CURRENT_SAMPLE = new TuningSample<int>();
 
     map<string, ParameterMetadata> parameters = map<string, ParameterMetadata>{
             {"EPSILON_APPROX_TOLERANCE_FACTOR", ParameterMetadata(shapeFinder.EPSILON_APPROX_TOLERANCE_FACTOR, 0, 1)},
@@ -162,6 +161,7 @@ int main(int argc, char **argv) {
             raw.copyTo(CURRENT_SAMPLE->image);
 
             TUNING_SAMPLES->push_back(*CURRENT_SAMPLE);
+            cout << "Finished capturing image " << TUNING_SAMPLES->size() << " for training" << endl;
         } else if (keyPress == 84 || keyPress == 116) {
             auto bestParameters = pt.tuneParameters(parameters, parameterEvaluationFunction);
 
@@ -171,8 +171,10 @@ int main(int argc, char **argv) {
             for (auto const &parameter: bestParameters) {
                 cout << "\t" << parameter.first << ": " << parameter.second << endl;
             }
-        } else if (keyPress >= 65 && keyPress <= 122)
+        } else if (keyPress >= 65 && keyPress <= 122) {
+            cout << "Received kill command. Exiting" << endl;
             break;
+        }
     }
 
     return 0;

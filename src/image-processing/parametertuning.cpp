@@ -132,4 +132,29 @@ namespace robosub {
         norm_distribution = normal_distribution<double>(0, 2);
         bern_dist = bernoulli_distribution();
     }
+
+
+    template<typename T>
+    bool TuningSample<T>::saveToFile(string filePrefix, string (*toString)(T)) {
+        ofstream dataFile(filePrefix + ".txt");
+        FileStorage matFile(filePrefix + ".xml", FileStorage::WRITE);
+        if (dataFile.is_open()) {
+            for (auto const &data: *sampleData) {
+                dataFile << data.first << ":" << toString(data.second) << endl;
+            }
+        } else {
+            return false;
+        }
+
+        dataFile.close();
+
+        if (matFile.isOpened()) {
+            matFile << image;
+        } else {
+            return false;
+        }
+
+        matFile.release();
+        return true;
+    }
 }
