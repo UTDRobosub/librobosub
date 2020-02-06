@@ -95,6 +95,7 @@ namespace robosub {
         vector<double> populationFitnessLevels;
         for (int i = 0; i < populationSize; ++i) {
             auto error = evaluationFunction(oldParameters[i]);
+            cout << "\tError for parameter set " << i << ": " << error << endl;
             populationFitnessLevels.push_back(error);
             //initialized with 0 so don't double count
             if (i != 0)
@@ -117,8 +118,12 @@ namespace robosub {
             }
         }
 
+        cout << "Getting final parameter values for population:" << endl;
         for (int i = 0; i < populationSize; ++i) {
             populationBuffer[i] = mutateParameters(populationBuffer[i]);
+            cout << "\tParameters for set " << i << ":" << endl;
+            for (auto const &kv: populationBuffer[i])
+                cout << "\t\tParameter " << kv.first << ": " << kv.second << endl;
         }
         return (double) totalerror / populationSize;
     }
@@ -134,15 +139,16 @@ namespace robosub {
         return get<1>(bestParameterSet);
     }
 
+
     ParameterTuner::ParameterTuner() {
         // Create a normal distribution with a good spread for our sigmoid function
-        norm_distribution = normal_distribution<double>(0, 2);
+        norm_distribution = normal_distribution<double>(0, 5);
         bern_dist = bernoulli_distribution();
     }
 
 
     template<typename T>
-    bool TuningSample<T>::saveToFile(string filePrefix, string (*toString)(T)) {
+    bool TuningSample<T>::saveToFiles(const string &filePrefix, string (*toString)(T)) {
         ofstream dataFile(filePrefix + ".txt");
         FileStorage matFile(filePrefix + ".xml", FileStorage::WRITE);
         if (dataFile.is_open()) {
@@ -157,6 +163,34 @@ namespace robosub {
 
         if (matFile.isOpened()) {
             matFile << image;
+        } else {
+            return false;
+        }
+
+        matFile.release();
+        return true;
+    }
+
+    template<typename T>
+    bool TuningSample<T>::loadFromFiles(const string &filePrefix, T (*fromString)(string)) {
+        ifstream dataFile(filePrefix + ".txt");
+        FileStorage matFile(filePrefix + ".xml", FileStorage::WRITE);
+        if (dataFile.is_open()) {
+            string line;
+            dataFile >> line;
+            size_t divider = line.find(':');
+            string paramName = line.substr(0, divider);
+            T value = fromString(line.substr(divider + 1, line.size() - divider - 1));
+            sampleData->insert({paramName, value});
+        } else {
+            return false;
+        }
+
+        dataFile.close();
+
+        if (matFile.isOpened()) {
+//            matFile >> image;
+// TODO: fix
         } else {
             return false;
         }

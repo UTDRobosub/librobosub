@@ -68,10 +68,10 @@ static void createViewingWindows() {
 void createTuningWindow() {
     createViewingWindows();
 
-    cv::createTrackbar("N_SQUARES", "Output", &N_SQUARES, 10);
-    cv::createTrackbar("N_CIRCLES", "Output", &N_CIRCLES, 10);
-    cv::createTrackbar("N_RECTANGLES", "Output", &N_RECTANGLES, 10);
-    cv::createTrackbar("N_TRIANGLES", "Output", &N_TRIANGLES, 10);
+    cv::createTrackbar("N_SQUARES", "Output", &N_SQUARES, 5);
+    cv::createTrackbar("N_CIRCLES", "Output", &N_CIRCLES, 5);
+    cv::createTrackbar("N_RECTANGLES", "Output", &N_RECTANGLES, 5);
+    cv::createTrackbar("N_TRIANGLES", "Output", &N_TRIANGLES, 5);
 }
 
 void displayFrameCount(double rate, Mat &outputImage) {
@@ -98,10 +98,10 @@ double parameterEvaluationFunction(map<string, double> parameters) {
         auto result = new ShapeFindResult();
         sf.processFrame(sample.image, *result);
 
-        error += abs(result->getLastSquareCount() - *((int *) sample.sampleData->at("N_SQUARES")));
-        error += abs(result->getLastCircleCount() - *((int *) sample.sampleData->at("N_CIRCLES")));
-        error += abs(result->getLastRectangleCount() - *((int *) sample.sampleData->at("N_RECTANGLES")));
-        error += abs(result->getLastTriangleCount() - *((int *) sample.sampleData->at("N_TRIANGLES")));
+        error += abs(result->getLastSquareCount() - sample.sampleData->at("N_SQUARES"));
+        error += abs(result->getLastCircleCount() - sample.sampleData->at("N_CIRCLES"));
+        error += abs(result->getLastRectangleCount() - sample.sampleData->at("N_RECTANGLES"));
+        error += abs(result->getLastTriangleCount() - sample.sampleData->at("N_TRIANGLES"));
     }
 
     return error;
@@ -171,6 +171,12 @@ int main(int argc, char **argv) {
             for (auto const &parameter: bestParameters) {
                 cout << "\t" << parameter.first << ": " << parameter.second << endl;
             }
+        } else if (keyPress == 115) { // Save tuning samples
+            // TODO: save tuning samples
+            cout << "Feature not finished" << endl;
+        } else if (keyPress == 108) { // Load tuning samples
+            // TODO: load tuning samples
+            cout << "Feature not finished" << endl;
         } else if (keyPress >= 65 && keyPress <= 122) {
             cout << "Received kill command. Exiting" << endl;
             break;

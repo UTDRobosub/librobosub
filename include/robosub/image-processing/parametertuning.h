@@ -27,7 +27,7 @@ namespace robosub {
         normal_distribution<double> norm_distribution;
         bernoulli_distribution bern_dist;
 
-        static constexpr double mutationRate = 0.01;
+        static constexpr double mutationRate = 0.1;
         static constexpr int generationSize = 30;
 
         double mutateParameter(double currentValue, ParameterMetadata data);
@@ -61,7 +61,9 @@ namespace robosub {
             sampleData = new map<string, T>();
         }
 
-        bool saveToFile(string filePrefix, string (*toString)(T));
+        bool saveToFiles(const string &filePrefix, string (*toString)(T));
+
+        bool loadFromFiles(const string &filePrefix, T (*fromString)(string));
     };
 }
 
