@@ -117,7 +117,7 @@ namespace robosub {
                 }
             }
         }
-
+/*
         cout << "Getting final parameter values for population:" << endl;
         for (int i = 0; i < populationSize; ++i) {
             populationBuffer[i] = mutateParameters(populationBuffer[i]);
@@ -125,6 +125,7 @@ namespace robosub {
             for (auto const &kv: populationBuffer[i])
                 cout << "\t\tParameter " << kv.first << ": " << kv.second << endl;
         }
+        */
         return (double) totalerror / populationSize;
     }
 

@@ -91,6 +91,7 @@ void setParameters(ShapeFinder &sf, map<string, double> parameters) {
 
 double parameterEvaluationFunction(map<string, double> parameters) {
     ShapeFinder sf(CALIBRATION_DATA);
+
     setParameters(sf, parameters);
 
     double error = 0;
@@ -99,6 +100,8 @@ double parameterEvaluationFunction(map<string, double> parameters) {
         sf.processFrame(sample.image, *result);
 
         error += abs(result->getLastSquareCount() - sample.sampleData->at("N_SQUARES"));
+        //cout << "Squares seen: " << result->getLastSquareCount() << endl;
+        //cout << "Squares in picture: " << sample.sampleData->at("N_SQUARES") << endl;
         error += abs(result->getLastCircleCount() - sample.sampleData->at("N_CIRCLES"));
         error += abs(result->getLastRectangleCount() - sample.sampleData->at("N_RECTANGLES"));
         error += abs(result->getLastTriangleCount() - sample.sampleData->at("N_TRIANGLES"));

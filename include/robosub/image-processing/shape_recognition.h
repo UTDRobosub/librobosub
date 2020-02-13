@@ -4,7 +4,7 @@
 namespace robosub {
     class ShapeFindResult {
     private:
-        int COUNT_MODE_LOOKBACK;
+        int COUNT_MODE_LOOKBACK = 5;
 
         static int mode(const deque<int> &q);
 
