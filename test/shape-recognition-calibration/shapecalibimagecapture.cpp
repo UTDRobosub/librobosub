@@ -137,6 +137,7 @@ int main(int argc, char **argv) {
 
     namedWindow("Input");
     createTuningWindow();
+    TuningSampleManager<int> mg = TuningSampleManager<int>("./");
 
 
     while (RUNNING) {
@@ -174,7 +175,8 @@ int main(int argc, char **argv) {
                      << parameters.at(parameter.first).initValue << ")" << endl;
             }
         } else if (keyPress == 115) { // Save tuning samples
-            // TODO: save tuning samples
+            // TODO: Modify the following line to correctly save samples
+            //mg.save(TUNING_SAMPLES, sizeof(TUNING_SAMPLES), to_string);
             cout << "Feature not finished" << endl;
         } else if (keyPress == 108) { // Load tuning samples
             // TODO: load tuning samples
