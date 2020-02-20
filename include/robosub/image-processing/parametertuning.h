@@ -37,9 +37,11 @@ namespace robosub {
 
         map<string, double> mutateParameters(map<string, double> parameters, double mutRate = mutationRate);
 
-        void generateInitialPopulation(map<string, double> *populationBuffer, int populationSize = generationSize);
+        double generateInitialPopulation(map<string, double> *populationBuffer, vector<double> &populationFitnessLevels,
+                                         int populationSize);
 
-        double generateNewPopulation(map<string, double> *populationBuffer, int populationSize);
+        double generateNewPopulation(map<string, double> *populationBuffer, vector<double> &populationFitnessLevels,
+                                     int populationSize);
 
         map<string, double> getBestParameterSet(map<string, double> *population, int populationSize);
 
@@ -49,6 +51,7 @@ namespace robosub {
         map<string, double>
         tuneParameters(map<string, ParameterMetadata> parameters, double (*evalFunction)(map<string, double>),
                        TuningMethods method = TuningMethods::GENETIC_ALGORITHM);
+
     };
 
     template<typename T>
@@ -63,7 +66,24 @@ namespace robosub {
 
         bool saveToFiles(const string &filePrefix, string (*toString)(T));
 
-        bool loadFromFiles(const string &filePrefix, T (*fromString)(string));
+        bool loadFromFiles(const string &directory, T (*fromString)(string));
+    };
+
+    template<typename T>
+    class TuningSampleManager {
+    public:
+        string rootPath;
+
+        TuningSampleManager(const string &rootPath) {
+            if (rootPath.at(rootPath.length() - 1) != '/')
+                this->rootPath = rootPath + '/';
+            else
+                this->rootPath = rootPath;
+        }
+
+        bool save(TuningSample<T> *samples, int size, string (*toString)(T));
+
+        TuningSample<T> *load(T (*fromString)(string));
     };
 }
 

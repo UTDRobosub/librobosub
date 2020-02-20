@@ -91,8 +91,7 @@ void setParameters(ShapeFinder &sf, map<string, double> parameters) {
 
 double parameterEvaluationFunction(map<string, double> parameters) {
     ShapeFinder sf(CALIBRATION_DATA);
-
-    setParameters(sf, parameters);
+    setParameters(sf, std::move(parameters));
 
     double error = 0;
     for (auto sample: *TUNING_SAMPLES) {
@@ -100,8 +99,6 @@ double parameterEvaluationFunction(map<string, double> parameters) {
         sf.processFrame(sample.image, *result);
 
         error += abs(result->getLastSquareCount() - sample.sampleData->at("N_SQUARES"));
-        //cout << "Squares seen: " << result->getLastSquareCount() << endl;
-        //cout << "Squares in picture: " << sample.sampleData->at("N_SQUARES") << endl;
         error += abs(result->getLastCircleCount() - sample.sampleData->at("N_CIRCLES"));
         error += abs(result->getLastRectangleCount() - sample.sampleData->at("N_RECTANGLES"));
         error += abs(result->getLastTriangleCount() - sample.sampleData->at("N_TRIANGLES"));
@@ -121,10 +118,10 @@ int main(int argc, char **argv) {
     Mat raw, input, output;
     Camera cam = Camera("/dev/video0");
     ShapeFinder shapeFinder(CALIBRATION_DATA);
-    TUNING_SAMPLES = new vector<TuningSample<int>>();
+    TUNING_SAMPLES = new vector <TuningSample<int>>();
     CURRENT_SAMPLE = new TuningSample<int>();
 
-    map<string, ParameterMetadata> parameters = map<string, ParameterMetadata>{
+    map < string, ParameterMetadata > parameters = map < string, ParameterMetadata > {
             {"EPSILON_APPROX_TOLERANCE_FACTOR", ParameterMetadata(shapeFinder.EPSILON_APPROX_TOLERANCE_FACTOR, 0, 1)},
             {"MIN_AREA",                        ParameterMetadata(shapeFinder.MIN_AREA, 0, 100)},
             {"MAX_AREA",                        ParameterMetadata(shapeFinder.MAX_AREA, 1000, 10000)},
@@ -138,6 +135,7 @@ int main(int argc, char **argv) {
     ParameterTuner pt = ParameterTuner();
     ShapeFindResult result;
 
+    namedWindow("Input");
     createTuningWindow();
 
 
@@ -172,7 +170,8 @@ int main(int argc, char **argv) {
 
             cout << "Best parameters:" << endl;
             for (auto const &parameter: bestParameters) {
-                cout << "\t" << parameter.first << ": " << parameter.second << endl;
+                cout << "\t" << parameter.first << ": " << parameter.second << " (default: "
+                     << parameters.at(parameter.first).initValue << ")" << endl;
             }
         } else if (keyPress == 115) { // Save tuning samples
             // TODO: save tuning samples

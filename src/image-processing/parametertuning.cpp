@@ -36,14 +36,16 @@ namespace robosub {
     map<string, double>
     ParameterTuner::tuneWithGeneticAlgorithm() {
         map<string, double> populationBuffer[generationSize];
+        vector<double> populationFitnessLevels(generationSize);
 
         cout << "Using genetic algorithm for parameter tuning. Generating initial population" << endl;
-        generateInitialPopulation(populationBuffer, generationSize);
+        double avgError = generateInitialPopulation(populationBuffer, populationFitnessLevels, generationSize);
+        cout << "Average Error: " << avgError << endl;
 
         for (int i = 0; i < 10; ++i) {
             cout << "Starting iteration " << i << " of genetic algorithm training" << endl;
             //put fitness percentage here
-            double avgError = generateNewPopulation(populationBuffer, generationSize);
+            avgError = generateNewPopulation(populationBuffer, populationFitnessLevels, generationSize);
             cout << "Average Error: " << avgError << endl;
         }
 
@@ -65,7 +67,7 @@ namespace robosub {
 
     map<string, double>
     ParameterTuner::mutateParameters(map<string, double> parameters, double mutRate) {
-        bernoulli_distribution bern_distribution = bernoulli_distribution(1 - mutRate);
+        bernoulli_distribution bern_distribution = bernoulli_distribution(mutRate);
 
         for (auto const &kv : parameters) {
             if (bern_distribution(generator)) {
@@ -76,31 +78,29 @@ namespace robosub {
         return parameters;
     }
 
-    void ParameterTuner::generateInitialPopulation(map<string, double> *populationBuffer, int populationSize) {
+    double ParameterTuner::generateInitialPopulation(map<string, double> *populationBuffer,
+                                                     vector<double> &populationFitnessLevels, int populationSize) {
         map<string, double> startingParameters = map<string, double>();
+        double totalError = 0;
+
         for (auto const &kv : parameterMetadata) {
             startingParameters[kv.first] = kv.second.initValue;
         }
 
         for (int i = 0; i < populationSize; ++i) {
             populationBuffer[i] = mutateParameters(startingParameters);
+            populationFitnessLevels[i] = evaluationFunction(populationBuffer[i]);
+            totalError += populationFitnessLevels[i];
         }
+
+        return totalError / populationSize;
     }
 
-    double ParameterTuner::generateNewPopulation(map<string, double> *populationBuffer, int populationSize) {
+    double ParameterTuner::generateNewPopulation(map<string, double> *populationBuffer,
+                                                 vector<double> &populationFitnessLevels, int populationSize) {
         map<string, double> oldParameters[populationSize];
         copy(populationBuffer, populationBuffer + populationSize, oldParameters);
-        auto totalerror = evaluationFunction(oldParameters[0]);
-
-        vector<double> populationFitnessLevels;
-        for (int i = 0; i < populationSize; ++i) {
-            auto error = evaluationFunction(oldParameters[i]);
-            cout << "\tError for parameter set " << i << ": " << error << endl;
-            populationFitnessLevels.push_back(error);
-            //initialized with 0 so don't double count
-            if (i != 0)
-                totalerror += error;
-        }
+        double totalError = 0;
 
         discrete_distribution<int> distribution(populationFitnessLevels.begin(), populationFitnessLevels.end());
 
@@ -117,16 +117,18 @@ namespace robosub {
                 }
             }
         }
-/*
+
         cout << "Getting final parameter values for population:" << endl;
         for (int i = 0; i < populationSize; ++i) {
             populationBuffer[i] = mutateParameters(populationBuffer[i]);
-            cout << "\tParameters for set " << i << ":" << endl;
-            for (auto const &kv: populationBuffer[i])
-                cout << "\t\tParameter " << kv.first << ": " << kv.second << endl;
+
+            populationFitnessLevels[i] = evaluationFunction(populationBuffer[i]);
+            cout << "\tError for parameter set " << i << ": " << populationFitnessLevels[i] << endl;
+            totalError += populationFitnessLevels[i];
+
         }
-        */
-        return (double) totalerror / populationSize;
+
+        return totalError / populationSize;
     }
 
     map<string, double> ParameterTuner::getBestParameterSet(map<string, double> *population, int populationSize) {
@@ -149,9 +151,9 @@ namespace robosub {
 
 
     template<typename T>
-    bool TuningSample<T>::saveToFiles(const string &filePrefix, string (*toString)(T)) {
-        ofstream dataFile(filePrefix + ".txt");
-        FileStorage matFile(filePrefix + ".xml", FileStorage::WRITE);
+    bool TuningSample<T>::saveToFiles(const string &directory, string (*toString)(T)) {
+        ofstream dataFile(directory + "sampleData.txt");
+
         if (dataFile.is_open()) {
             for (auto const &data: *sampleData) {
                 dataFile << data.first << ":" << toString(data.second) << endl;
@@ -162,20 +164,13 @@ namespace robosub {
 
         dataFile.close();
 
-        if (matFile.isOpened()) {
-            matFile << image;
-        } else {
-            return false;
-        }
-
-        matFile.release();
-        return true;
+        return imwrite(directory + "image.jpg", image);
     }
 
     template<typename T>
-    bool TuningSample<T>::loadFromFiles(const string &filePrefix, T (*fromString)(string)) {
-        ifstream dataFile(filePrefix + ".txt");
-        FileStorage matFile(filePrefix + ".xml", FileStorage::WRITE);
+    bool TuningSample<T>::loadFromFiles(const string &directory, T (*fromString)(string)) {
+        ifstream dataFile(directory + "sampleData.txt");
+
         if (dataFile.is_open()) {
             string line;
             dataFile >> line;
@@ -189,14 +184,40 @@ namespace robosub {
 
         dataFile.close();
 
-        if (matFile.isOpened()) {
-//            matFile >> image;
-// TODO: fix
-        } else {
+        image = imread(directory + "image.jpg");
+        return image != nullptr;
+    }
+
+    template<typename T>
+    bool TuningSampleManager<T>::save(TuningSample<T> *samples, int size, string (*toString)(T)) {
+        ofstream sizeFile(rootPath + "sizeFile.dat");
+        if (sizeFile.is_open())
+            sizeFile << size;
+        else
             return false;
+
+        for (int i = 0; i < size; ++i) {
+            samples->saveToFiles(rootPath + "Sample" + i + "/", toString);
         }
 
-        matFile.release();
         return true;
+    }
+
+    template<typename T>
+    TuningSample<T> *TuningSampleManager<T>::load(T (*fromString)(string)) {
+        ifstream sizeFile(rootPath + "sizeFile.dat");
+        int size;
+        if (sizeFile.is_open())
+            sizeFile >> size;
+        else
+            return nullptr;
+
+        TuningSample<T> samples[size];
+
+        for (int i = 0; i < size; ++i) {
+            samples[i] = TuningSample<T>::loadFromFiles(rootPath + "Sample" + i + "/", fromString);
+        }
+
+        return samples;
     }
 }
