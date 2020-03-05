@@ -176,7 +176,7 @@ int main(int argc, char **argv) {
             }
         } else if (keyPress == 115) { // Save tuning samples
             // TODO: Modify the following line to correctly save samples
-            mg.save(&(*TUNING_SAMPLES)[0], sizeof(TUNING_SAMPLES), to_string);
+            mg.save(TUNING_SAMPLES->data(), TUNING_SAMPLES->size(), &to_string);
             cout << "Feature not finished" << endl;
         } else if (keyPress == 108) { // Load tuning samples
             // TODO: load tuning samples

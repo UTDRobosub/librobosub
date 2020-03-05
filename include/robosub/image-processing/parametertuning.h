@@ -95,7 +95,7 @@ namespace robosub {
             return false;
 
         for (int i = 0; i < size; ++i) {
-            samples->saveToFiles(rootPath + "Sample" + to_string(i) + "/", toString);
+            samples[i].saveToFiles(rootPath + "Sample" + to_string(i) + "/", toString);
         }
 
         return true;
@@ -155,7 +155,7 @@ namespace robosub {
         dataFile.close();
 
         image = imread(directory + "image.jpg");
-        return &image != nullptr;
+        return image.size != 0;
     }
 }
 
