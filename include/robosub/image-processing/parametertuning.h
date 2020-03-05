@@ -95,9 +95,13 @@ namespace robosub {
             return false;
 
         for (int i = 0; i < size; ++i) {
-            samples[i].saveToFiles(rootPath + "Sample" + to_string(i) + "/", toString);
+            string directory = rootPath + "Sample" + to_string(i) + "/";
+            struct stat buffer;
+            if ((stat(directory.c_str(), &buffer) != 0)) {
+                mkdir(directory.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+            }
+            samples[i].saveToFiles(directory, toString);
         }
-
         return true;
     }
 
@@ -120,24 +124,6 @@ namespace robosub {
 
 
     template<typename T>
-    TuningSample<T> *TuningSampleManager<T>::load(T (*fromString)(string)) {
-        ifstream sizeFile(rootPath + "sizeFile.dat");
-        int size;
-        if (sizeFile.is_open())
-            sizeFile >> size;
-        else
-            return nullptr;
-
-        TuningSample<T> samples[size];
-
-        for (int i = 0; i < size; ++i) {
-            samples[i] = TuningSample<T>::loadFromFiles(rootPath + "Sample" + to_string(i) + "/", fromString);
-        }
-
-        return samples;
-    }
-
-    template<typename T>
     bool TuningSample<T>::loadFromFiles(const string &directory, T (*fromString)(string)) {
         ifstream dataFile(directory + "sampleData.txt");
 
@@ -156,6 +142,28 @@ namespace robosub {
 
         image = imread(directory + "image.jpg");
         return image.size != 0;
+    }
+
+    template<typename T>
+    TuningSample<T> *TuningSampleManager<T>::load(T (*fromString)(string)) {
+        ifstream sizeFile(rootPath + "sizeFile.dat");
+        int size;
+        if (sizeFile.is_open())
+            sizeFile >> size;
+        else {
+            cout << "sizeFile not open" << endl;
+            return nullptr;
+        }
+
+
+        TuningSample<T> samples[size];
+
+        for (int i = 0; i < size; ++i) {
+            string directory = rootPath + "Sample" + to_string(i) + "/";
+            samples[i].loadFromFiles(directory, fromString);
+        }
+
+        return samples;
     }
 }
 

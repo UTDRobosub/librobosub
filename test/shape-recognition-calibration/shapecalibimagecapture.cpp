@@ -107,6 +107,10 @@ double parameterEvaluationFunction(map<string, double> parameters) {
     return error;
 }
 
+int fromString(string s) {
+    return stoi(s);
+}
+
 int main(int argc, char **argv) {
     struct sigaction action = getSigaction();
 
@@ -175,11 +179,11 @@ int main(int argc, char **argv) {
                      << parameters.at(parameter.first).initValue << ")" << endl;
             }
         } else if (keyPress == 115) { // Save tuning samples
-            // TODO: Modify the following line to correctly save samples
             mg.save(TUNING_SAMPLES->data(), TUNING_SAMPLES->size(), &to_string);
-            cout << "Feature not finished" << endl;
+            cout << "Images saved :)" << endl;
         } else if (keyPress == 108) { // Load tuning samples
             // TODO: load tuning samples
+            TUNING_SAMPLES = new vector<TuningSample<int>>(mg.load(&fromString));
             cout << "Feature not finished" << endl;
         } else if (keyPress >= 65 && keyPress <= 122) {
             cout << "Received kill command. Exiting" << endl;
