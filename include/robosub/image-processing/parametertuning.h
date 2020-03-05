@@ -85,6 +85,78 @@ namespace robosub {
 
         TuningSample<T> *load(T (*fromString)(string));
     };
+
+    template<typename T>
+    bool TuningSampleManager<T>::save(TuningSample<T> *samples, int size, string (*toString)(T)) {
+        ofstream sizeFile(rootPath + "sizeFile.dat");
+        if (sizeFile.is_open())
+            sizeFile << size;
+        else
+            return false;
+
+        for (int i = 0; i < size; ++i) {
+            samples->saveToFiles(rootPath + "Sample" + to_string(i) + "/", toString);
+        }
+
+        return true;
+    }
+
+    template<typename T>
+    bool TuningSample<T>::saveToFiles(const string &directory, string (*toString)(T)) {
+        ofstream dataFile(directory + "sampleData.txt");
+
+        if (dataFile.is_open()) {
+            for (auto const &data: *sampleData) {
+                dataFile << data.first << ":" << toString(data.second) << endl;
+            }
+        } else {
+            return false;
+        }
+
+        dataFile.close();
+
+        return imwrite(directory + "image.jpg", image);
+    }
+
+
+    template<typename T>
+    TuningSample<T> *TuningSampleManager<T>::load(T (*fromString)(string)) {
+        ifstream sizeFile(rootPath + "sizeFile.dat");
+        int size;
+        if (sizeFile.is_open())
+            sizeFile >> size;
+        else
+            return nullptr;
+
+        TuningSample<T> samples[size];
+
+        for (int i = 0; i < size; ++i) {
+            samples[i] = TuningSample<T>::loadFromFiles(rootPath + "Sample" + to_string(i) + "/", fromString);
+        }
+
+        return samples;
+    }
+
+    template<typename T>
+    bool TuningSample<T>::loadFromFiles(const string &directory, T (*fromString)(string)) {
+        ifstream dataFile(directory + "sampleData.txt");
+
+        if (dataFile.is_open()) {
+            string line;
+            dataFile >> line;
+            size_t divider = line.find(':');
+            string paramName = line.substr(0, divider);
+            T value = fromString(line.substr(divider + 1, line.size() - divider - 1));
+            sampleData->insert({paramName, value});
+        } else {
+            return false;
+        }
+
+        dataFile.close();
+
+        image = imread(directory + "image.jpg");
+        return &image != nullptr;
+    }
 }
 
 
