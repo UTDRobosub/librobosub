@@ -105,6 +105,7 @@ namespace robosub {
         discrete_distribution<int> distribution(populationFitnessLevels.begin(), populationFitnessLevels.end());
 
         for (int i = 0; i < populationSize; ++i) {
+            // Add index evaluation separately
             auto firstParent = oldParameters[distribution(generator)];
             auto secondParent = oldParameters[distribution(generator)];
 

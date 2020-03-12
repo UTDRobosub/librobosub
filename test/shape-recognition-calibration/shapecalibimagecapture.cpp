@@ -115,7 +115,7 @@ int fromString(string s) {
 int main(int argc, char **argv) {
     struct sigaction action = getSigaction();
 
-    sigaction(SIGINT, &action, NULL);
+    sigaction(SIGINT, &action, nullptr);
 
     CALIBRATION_DATA = *Camera::loadCalibrationDataFromXML(
             "../config/fisheye_cameracalib.xml",

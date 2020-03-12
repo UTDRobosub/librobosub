@@ -27,7 +27,7 @@ namespace robosub {
         normal_distribution<double> norm_distribution;
         bernoulli_distribution bern_dist;
 
-        static constexpr double mutationRate = 0.1;
+        static constexpr double mutationRate = 0.5;
         static constexpr int generationSize = 30;
 
         double mutateParameter(double currentValue, ParameterMetadata data);
@@ -129,11 +129,12 @@ namespace robosub {
 
         if (dataFile.is_open()) {
             string line;
-            dataFile >> line;
-            size_t divider = line.find(':');
-            string paramName = line.substr(0, divider);
-            T value = fromString(line.substr(divider + 1, line.size() - divider - 1));
-            sampleData->insert({paramName, value});
+            while (getline(dataFile, line)) {
+                size_t divider = line.find(':');
+                string paramName = line.substr(0, divider);
+                T value = fromString(line.substr(divider + 1, line.size() - divider - 1));
+                sampleData->insert({paramName, value});
+            }
         } else {
             return false;
         }
