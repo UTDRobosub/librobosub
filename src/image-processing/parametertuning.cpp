@@ -36,17 +36,17 @@ namespace robosub {
     map<string, double>
     ParameterTuner::tuneWithGeneticAlgorithm() {
         map<string, double> populationBuffer[generationSize];
-        vector<double> populationFitnessLevels(generationSize);
+        vector<double> populationErrorLevels(generationSize);
 
         cout << "Using genetic algorithm for parameter tuning. Generating initial population" << endl;
-        double avgError = generateInitialPopulation(populationBuffer, populationFitnessLevels, generationSize);
-        cout << "Average Error: " << avgError << endl;
+        initialPopulationAvgError = generateInitialPopulation(populationBuffer, populationErrorLevels, generationSize);
+        cout << "Average Error: " << initialPopulationAvgError << endl;
 
         for (int i = 0; i < 10; ++i) {
             cout << "Starting iteration " << i << " of genetic algorithm training" << endl;
             //put fitness percentage here
-            avgError = generateNewPopulation(populationBuffer, populationFitnessLevels, generationSize);
-            cout << "Average Error: " << avgError << endl;
+            lastAvgError = generateNewPopulation(populationBuffer, populationErrorLevels, generationSize);
+            cout << "Average Error: " << lastAvgError << endl;
         }
 
         cout << "Determining the best possible parameter set" << endl;
@@ -79,7 +79,7 @@ namespace robosub {
     }
 
     double ParameterTuner::generateInitialPopulation(map<string, double> *populationBuffer,
-                                                     vector<double> &populationFitnessLevels, int populationSize) {
+                                                     vector<double> &populationErrorLevels, int populationSize) {
         map<string, double> startingParameters = map<string, double>();
         double totalError = 0;
 
@@ -89,20 +89,20 @@ namespace robosub {
 
         for (int i = 0; i < populationSize; ++i) {
             populationBuffer[i] = mutateParameters(startingParameters);
-            populationFitnessLevels[i] = evaluationFunction(populationBuffer[i]);
-            totalError += populationFitnessLevels[i];
+            populationErrorLevels[i] = evaluationFunction(populationBuffer[i]);
+            totalError += populationErrorLevels[i];
         }
 
         return totalError / populationSize;
     }
 
     double ParameterTuner::generateNewPopulation(map<string, double> *populationBuffer,
-                                                 vector<double> &populationFitnessLevels, int populationSize) {
+                                                 vector<double> &populationErrorLevels, int populationSize) {
         map<string, double> oldParameters[populationSize];
         copy(populationBuffer, populationBuffer + populationSize, oldParameters);
         double totalError = 0;
 
-        discrete_distribution<int> distribution(populationFitnessLevels.begin(), populationFitnessLevels.end());
+        discrete_distribution<int> distribution(populationErrorLevels.begin(), populationErrorLevels.end());
 
         for (int i = 0; i < populationSize; ++i) {
             // Add index evaluation separately
@@ -123,9 +123,9 @@ namespace robosub {
         for (int i = 0; i < populationSize; ++i) {
             populationBuffer[i] = mutateParameters(populationBuffer[i]);
 
-            populationFitnessLevels[i] = evaluationFunction(populationBuffer[i]);
-            cout << "\tError for parameter set " << i << ": " << populationFitnessLevels[i] << endl;
-            totalError += populationFitnessLevels[i];
+            populationErrorLevels[i] = evaluationFunction(populationBuffer[i]) * difficultyModifier();
+            cout << "\tError for parameter set " << i << ": " << populationErrorLevels[i] << endl;
+            totalError += populationErrorLevels[i];
 
         }
 
@@ -150,8 +150,8 @@ namespace robosub {
         bern_dist = bernoulli_distribution();
     }
 
-
-
-
-
+    double ParameterTuner::difficultyModifier() {
+        auto x = difficultyConstant * (lastAvgError / initialPopulationAvgError);
+        return x * x + 1;
+    }
 }

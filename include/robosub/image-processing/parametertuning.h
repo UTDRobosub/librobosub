@@ -29,6 +29,8 @@ namespace robosub {
 
         static constexpr double mutationRate = 0.5;
         static constexpr int generationSize = 30;
+        double difficultyConstant = 0.125;
+        double initialPopulationAvgError, lastAvgError;
 
         double mutateParameter(double currentValue, ParameterMetadata data);
 
@@ -40,7 +42,7 @@ namespace robosub {
         double generateInitialPopulation(map<string, double> *populationBuffer, vector<double> &populationFitnessLevels,
                                          int populationSize);
 
-        double generateNewPopulation(map<string, double> *populationBuffer, vector<double> &populationFitnessLevels,
+        double generateNewPopulation(map<string, double> *populationBuffer, vector<double> &populationErrorLevels,
                                      int populationSize);
 
         map<string, double> getBestParameterSet(map<string, double> *population, int populationSize);
@@ -51,6 +53,8 @@ namespace robosub {
         map<string, double>
         tuneParameters(map<string, ParameterMetadata> parameters, double (*evalFunction)(map<string, double>),
                        TuningMethods method = TuningMethods::GENETIC_ALGORITHM);
+
+        double difficultyModifier();
 
     };
 
