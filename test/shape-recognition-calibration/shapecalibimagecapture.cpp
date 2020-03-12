@@ -5,6 +5,7 @@
 #include <opencv2/opencv.hpp>
 #include <robosub/robosub.h>
 #include <csignal>
+#include <iterator>
 
 using namespace std;
 using namespace robosub;
@@ -162,13 +163,13 @@ int main(int argc, char **argv) {
 
         int keyPress = waitKey(1);
 
-        if (keyPress == 32) { //take a picture and save values
+        if (keyPress == 32) {                                   // Take a picture and save values
             updateSample(CURRENT_SAMPLE);
             raw.copyTo(CURRENT_SAMPLE->image);
 
             TUNING_SAMPLES->push_back(*CURRENT_SAMPLE);
             cout << "Finished capturing image " << TUNING_SAMPLES->size() << " for training" << endl;
-        } else if (keyPress == 84 || keyPress == 116) {
+        } else if (keyPress == 84 || keyPress == 116) {     // Start training
             auto bestParameters = pt.tuneParameters(parameters, parameterEvaluationFunction);
 
             setParameters(shapeFinder, bestParameters);
@@ -178,14 +179,13 @@ int main(int argc, char **argv) {
                 cout << "\t" << parameter.first << ": " << parameter.second << " (default: "
                      << parameters.at(parameter.first).initValue << ")" << endl;
             }
-        } else if (keyPress == 115) { // Save tuning samples
+        } else if (keyPress == 115) {                       // Save tuning samples
             mg.save(TUNING_SAMPLES->data(), TUNING_SAMPLES->size(), &to_string);
             cout << "Images saved :)" << endl;
-        } else if (keyPress == 108) { // Load tuning samples
-            // TODO: load tuning samples
-            TUNING_SAMPLES = new vector<TuningSample<int>>(mg.load(&fromString));
-            cout << "Feature not finished" << endl;
-        } else if (keyPress >= 65 && keyPress <= 122) {
+        } else if (keyPress == 108) {                       // Load tuning samples
+            *TUNING_SAMPLES = mg.load(&fromString);
+            cout << "Finished loading saved tuning samples!" << endl;
+        } else if (keyPress >= 65 && keyPress <= 122) {     // Exit
             cout << "Received kill command. Exiting" << endl;
             break;
         }

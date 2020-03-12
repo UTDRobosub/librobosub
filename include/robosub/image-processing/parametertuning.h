@@ -83,7 +83,7 @@ namespace robosub {
 
         bool save(TuningSample<T> *samples, int size, string (*toString)(T));
 
-        TuningSample<T> *load(T (*fromString)(string));
+        vector<TuningSample<T>> load(T (*fromString)(string));
     };
 
     template<typename T>
@@ -145,22 +145,22 @@ namespace robosub {
     }
 
     template<typename T>
-    TuningSample<T> *TuningSampleManager<T>::load(T (*fromString)(string)) {
+    vector<TuningSample<T>> TuningSampleManager<T>::load(T (*fromString)(string)) {
         ifstream sizeFile(rootPath + "sizeFile.dat");
         int size;
         if (sizeFile.is_open())
             sizeFile >> size;
         else {
-            cout << "sizeFile not open" << endl;
-            return nullptr;
+            cout << "sizeFile not able to open" << endl;
+            return vector<TuningSample<T>>();
         }
 
 
-        TuningSample<T> samples[size];
+        vector<TuningSample<T>> samples(size);
 
         for (int i = 0; i < size; ++i) {
             string directory = rootPath + "Sample" + to_string(i) + "/";
-            samples[i].loadFromFiles(directory, fromString);
+            samples.at(i).loadFromFiles(directory, fromString);
         }
 
         return samples;
